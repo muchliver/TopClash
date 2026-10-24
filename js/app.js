@@ -1228,11 +1228,265 @@ $('#modeTabs').addEventListener('click', e => {
 function setMode(m) {
   state.mode = m; state.sandResult = null; state.scout = false;
   document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === m));
+  
+  const viewLadder = $('#viewLadder');
+  const viewBuild = $('#viewBuild');
+  const missionBar = $('#missionBar');
+  const commandDeck = $('#commandDeck');
+
+  if (m === 'ladder') {
+    if (viewLadder) viewLadder.hidden = false;
+    if (viewBuild) viewBuild.hidden = true;
+    if (missionBar) missionBar.hidden = true;
+    if (commandDeck) commandDeck.hidden = true;
+    renderLadderView();
+    toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪五星特級上將席位！');
+    return;
+  } else {
+    if (viewLadder) viewLadder.hidden = true;
+    if (viewBuild) viewBuild.hidden = false;
+    if (missionBar) missionBar.hidden = false;
+    if (commandDeck) commandDeck.hidden = false;
+  }
+
   prune(); setupMatch(); renderAll();
   if (m === 'bo3') {
     toast(`🏆 已進入 BO5 征服賽：五局三勝制！配對對手【${state.bo3.rivalName}】，輸掉該局之一方可啟動戰術反制，禁用對方關鍵裝備！`);
   }
 }
+
+/* =====================================================
+   🏆 天梯競技場介面與交互邏輯 (Tactical Ladder UI Controller)
+   ===================================================== */
+let currentRosterTab = 'live'; // 'live' 或 'yesterday'
+
+function renderLadderView() {
+  if (typeof LadderEngine === 'undefined') return;
+  LadderEngine.init();
+  const lState = LadderEngine.getState();
+  const player = lState.player;
+  const pTier = LadderEngine.getRankTier(player.rp);
+
+  // 1. 渲染頂部個人戰情卡
+  const myTierBadge = $('#myTierBadge');
+  if (myTierBadge) {
+    myTierBadge.textContent = pTier.icon;
+    myTierBadge.title = pTier.en;
+  }
+  const myFlag = $('#myFlag');
+  if (myFlag) myFlag.textContent = player.flag || '🇹🇼';
+  const myCallsign = $('#myCallsign');
+  if (myCallsign) myCallsign.textContent = player.name;
+  const myTierName = $('#myTierName');
+  if (myTierName) {
+    myTierName.textContent = pTier.name;
+    myTierName.style.color = pTier.color;
+    myTierName.style.borderColor = pTier.color;
+  }
+  const myRankVal = $('#myRankVal');
+  if (myRankVal) myRankVal.textContent = `#${player.rank}`;
+
+  const myRankTrend = $('#myRankTrend');
+  if (myRankTrend) {
+    const diff = player.yesterdayRank - player.rank;
+    if (diff > 0) {
+      myRankTrend.textContent = `▲ +${diff} (昨日 #${player.yesterdayRank})`;
+      myRankTrend.className = 'trend';
+    } else if (diff < 0) {
+      myRankTrend.textContent = `▼ ${diff} (昨日 #${player.yesterdayRank})`;
+      myRankTrend.className = 'trend down';
+    } else {
+      myRankTrend.textContent = `− 持平 (昨日 #${player.yesterdayRank})`;
+      myRankTrend.className = 'trend flat';
+    }
+  }
+
+  const myRPVal = $('#myRPVal');
+  if (myRPVal) myRPVal.textContent = player.rp.toLocaleString();
+  const myRPSub = $('#myRPSub');
+  if (myRPSub) myRPSub.textContent = `昨日 ${player.yesterdayRP.toLocaleString()}`;
+
+  const myOrdersVal = $('#myOrdersVal');
+  if (myOrdersVal) {
+    myOrdersVal.textContent = `⚡ ${player.orders} / 5`;
+    myOrdersVal.className = player.orders > 0 ? 'val green' : 'val';
+    if (player.orders === 0) myOrdersVal.style.color = '#ef4444';
+  }
+
+  // 防守部隊預覽
+  const defDeck = player.defenseDeck || state.deck;
+  const defBox = $('#defenseDeckPreview');
+  if (defBox) {
+    defBox.innerHTML = defDeck.map(id => {
+      const u = UNIT_MAP[id];
+      if (!u) return '<div class="mini-unit-chip"></div>';
+      return `<div class="mini-unit-chip" title="${esc(u.name)} ($${u.cost})">
+        <img src="${u.img || `assets/units/${u.id}.jpg`}" alt="${esc(u.name)}" onerror="this.style.display='none'"/>
+        <span class="cost-tag">$${u.cost}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // 2. 渲染衛星戰術情報推薦目標 (3 梯隊)
+  renderLadderReconGrid();
+
+  // 3. 渲染天梯榜單
+  renderLadderRosterTable();
+}
+
+function renderLadderReconGrid() {
+  const reconGrid = $('#reconGrid');
+  if (!reconGrid) return;
+  const candidates = LadderEngine.getMatchCandidates();
+
+  reconGrid.innerHTML = candidates.map((cand, idx) => {
+    return `<div class="recon-card ${cand.tagClass}">
+      <div class="recon-top">
+        <span class="recon-rank-badge">#${cand.rank}</span>
+        <span class="recon-diff-tag ${cand.tagClass}">${cand.label} (${cand.rpDiff >= 0 ? '+' : ''}${cand.rpDiff} RP)</span>
+      </div>
+      <div class="recon-who">
+        <span style="font-size:20px">${cand.flag}</span>
+        <div>
+          <div class="recon-name">${esc(cand.name)}</div>
+          <div class="recon-rp">${cand.rp.toLocaleString()} RP · ${esc(cand.title || '戰術指揮官')}</div>
+        </div>
+      </div>
+      <div class="recon-doc-tag">戰術教條: <b>${esc(DOCTRINES.find(d => d.id === cand.doc)?.name || cand.doc)}</b></div>
+      
+      <!-- 戰術迷霧偵察槽 -->
+      <div class="recon-deck-row">
+        ${cand.intelDeck.map(slot => {
+          if (slot.isMasked) {
+            return `<div class="recon-slot masked" title="受電戰迷霧遮蔽：未知裝備">
+              <span class="mask-icon">📡</span>
+              <span class="mask-lbl">CLASSIFIED</span>
+            </div>`;
+          }
+          return `<div class="recon-slot" title="${esc(slot.name)} ($${slot.cost})">
+            <img src="${slot.img}" alt="${esc(slot.name)}" onerror="this.style.display='none'"/>
+            <span class="slot-cost">$${slot.cost}</span>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <button class="recon-engage-btn" data-candidate-idx="${idx}">
+        <span>⚡ 發起挑戰 (ENGAGE)</span>
+      </button>
+    </div>`;
+  }).join('');
+
+  // 儲存當前推薦對手供發起挑戰時使用
+  state.currentLadderCandidates = candidates;
+}
+
+function renderLadderRosterTable() {
+  const tableBox = $('#rosterTableBox');
+  if (!tableBox) return;
+  const lState = LadderEngine.getState();
+  const player = lState.player;
+
+  const isLive = currentRosterTab === 'live';
+  const list = isLive ? lState.roster.slice(0, 100) : lState.yesterdayTop10;
+
+  tableBox.innerHTML = list.map((u, idx) => {
+    const isMe = u.id === player.id;
+    const rankNo = u.rank || (idx + 1);
+    const topClass = rankNo === 1 ? 'top-1' : rankNo === 2 ? 'top-2' : rankNo === 3 ? 'top-3' : '';
+    const tier = LadderEngine.getRankTier(u.rp);
+
+    // 排名趨勢
+    let trendHtml = '<span class="r-trend flat">− 持平</span>';
+    if (isLive && u.yesterdayRank) {
+      const diff = u.yesterdayRank - rankNo;
+      if (diff > 0) trendHtml = `<span class="r-trend up">▲ +${diff}</span>`;
+      else if (diff < 0) trendHtml = `<span class="r-trend down">▼ ${diff}</span>`;
+    }
+
+    return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass}">
+      <div class="r-rank">${rankNo <= 3 ? ['🥇','🥈','🥉'][rankNo - 1] : '#' + rankNo}</div>
+      <div class="r-trend">${trendHtml}</div>
+      <div class="r-commander">
+        <span style="font-size:18px">${u.flag}</span>
+        <span class="r-name">${esc(u.name)} ${isMe ? '<b style="color:#38bdf8;font-size:11px">[我方]</b>' : ''}</span>
+        <span class="r-tier-icon" title="${tier.en}">${tier.icon}</span>
+      </div>
+      <div class="r-rp">${u.rp.toLocaleString()} RP</div>
+      <div class="r-deck-preview">
+        ${(u.deck || []).map(id => {
+          const unit = UNIT_MAP[id];
+          if (!unit) return '<div class="r-deck-chip"></div>';
+          return `<div class="r-deck-chip" title="${esc(unit.name)} ($${unit.cost})">
+            <img src="${unit.img || `assets/units/${unit.id}.jpg`}" alt="${esc(unit.name)}" onerror="this.style.display='none'"/>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// 天梯操作事件代理
+$('#viewLadder')?.addEventListener('click', e => {
+  // 1. 同步當前陣容為防守部隊
+  if (e.target.closest('#btnSyncDefense')) {
+    if (!state.deck.every(Boolean)) {
+      toast('請先在快速對戰模式配置滿 5 個槽位再同步防守！');
+      return;
+    }
+    LadderEngine.setDefenseFleet(state.deck, state.doctrine);
+    renderLadderView();
+    toast('🛡️ 已將當前主力編制同步為天梯防守部隊！');
+    return;
+  }
+
+  // 2. 切換即時榜 vs 昨日榮譽榜
+  if (e.target.closest('#tabRosterLive')) {
+    currentRosterTab = 'live';
+    $('#tabRosterLive').classList.add('active');
+    $('#tabRosterYesterday').classList.remove('active');
+    renderLadderRosterTable();
+    return;
+  }
+  if (e.target.closest('#tabRosterYesterday')) {
+    currentRosterTab = 'yesterday';
+    $('#tabRosterYesterday').classList.add('active');
+    $('#tabRosterLive').classList.remove('active');
+    renderLadderRosterTable();
+    return;
+  }
+
+  // 3. 發起天梯挑戰
+  const engageBtn = e.target.closest('.recon-engage-btn');
+  if (engageBtn) {
+    const idx = +engageBtn.dataset.candidateIdx;
+    const candidate = (state.currentLadderCandidates || [])[idx];
+    if (!candidate) return;
+
+    if (!state.deck.every(Boolean)) {
+      toast('⚠️ 你的出征部隊尚未配置滿 5 個槽位！請先切換至快速對戰補齊裝備。');
+      return;
+    }
+
+    const playerOrders = LadderEngine.getState().player.orders;
+    if (playerOrders <= 0) {
+      toast('❌ 今日作戰派遣令已耗盡 (0/5)！每日 00:00 補給完畢。');
+      return;
+    }
+
+    // 啟動天梯挑戰！
+    state.ladderEnemy = candidate;
+    state.enemy = candidate.rawDeck.slice();
+    state.enemyName = `${candidate.flag} ${candidate.name}`;
+    state.enemyDoc = candidate.doc || 'defense';
+    state.event = pick(EVENTS);
+
+    // 關閉天梯視圖，切換至對戰視圖
+    $('#viewLadder').hidden = true;
+    startBattle();
+    toast(`⚔️ 已派出聯合作戰群，向【${candidate.name}】發起天梯突擊！`);
+    return;
+  }
+});
 
 function prune() {
   while (spent() > budgetLimit()) {
@@ -1771,12 +2025,85 @@ function finishBattle(res) {
 
   renderHud();
 
-  /* BO3 系列賽邏輯分流 */
+  /* 天梯 / BO3 系列賽邏輯分流 */
   if (state.mode === 'bo3') {
     handleBo3RoundEnd(res);
+  } else if (state.mode === 'ladder' && state.ladderEnemy) {
+    handleLadderMatchEnd(res);
   } else {
     showResult(res);
   }
+}
+
+/* ---------- 🏆 天梯戰功勝點結算 ---------- */
+function handleLadderMatchEnd(res) {
+  const isWin = res.winner === 'A';
+  const enemy = state.ladderEnemy;
+  const rep = LadderEngine.resolveMatch(isWin, enemy, res);
+
+  currentActiveModal = $('#ladderResultModal');
+  const card = $('#ladderResultCard');
+  if (!card) return;
+
+  card.innerHTML = `
+    <div class="l-res-banner ${isWin ? 'win' : 'lose'}">
+      ${isWin ? '🏆 戰 術 獲 勝 · VICTORY' : '✘ 作 戰 失 利 · DEFEAT'}
+    </div>
+    <div class="muted">天梯對決目標：${enemy.flag} ${esc(enemy.name)} (${enemy.rp} RP)</div>
+
+    <div class="l-res-rp-change">
+      <span class="l-res-old-rp">${rep.oldRP} RP</span>
+      <span class="l-res-arrow">➔</span>
+      <span class="l-res-new-rp">${rep.newRP} RP</span>
+      <span class="l-res-delta ${rep.totalDelta >= 0 ? 'up' : 'down'}">
+        ${rep.totalDelta >= 0 ? '+' : ''}${rep.totalDelta} RP
+      </span>
+    </div>
+
+    ${rep.rankDelta > 0 ? `
+      <div class="l-rank-jump">
+        🚀 全球天梯名次躍升：第 ${rep.oldRank} 名 ➔ <b>第 ${rep.newRank} 名</b>（上升 ${rep.rankDelta} 位！）
+      </div>
+    ` : rep.rankDelta < 0 ? `
+      <div class="l-rank-jump" style="background:rgba(244,63,94,0.12);border-color:rgba(244,63,94,0.35);color:#f43f5e">
+        名次微調：第 ${rep.oldRank} 名 ➔ 第 ${rep.newRank} 名
+      </div>
+    ` : `
+      <div class="l-rank-jump" style="color:#94a3b8">
+        名次維持在：第 ${rep.newRank} 名
+      </div>
+    `}
+
+    <div class="l-breakdown-box">
+      <div class="l-breakdown-row"><span>基礎戰功評級</span><b>${rep.baseDelta >= 0 ? '+' : ''}${rep.baseDelta} RP</b></div>
+      ${rep.diffBonus !== 0 ? `<div class="l-breakdown-row"><span>分差難度校正 (${rep.diffBonus >= 0 ? '越級強攻' : '弱勢對陣'})</span><b>${rep.diffBonus >= 0 ? '+' : ''}${rep.diffBonus} RP</b></div>` : ''}
+      ${rep.aceBonus ? `<div class="l-breakdown-row" style="color:#4ade80"><span>🎖️ ACE 完勝獎章 (全隊全員生還)</span><b>倍率 +25%</b></div>` : ''}
+      ${rep.blitzBonus ? `<div class="l-breakdown-row" style="color:#38bdf8"><span>⚡ 閃擊先制獎章 (前置階段全殲)</span><b>倍率 +15%</b></div>` : ''}
+      ${rep.miracleBonus > 0 ? `<div class="l-breakdown-row" style="color:#fbbf24"><span>🌟 以小博大奇蹟賞金 (${rep.miracleCount} 次)</span><b>+${rep.miracleBonus} RP</b></div>` : ''}
+    </div>
+
+    <div class="res-actions">
+      <button class="btn primary block" id="btnLadderReturn">返回天梯戰情室</button>
+      <button class="btn ghost block" id="btnLadderReview">檢視戰場情形 🔍</button>
+    </div>
+  `;
+
+  $('#ladderResultModal').hidden = false;
+
+  $('#btnLadderReturn').onclick = () => {
+    $('#ladderResultModal').hidden = true;
+    closeBattle();
+    setMode('ladder');
+  };
+
+  $('#btnLadderReview').onclick = () => {
+    $('#ladderResultModal').hidden = true;
+    $('#btnSpeed').hidden = true;
+    $('#btnSkip').hidden = true;
+    $('#btnReopenResult').hidden = false;
+    $('#btnBattleExit').hidden = false;
+    toast('🔍 已進入戰場檢視：可自由滾動日誌與檢視部隊殘局');
+  };
 }
 
 /* ---------- BO3 系列賽輪次推進 ---------- */
@@ -2280,8 +2607,10 @@ const savedSound = LS.get('db15_sound', true);
 SoundEngine.enabled = savedSound;
 if ($('#audioIcon')) $('#audioIcon').textContent = savedSound ? '🔊' : '🔇';
 
+if (typeof LadderEngine !== 'undefined') LadderEngine.init();
+
 setupMatch();
 renderAll();
 if (!LS.get('db15_seen', 0)) showHelp();
-window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme };
+window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView };
 })();

@@ -24,6 +24,7 @@
     </div>
   </div>
   <nav class="modes" id="modeTabs" aria-label="遊戲模式">
+    <button class="mode-btn" data-mode="ladder" id="tabLadder">🏆 天梯競技</button>
     <button class="mode-btn active" data-mode="quick" id="tabQuick">快速對戰</button>
     <button class="mode-btn" data-mode="ghost" id="tabGhost">幽靈對戰 🌐</button>
     <button class="mode-btn" data-mode="bo3" id="tabBo3">BO5 征服賽 🏆</button>
@@ -200,8 +201,77 @@
   </div>
 </section>
 
+<!-- =====================================================
+     🏆 天梯競技場主介面 (Tactical Ladder Arena)
+     ===================================================== -->
+<section id="viewLadder" class="ladder-layout" hidden>
+  <!-- 頂部指揮官天梯戰情報告 (Commander C4ISR HUD) -->
+  <div class="ladder-header">
+    <div class="ladder-my-card" id="ladderMyCard">
+      <div class="my-tier-badge" id="myTierBadge">🎖️</div>
+      <div class="my-info-col">
+        <div class="my-name-row">
+          <span class="my-flag" id="myFlag">🇹🇼</span>
+          <strong class="my-callsign" id="myCallsign">我方聯合戰術作戰群</strong>
+          <span class="my-tier-name" id="myTierName">特遣上尉</span>
+        </div>
+        <div class="my-stats-pills">
+          <div class="stat-pill">
+            <span class="lbl">當前全球排名</span>
+            <strong class="val gold" id="myRankVal">#55</strong>
+            <span class="trend" id="myRankTrend">▲ +3 (昨日 #58)</span>
+          </div>
+          <div class="stat-pill">
+            <span class="lbl">戰略勝點 (RP)</span>
+            <strong class="val cyan" id="myRPVal">1,020</strong>
+            <span class="rp-sub" id="myRPSub">昨日 995</span>
+          </div>
+          <div class="stat-pill">
+            <span class="lbl">作戰派遣令</span>
+            <strong class="val green" id="myOrdersVal">⚡ 5 / 5</strong>
+            <span class="order-sub">每日 00:00 補給</span>
+          </div>
+        </div>
+      </div>
+      <div class="my-defense-col">
+        <div class="defense-title">
+          <span>🛡️ 當前防禦陣容</span>
+          <button class="btn-micro" id="btnSyncDefense">更新為當前陣容</button>
+        </div>
+        <div class="defense-deck-preview" id="defenseDeckPreview"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中間：衛星戰術情報與對手挑戰區 -->
+  <div class="ladder-recon-section">
+    <div class="recon-header">
+      <div class="recon-title">
+        <span class="radar-dot"></span>
+        <h3>🛰️ 戰術衛星情報推薦目標 (SATELLITE INTEL MATCHMAKING)</h3>
+      </div>
+      <div class="recon-tip">依戰略勝點匹配具備挑戰梯度之對手，戰術迷霧遮蔽部分武裝，擊敗高分目標獲取超額戰功！</div>
+    </div>
+    <div class="recon-grid" id="reconGrid"></div>
+  </div>
+
+  <!-- 下方：百大天梯名冊 vs 昨日榮譽殿堂 -->
+  <div class="ladder-roster-section">
+    <div class="roster-tabs">
+      <button class="roster-tab active" id="tabRosterLive">🏆 全球即時天梯榜 (前 100 強)</button>
+      <button class="roster-tab" id="tabRosterYesterday">📜 昨日榮譽殿堂 (昨日 00:00 截算)</button>
+    </div>
+    <div class="roster-table-box" id="rosterTableBox"></div>
+  </div>
+</section>
+
 <div class="modal" id="resultModal" hidden>
   <div class="modal-card result-card" id="resultCard"></div>
+</div>
+
+<!-- 天梯戰功勝點結算 Modal -->
+<div class="modal" id="ladderResultModal" hidden>
+  <div class="modal-card ladder-result-card" id="ladderResultCard"></div>
 </div>
 <div class="modal" id="helpModal" hidden>
   <div class="modal-card help-card" id="helpCard"></div>
@@ -295,6 +365,8 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script src="js/data.js"></script>
+<script src="js/ladder-data.js"></script>
+<script src="js/ladder.js"></script>
 <script src="js/engine.js"></script>
 <script src="js/app.js"></script>
 </body>

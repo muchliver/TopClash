@@ -1422,6 +1422,569 @@ kbd{display:inline-block;padding:1.5px 5px;font-family:var(--mono);font-size:10p
   border-color: rgba(220, 38, 38, 0.3);
 }
 
+/* =====================================================
+   🏆 天梯競技場樣式 (Tactical Ladder Arena Styles)
+   ===================================================== */
+.ladder-layout {
+  max-width: 1380px;
+  margin: 0 auto;
+  padding: 18px 16px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 頂部指揮官天梯戰情報告卡 */
+.ladder-header {
+  width: 100%;
+}
+.ladder-my-card {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(8, 14, 28, 0.95));
+  border: 1.5px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(56, 189, 248, 0.08);
+}
+.my-tier-badge {
+  font-size: 42px;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2), transparent 70%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+}
+.my-info-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.my-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+.my-callsign {
+  color: #fff;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.my-tier-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+.my-stats-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.stat-pill {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px 12px;
+  display: flex;
+  flex-direction: column;
+  min-width: 110px;
+}
+.stat-pill .lbl {
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+.stat-pill .val {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 900;
+}
+.stat-pill .val.gold { color: #fbbf24; }
+.stat-pill .val.cyan { color: #38bdf8; }
+.stat-pill .val.green { color: #4ade80; }
+.stat-pill .trend {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #4ade80;
+}
+.stat-pill .trend.down { color: #f43f5e; }
+.stat-pill .trend.flat { color: #94a3b8; }
+.stat-pill .rp-sub, .stat-pill .order-sub {
+  font-size: 9.5px;
+  color: #64748b;
+  font-family: var(--mono);
+}
+
+.my-defense-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(8, 14, 28, 0.6);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 250px;
+}
+.defense-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 700;
+}
+.btn-micro {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-micro:hover {
+  background: #38bdf8;
+  color: #020617;
+}
+.defense-deck-preview {
+  display: flex;
+  gap: 6px;
+}
+.mini-unit-chip {
+  width: 42px;
+  height: 30px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #020617;
+  position: relative;
+}
+.mini-unit-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mini-unit-chip .cost-tag {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  font-size: 8px;
+  font-family: var(--mono);
+  background: rgba(0,0,0,0.75);
+  color: #fbbf24;
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: 800;
+}
+
+/* 戰術衛星情報推薦目標區 */
+.ladder-recon-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.recon-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.recon-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.recon-title .radar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  animation: pulse-vector 1s infinite alternate;
+}
+.recon-title h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #f1f5f9;
+  letter-spacing: 0.5px;
+}
+.recon-tip {
+  font-size: 12px;
+  color: #64748b;
+}
+.recon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+.recon-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(10, 16, 32, 0.9));
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.recon-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.recon-card.hard {
+  border-color: rgba(244, 63, 94, 0.35);
+}
+.recon-card.hard:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 8px 24px rgba(244, 63, 94, 0.25);
+}
+.recon-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.recon-rank-badge {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 900;
+  color: #fbbf24;
+}
+.recon-diff-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.recon-diff-tag.hard { background: rgba(244, 63, 94, 0.2); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.4); }
+.recon-diff-tag.even { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); }
+.recon-diff-tag.easy { background: rgba(74, 222, 128, 0.18); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.4); }
+
+.recon-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.recon-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #fff;
+}
+.recon-rp {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #38bdf8;
+  font-weight: 700;
+}
+.recon-doc-tag {
+  font-size: 10.5px;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 3px;
+  align-self: flex-start;
+}
+
+/* 戰術迷霧裝備槽 (Recon Fog Masking) */
+.recon-deck-row {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+.recon-slot {
+  flex: 1;
+  height: 54px;
+  border-radius: 6px;
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.recon-slot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.recon-slot.masked {
+  background: repeating-linear-gradient(45deg, #091322, #091322 8px, #0f2139 8px, #0f2139 16px);
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+}
+.recon-slot.masked .mask-icon {
+  font-size: 16px;
+  opacity: 0.6;
+}
+.recon-slot.masked .mask-lbl {
+  font-size: 8px;
+  color: #64748b;
+  font-family: var(--mono);
+  font-weight: 700;
+}
+.recon-slot .slot-cost {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 9px;
+  font-family: var(--mono);
+  background: rgba(0,0,0,0.8);
+  color: #fbbf24;
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-weight: 800;
+}
+
+.recon-engage-btn {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 9px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+  transition: all 0.2s ease;
+}
+.recon-engage-btn:hover {
+  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  box-shadow: 0 6px 18px rgba(56, 189, 248, 0.6);
+  transform: translateY(-1px);
+}
+
+/* 下方天梯名冊與昨日榮譽榜 */
+.ladder-roster-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.roster-tabs {
+  display: flex;
+  gap: 10px;
+}
+.roster-tab {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.roster-tab:hover {
+  color: #fff;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.roster-tab.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  font-weight: 800;
+}
+
+.roster-table-box {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.roster-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+}
+.roster-row:hover {
+  background: rgba(56, 189, 248, 0.06);
+}
+.roster-row.is-me {
+  background: rgba(56, 189, 248, 0.12);
+  border-left: 3px solid #38bdf8;
+}
+.roster-row.top-1 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), transparent); border-left: 3px solid #fbbf24; }
+.roster-row.top-2 { background: linear-gradient(90deg, rgba(226, 232, 240, 0.1), transparent); border-left: 3px solid #e2e8f0; }
+.roster-row.top-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.1), transparent); border-left: 3px solid #cd7f32; }
+
+.r-rank {
+  width: 50px;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 900;
+  color: #94a3b8;
+}
+.roster-row.top-1 .r-rank { color: #fbbf24; }
+.roster-row.top-2 .r-rank { color: #e2e8f0; }
+.roster-row.top-3 .r-rank { color: #cd7f32; }
+
+.r-trend {
+  width: 55px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+.r-trend.up { color: #4ade80; }
+.r-trend.down { color: #f43f5e; }
+.r-trend.flat { color: #64748b; }
+
+.r-commander {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.r-name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.r-tier-icon {
+  font-size: 14px;
+}
+.r-rp {
+  width: 90px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 800;
+  color: #38bdf8;
+  text-align: right;
+  margin-right: 14px;
+}
+.r-deck-preview {
+  display: flex;
+  gap: 4px;
+}
+.r-deck-chip {
+  width: 32px;
+  height: 22px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #020617;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.r-deck-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 天梯勝點結算 Modal */
+.ladder-result-card {
+  max-width: 480px;
+  text-align: center;
+  background: linear-gradient(145deg, #0f172a, #090e1a);
+  border: 2px solid rgba(56, 189, 248, 0.4);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+}
+.l-res-banner {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+.l-res-banner.win { color: #4ade80; text-shadow: 0 0 20px rgba(74, 222, 128, 0.6); }
+.l-res-banner.lose { color: #f43f5e; text-shadow: 0 0 20px rgba(244, 63, 94, 0.6); }
+
+.l-res-rp-change {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0;
+  font-family: var(--mono);
+}
+.l-res-old-rp { font-size: 18px; color: #94a3b8; }
+.l-res-arrow { font-size: 16px; color: #64748b; }
+.l-res-new-rp { font-size: 24px; font-weight: 900; color: #38bdf8; }
+.l-res-delta {
+  font-size: 14px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.l-res-delta.up { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+.l-res-delta.down { background: rgba(244, 63, 94, 0.2); color: #f43f5e; }
+
+.l-breakdown-box {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  text-align: left;
+}
+.l-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  color: #94a3b8;
+}
+.l-breakdown-row b { color: #f1f5f9; font-family: var(--mono); }
+
+.l-rank-jump {
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 18px;
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* 淺色模式天梯適配 */
+[data-theme="light"] .ladder-my-card {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+[data-theme="light"] .my-callsign { color: #0f172a; }
+[data-theme="light"] .stat-pill { background: #f8fafc; border-color: rgba(15, 23, 42, 0.1); }
+[data-theme="light"] .my-defense-col { background: #f1f5f9; border-color: rgba(15, 23, 42, 0.1); }
+[data-theme="light"] .recon-card { background: #ffffff; border-color: rgba(15, 23, 42, 0.12); box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06); }
+[data-theme="light"] .recon-name { color: #0f172a; }
+[data-theme="light"] .roster-table-box { background: #ffffff; border-color: rgba(15, 23, 42, 0.12); }
+[data-theme="light"] .r-name { color: #0f172a; }
+[data-theme="light"] .roster-row:hover { background: #f1f5f9; }
+[data-theme="light"] .roster-row.is-me { background: rgba(2, 132, 199, 0.08); border-left-color: #0284c7; }
+
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 

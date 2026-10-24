@@ -46,11 +46,14 @@ const DOC_FX = {
 /* ---------- 隊伍建立 ---------- */
 function makeTeam(ids, side) {
   return ids.map((id, i) => {
-    const d = UNIT_MAP[id];
+    const d = UNIT_MAP[id] || {
+      name: '主力裝備', cat: 'air', cost: 1, v: 'A',
+      traits: [], hp: 120, atk: 60, def: 0, st: 0, ew: 0
+    };
     return {
       uid: side + i, side, id, name: d.name, cat: d.cat, cost: d.cost, v: d.v,
-      traits: d.traits, hpMax: d.hp, hp: d.hp, atk: d.atk, def: d.def,
-      stealth: d.st, ew: d.ew, alive: true, apsUsed: false,
+      traits: d.traits || [], hpMax: d.hp, hp: d.hp, atk: d.atk, def: d.def,
+      stealth: d.st || 0, ew: d.ew || 0, alive: true, apsUsed: false,
       dmgDone: 0, killedBy: null
     };
   });
