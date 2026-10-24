@@ -18,7 +18,7 @@ const LadderEngine = (function() {
       yesterdayRP: 995,
       orders: 5, // 今日剩餘作戰派遣令
       lastResetDate: '',
-      defenseDeck: ['F16V', 'M1A2', 'TIANKJIAN2', 'CORVETTE', 'FPV_SWARM'],
+      defenseDeck: ['F16V', 'M1A2', 'TC2', 'TUOCHIANG', 'FPV'],
       defenseDoc: 'air_sup',
       stats: { wins: 0, losses: 0, highestRank: 55, highestRP: 1020, miracleKills: 0 }
     },
