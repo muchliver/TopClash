@@ -572,91 +572,154 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   .res-banner h2{font-size:36px}
 }
 
-/* 核心手機版設計 (<= 768px) */
+/* 核心手機版設計 (<= 768px: 頂級二層式戰術操控台與原生 App 級滑動選單) */
 @media(max-width:768px){
-  /* Topbar 極簡化 */
-  .topbar{padding:8px 12px}
-  .brand-mark{width:34px;height:34px}
-  .brand-mark svg{width:20px;height:20px}
-  .brand h1{font-size:16px}
-  .brand h1 small{display:none}
-  .brand .sub{display:none}
-  .hud-stats{display:none}
-  
-  /* 緊湊戰情橫幅 */
-  .mission-bar{padding:6px 12px;min-height:36px}
-  .mission-content{gap:6px;font-size:12px}
-  .mission-item{flex-wrap:wrap}
-  .mission-actions{margin-left:0;width:100%;justify-content:flex-end}
+  /* 解除桌機一屏流鎖定，允許手機流暢自然滑動 */
+  html,body{height:100%!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;display:block!important}
+
+  /* Topbar 極簡二層排版：上層品牌與功能鈕、下層滑動模式選單 */
+  .topbar{height:auto!important;min-height:46px!important;flex:none!important;padding:8px 12px 6px!important;flex-wrap:wrap!important;gap:6px!important}
+  .brand{display:flex!important;align-items:center!important;gap:8px!important;flex:1 1 auto!important}
+  .brand-mark{width:30px!important;height:30px!important}
+  .brand-mark svg{width:16px!important;height:16px!important}
+  .brand h1{font-size:15px!important}
+  .brand h1 small{display:none!important}
+  .brand .sub{display:none!important}
+  .hud-stats{display:none!important}
+  .hud-right{display:flex!important;align-items:center!important;gap:5px!important;flex:none!important}
+  .nav-armory-btn{padding:3px 7px!important;font-size:11px!important}
+  .icon-btn{width:26px!important;height:26px!important;font-size:12px!important}
+
+  .modes{
+    order:3!important;width:100%!important;margin:2px 0 0!important;
+    display:flex!important;gap:4px!important;overflow-x:auto!important;
+    -webkit-overflow-scrolling:touch!important;scrollbar-width:none!important;padding:2px 0!important;
+  }
+  .modes::-webkit-scrollbar{display:none!important}
+  .mode-btn{flex:none!important;padding:4px 10px!important;font-size:11.5px!important;white-space:nowrap!important}
+
+  /* 緊湊戰情橫幅手機版適配 */
+  .mission-bar{height:auto!important;min-height:36px!important;flex:none!important;padding:6px 12px!important;flex-wrap:wrap!important;gap:6px!important}
+  .mission-content{gap:6px!important;font-size:11px!important;flex:1 1 auto!important;min-width:140px!important}
+  .mission-item{flex-wrap:wrap!important}
+  .mission-actions{margin-left:0!important;width:100%!important;justify-content:flex-end!important}
+  .mission-right-tools{margin-left:auto!important;flex:none!important;padding-left:0!important}
+  .btn-reroll-top{height:28px!important;padding:2px 8px!important;gap:4px!important}
+  .btn-reroll-top .reroll-icon{font-size:14px!important}
+  .btn-reroll-top .reroll-title{font-size:11.5px!important}
+  .btn-reroll-top .reroll-title kbd{font-size:8.5px!important;padding:0 3px!important}
+  .btn-reroll-top .reroll-sub{display:none!important}
 
   /* 手機專屬兵種切換分頁導覽列 */
-  .mobile-cat-nav{display:flex;gap:6px;padding:6px 2px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:0;z-index:15;background:var(--bg)}
-  .m-tab{flex:1;min-width:62px;padding:6px 2px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:2px;transition:.18s;cursor:pointer}
-  .m-tab.active{background:linear-gradient(145deg,rgba(61,224,255,.2),rgba(20,31,48,.95));border-color:var(--cyan);box-shadow:0 0 10px rgba(61,224,255,.3)}
-  .m-tab-title{display:flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--text)}
-  .m-tab-title svg{width:14px;height:14px;color:var(--c)}
-  .m-tab-badge{font-family:var(--head);font-size:10.5px;font-weight:700;padding:0 5px;border-radius:99px;line-height:16px;background:rgba(255,255,255,.06);color:var(--muted)}
-  .m-tab-badge.on{background:rgba(255,179,64,.2);color:var(--amber);border:1px solid rgba(255,179,64,.35)}
+  .mobile-cat-nav{display:flex!important;gap:5px!important;padding:6px 10px 8px!important;overflow-x:auto!important;position:sticky!important;top:0!important;z-index:15!important;background:var(--bg)!important;border-bottom:1px solid var(--line)!important}
+  .m-tab{flex:1!important;min-width:56px!important;padding:5px 2px!important;border-radius:8px!important;background:rgba(255,255,255,.04)!important;border:1px solid var(--line)!important;display:flex!important;flex-direction:column!important;align-items:center!important;gap:2px!important}
+  .m-tab.active{background:linear-gradient(145deg,rgba(61,224,255,.2),rgba(20,31,48,.95))!important;border-color:var(--cyan)!important}
+  .m-tab-title{display:flex!important;align-items:center!important;gap:2px!important;font-size:11px!important;font-weight:700!important}
+  .m-tab-title svg{width:12px!important;height:12px!important}
+  .m-tab-badge{font-size:10px!important;padding:0 4px!important;line-height:14px!important}
 
-  /* 矩陣看板手機版切換為單兵種展示（一屏展示 5 個價位，免長滾動） */
-  .matrix-layout{padding:4px 12px 130px;height:auto;min-height:0}
-  .matrix-board{display:block}
-  .col-category{display:none;width:100%;background:none;border:none;padding:0;gap:8px}
-  .col-category.mobile-active{display:flex;flex-direction:column}
-  .col-category::before{display:none}
-  .cat-head{display:none}
+  /* 矩陣看板手機版切換為單兵種展示 (留足底部 padding 避免遮蔽) */
+  .matrix-layout{padding:8px 12px 145px!important;height:auto!important;min-height:0!important;overflow:visible!important}
+  .matrix-board{display:block!important}
+  .col-category{display:none!important;width:100%!important;background:none!important;border:none!important;padding:0!important;gap:8px!important}
+  .col-category.mobile-active{display:flex!important;flex-direction:column!important}
+  .col-category::before{display:none!important}
+  .cat-head{display:none!important}
 
-  /* 手機版卡片 */
-  .m-card{flex:none;min-height:72px;padding:10px 12px;border-radius:11px;margin-bottom:2px}
-  .m-info-btn{display:grid}
-  .m-cost{font-size:19px;line-height:24px;padding:0 7px}
-  .m-name{font-size:14.5px}
-  .m-tag{font-size:11.5px}
-  .m-var-toggle{font-size:11px;padding:2px 7px}
-  .m-bot{font-size:11px;margin-top:6px}
-  .m-stats{gap:8px}
+  /* 手機版軍武卡片 */
+  .m-card{flex:none!important;min-height:70px!important;padding:9px 12px!important;border-radius:10px!important;margin-bottom:6px!important}
+  .m-info-btn{display:grid!important}
+  .m-cost{font-size:17px!important;line-height:22px!important;padding:0 6px!important}
+  .m-name{font-size:14px!important}
+  .m-tag{font-size:11px!important}
+  .m-var-toggle{font-size:10.5px!important;padding:1px 6px!important}
+  .m-bot{font-size:10.5px!important;margin-top:5px!important}
+  .m-stats{gap:6px!important}
 
-  /* 底部指揮台手機版雙行精煉佈局 */
-  .command-deck{height:auto;padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px));flex-direction:column;gap:6px;align-items:stretch}
-  .deck-left{display:flex;justify-content:space-between;align-items:center;width:100%}
-  .budget-badge{flex-direction:row;align-items:center;gap:6px}
-  .budget-label{font-size:10px}
-  .budget-digits{font-size:22px}
-  .budget-mini-bar{display:none}
-  .deck-slots{display:flex;gap:4px}
-  .d-slot{width:auto;min-width:44px;height:38px;padding:2px 4px;font-size:10px}
-  .d-slot-name{font-size:10px}
-  .d-slot-cost{font-size:11px}
-  
-  .deck-mid{display:flex;justify-content:space-between;align-items:center;width:100%;gap:6px}
-  .doc-group{display:none} /* 手機版收入戰術抽屜 */
-  .deck-tools{display:flex;gap:6px;width:100%}
-  .tool-btn{flex:1;padding:8px 6px;text-align:center;justify-content:center;font-size:12px}
-  .dropdown-wrap{display:none} /* 桌機下拉收納至戰術抽屜 */
-  .mobile-more-btn{display:inline-flex}
+  /* ---------- 底部常駐指揮台：Grid Area 二層式行動佈局 ---------- */
+  .command-deck{
+    display:grid!important;
+    grid-template-columns:1fr auto!important;
+    grid-template-areas:
+      "left mid"
+      "right right"!important;
+    height:auto!important;
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px))!important;
+    gap:6px 8px!important;
+    align-items:center!important;
+    position:fixed!important;bottom:0!important;left:0!important;right:0!important;
+    z-index:40!important;background:var(--deck-bg)!important;
+    box-shadow:0 -6px 20px rgba(0,0,0,.6)!important;
+  }
+  .deck-left{
+    grid-area:left!important;
+    display:flex!important;align-items:center!important;gap:8px!important;
+    min-width:0!important;overflow:visible!important;
+  }
+  .deck-ab-toggle{flex:none!important}
+  .ab-btn{padding:4px 8px!important;font-size:11px!important}
+  .budget-badge{
+    display:flex!important;flex-direction:row!important;align-items:baseline!important;
+    gap:6px!important;width:auto!important;min-width:0!important;
+  }
+  .budget-top-row{display:none!important}
+  .budget-main-row{display:flex!important;align-items:baseline!important;gap:4px!important;margin:0!important}
+  .budget-digits{font-size:19px!important}
+  .budget-eff-tag{font-size:9px!important;padding:1px 4px!important}
+  .budget-mini-bar{display:none!important}
 
-  .deck-right{width:100%;display:flex;align-items:center;gap:8px}
-  .deck-hint{display:none}
-  .launch-btn{width:100%;padding:11px 16px;font-size:15px;letter-spacing:.06em}
+  .deck-mid{
+    grid-area:mid!important;
+    display:flex!important;justify-content:flex-end!important;align-items:center!important;
+    gap:6px!important;min-width:0!important;overflow:visible!important;
+  }
+  .doc-group{display:none!important} /* 手機版教條收納入戰術抽屜 */
+  .deck-tools{display:flex!important;gap:6px!important;padding-left:0!important;border-left:none!important;align-items:center!important}
+  .dropdown-wrap{display:none!important}
+  #btnClear{display:none!important}
+  .tool-btn{
+    height:28px!important;padding:3px 8px!important;
+    font-size:11px!important;border-radius:6px!important;
+  }
+  .tool-btn kbd{display:none!important}
+  .mobile-more-btn{
+    display:inline-flex!important;
+    background:linear-gradient(135deg,rgba(61,224,255,.2),rgba(61,224,255,.08))!important;
+    border-color:var(--cyan)!important;color:var(--cyan)!important;
+  }
+
+  .deck-right{
+    grid-area:right!important;
+    width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  }
+  .deck-hint{display:none!important}
+  .mega-launch-btn{
+    width:100%!important;max-width:100%!important;min-width:0!important;
+    height:44px!important;padding:0 12px!important;border-radius:9px!important;
+  }
+  .mega-launch-btn .launch-title{font-size:13.5px!important}
+  .mega-launch-btn .launch-sub{font-size:9px!important}
+  .mega-launch-btn .launch-icon{width:28px!important;height:28px!important;font-size:15px!important}
+  .mega-launch-btn .launch-arrow{width:22px!important;height:22px!important;font-size:12px!important}
 
   /* 手機版戰鬥畫面推演 */
-  .battle{padding:10px 12px 30px}
-  .battle-top{gap:8px;margin-bottom:10px}
-  .phase-steps{gap:4px;width:100%;overflow-x:auto}
-  .ph{padding:5px 9px;font-size:11.5px}
-  .battle-ctl{margin-left:auto;display:flex;gap:6px}
-  .radar{height:90px}
-  .log{min-height:160px;max-height:220px;font-size:11.5px}
-  .bu{padding:8px 10px}
-  .bu-name{font-size:12.5px}
+  .battle{padding:10px 12px 30px!important}
+  .battle-top{gap:8px!important;margin-bottom:10px!important}
+  .phase-steps{gap:4px!important;width:100%!important;overflow-x:auto!important}
+  .ph{padding:5px 9px!important;font-size:11.5px!important}
+  .battle-ctl{margin-left:auto!important;display:flex!important;gap:6px!important}
+  .radar{height:90px!important}
+  .log{min-height:160px!important;max-height:220px!important;font-size:11.5px!important}
+  .bu{padding:8px 10px!important}
+  .bu-name{font-size:12.5px!important}
 
   /* 手機版彈窗全螢幕或底部包覆 */
-  .modal{padding:8px}
-  .modal-card{padding:16px;border-radius:14px;max-height:92vh}
-  .res-banner h2{font-size:32px}
-  .vp-tbl{font-size:12px}
-  .res-actions{flex-direction:column}
-  .res-actions .btn{width:100%}
+  .modal{padding:8px!important}
+  .modal-card{padding:16px!important;border-radius:14px!important;max-height:92vh!important}
+  .res-banner h2{font-size:32px!important}
+  .vp-tbl{font-size:12px!important}
+  .res-actions{flex-direction:column!important}
+  .res-actions .btn{width:100%!important}
 }
 /* ---------- 淺色模式專用精修規則 (Light Mode Refinements) ---------- */
 [data-theme="light"] .mission-bar{background:rgba(255,255,255,.95);border-bottom:1px solid var(--line);box-shadow:0 1px 8px rgba(15,23,42,.04)}
