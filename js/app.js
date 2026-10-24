@@ -321,9 +321,14 @@ function generateRandomMarketPool() {
 }
 
 function rerollMarketPool() {
+  // 調撥軍火等同重置當前選取，杜絕利用保留裝備反覆洗出理想軍火的不公平刷牌漏洞
+  state.deck = [null, null, null, null, null];
+  state.active = 0;
+  syncActiveDeck();
+
   generateRandomMarketPool();
   SoundEngine.play('equip');
-  toast('🎲 已隨機調撥 5 大兵種戰區軍火選項！');
+  toast('🎲 戰區軍火已全面調撥！已清除當前選取，請由新軍火庫重新選配。');
   renderAll();
 }
 
