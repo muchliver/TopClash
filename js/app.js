@@ -1335,13 +1335,15 @@ function teamHtml(units, side) {
   }).join('');
 }
 function setHp(uid, hp, max) {
+  if (hp === undefined || isNaN(hp)) return;
   const u = $('#hp-' + uid); if (!u) return;
-  const p = hp / max;
+  const p = max > 0 ? (hp / max) : 0;
   u.style.width = Math.max(0, p * 100) + '%';
   u.className = p < 0.25 ? 'low' : p < 0.55 ? 'mid' : '';
-  $('#hpt-' + uid).textContent = Math.round(hp) + ' / ' + max;
+  const hptEl = $('#hpt-' + uid);
+  if (hptEl) hptEl.textContent = Math.round(hp) + ' / ' + max;
   const row = $('#bu-' + uid);
-  if (hp <= 0) row.classList.add('dead');
+  if (row && hp <= 0) row.classList.add('dead');
 }
 
 /* =====================================================
@@ -1404,8 +1406,9 @@ async function showBattle(res) {
   window.scrollTo({ top: 0 });
   const T = res.final;
   
-  // 注入左右部隊卡片列表（保留背景層）
-  const uBoxA = $('#teamUnitsA'), uBoxB = $('#teamUnitsB');
+  // 注入左右部隊卡片列表（注入至 unitsCardList 容器，不覆蓋頂部 team-bg-hud）
+  const uBoxA = $('#unitsCardListA') || $('#teamUnitsA');
+  const uBoxB = $('#unitsCardListB') || $('#teamUnitsB');
   if (uBoxA) uBoxA.innerHTML = teamHtml(T.A, 'A');
   if (uBoxB) uBoxB.innerHTML = teamHtml(T.B, 'B');
 
@@ -1441,6 +1444,7 @@ async function showBattle(res) {
       curPhase = f.phase;
       if (curPhase === 1 && radarEl) radarEl.classList.add('emp-active');
       else if (radarEl) radarEl.classList.remove('emp-active');
+      updateHoloPhase(curPhase);
     }
     sec++;
     const timerEl = $('#camTimer');
@@ -1451,7 +1455,9 @@ async function showBattle(res) {
     for (const ln of f.lines) {
       if (token !== playToken) return;
       const d = document.createElement('div');
-      d.className = `s${ln.side} ${ln.kind}`; d.textContent = ln.text;
+      d.className = `s${ln.side} ${ln.kind}`;
+      const brevityBadge = ln.brevity ? `<span class="brevity-tag ${ln.kind}">${esc(ln.brevity)}</span>` : '';
+      d.innerHTML = `${brevityBadge}<span class="log-text">${esc(ln.text)}</span>`;
       // 反敘倒序插入：最新戰況出現在最上方
       log.prepend(d);
       log.scrollTop = 0;
@@ -1474,6 +1480,22 @@ async function showBattle(res) {
   finishBattle(res);
 }
 
+function updateHoloPhase(phase) {
+  document.querySelectorAll('.holo-domain').forEach(el => el.classList.remove('active'));
+  if (phase === 1) {
+    const elEW = $('#domain-ew'), elAA = $('#domain-aa');
+    if (elEW) elEW.classList.add('active');
+    if (elAA) elAA.classList.add('active');
+  } else if (phase === 2) {
+    const elAir = $('#domain-air'), elSea = $('#domain-sea');
+    if (elAir) elAir.classList.add('active');
+    if (elSea) elSea.classList.add('active');
+  } else if (phase === 3) {
+    const elArmor = $('#domain-armor');
+    if (elArmor) elArmor.classList.add('active');
+  }
+}
+
 function playFx(ln) {
   if (skip) return;
   const fxLayer = $('#combatFxLayer');
@@ -1490,20 +1512,46 @@ function playFx(ln) {
   // 1. 即時動態切換左右兩半邊全景巨幕大圖與中央火控態勢！
   if (aUnit && tUnit) {
     const sAtk = $('#stripAttacker'), sTgt = $('#stripTarget'), sVec = $('#stripVector');
+    const isClashOfTitans = (aUnit.cost >= 4 && tUnit.cost >= 4);
+
     if (ln.side === 'A') {
       // 我方開火攻擊 ➔ 左邊為攻擊武器大圖，右邊為受擊目標大圖
       setSideHero('A', aUnit, 'fire', aUnit.weapon);
       setSideHero('B', tUnit, 'hit', ln.text);
       if (sAtk) sAtk.textContent = `${aUnit.flag} ${aUnit.name}`;
       if (sTgt) sTgt.textContent = `${tUnit.flag} ${tUnit.name}`;
-      if (sVec) sVec.textContent = `⚡ [${aUnit.weapon ? aUnit.weapon.split(' ')[0] : '開火'}] ➔`;
+      if (sVec) sVec.textContent = isClashOfTitans ? `🎯 頂峰對決 // CLASH ➔` : `⚡ [${aUnit.weapon ? aUnit.weapon.split(' ')[0] : '開火'}] ➔`;
     } else {
       // 敵方開火攻擊 ➔ 右邊為攻擊武器大圖，左邊為受擊目標大圖
       setSideHero('B', aUnit, 'fire', aUnit.weapon);
       setSideHero('A', tUnit, 'hit', ln.text);
       if (sAtk) sAtk.textContent = `${tUnit.flag} ${tUnit.name}`;
       if (sTgt) sTgt.textContent = `${aUnit.flag} ${aUnit.name}`;
-      if (sVec) sVec.textContent = `⚡ [${aUnit.weapon ? aUnit.weapon.split(' ')[0] : '突襲'}] ➔`;
+      if (sVec) sVec.textContent = isClashOfTitans ? `🎯 頂峰對決 // CLASH ➔` : `⚡ [${aUnit.weapon ? aUnit.weapon.split(' ')[0] : '突襲'}] ➔`;
+    }
+
+    // 連動全息雷達態勢帶
+    const lockTag = $('#holoLockTag');
+    if (lockTag) {
+      if (ln.brevity === 'FOX-3') lockTag.textContent = '[TWS RADAR LOCK]';
+      else if (ln.brevity === 'SABOT') lockTag.textContent = '[LASER RANGE LOCK]';
+      else if (ln.brevity === 'SEAD') lockTag.textContent = '[ANTI-RAD TARGET]';
+      else if (ln.brevity === 'APS-BLOCK') lockTag.textContent = '[APS HARD-KILL]';
+      else if (ln.kind === 'kill') lockTag.textContent = '[TARGET SPLASHED]';
+      else lockTag.textContent = '[FIRE CONTROL ON]';
+    }
+
+    // 觸發兵種態勢燈高亮
+    if (aUnit.role) {
+      const roleMap = { air: 'domain-air', ad: 'domain-aa', arm: 'domain-armor', sea: 'domain-sea', ew: 'domain-ew' };
+      const domId = roleMap[aUnit.role];
+      if (domId) {
+        const domEl = $('#' + domId);
+        if (domEl) {
+          domEl.classList.add('active');
+          setTimeout(() => domEl.classList.remove('active'), 500 / speed);
+        }
+      }
     }
 
     // 動態經緯度模擬
@@ -1512,6 +1560,12 @@ function playFx(ln) {
       const minN = (18 + Math.random() * 0.9).toFixed(2);
       const minE = (34 + Math.random() * 0.9).toFixed(2);
       camCoords.textContent = `LAT 24°${minN}'N LON 120°${minE}'E`;
+    }
+
+    // 【以小博大・戰術奇蹟警報 (Tactical Upset Alarm)】
+    // 當低成本兵種 (<= $2) 成功擊毀高價值旗艦 (>= $4)
+    if (ln.kind === 'kill' && aUnit.cost <= 2 && tUnit.cost >= 4) {
+      spawnTacticalUpset(aUnit, tUnit);
     }
   }
 
@@ -1534,12 +1588,7 @@ function playFx(ln) {
     setTimeout(() => tEl.classList.remove('active-target'), 350 / speed);
   }
 
-  // 2. 觸發開火音效
-  if (aUnit) {
-    SoundEngine.play(aUnit.sfx || 'missile');
-  }
-
-  // 3. 開火方微後座力發光動畫
+  // 開火方微後座力發光動畫
   if (aEl) {
     const recoilClass = ln.side === 'A' ? 'fire-recoil-a' : 'fire-recoil-b';
     aEl.classList.remove('fire-recoil-a', 'fire-recoil-b');
@@ -1650,6 +1699,20 @@ function playFx(ln) {
     fl.style.left = x + 'px'; fl.style.top = y + 'px';
     fxLayer.appendChild(fl);
     setTimeout(() => fl.remove(), 680 / speed);
+  }
+
+  function spawnTacticalUpset(attacker, victim) {
+    const banner = document.createElement('div');
+    banner.className = 'tactical-upset-banner';
+    banner.innerHTML = `
+      <div class="upset-title">⚡ 戰 術 奇 蹟 // ASYMMETRIC UPSET ⚡</div>
+      <div class="upset-desc">${attacker.flag} ${attacker.name} ($${attacker.cost}) 擊墜 ${victim.flag} ${victim.name} ($${victim.cost})！</div>
+    `;
+    const viewBattle = $('#viewBattle');
+    if (viewBattle) {
+      viewBattle.appendChild(banner);
+      setTimeout(() => banner.remove(), 2300);
+    }
   }
 }
 

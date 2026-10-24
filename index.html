@@ -134,13 +134,17 @@
       <div class="team-bg-layer" id="teamBgLayerA">
         <img class="team-bg-img" id="teamBgImgA" alt="" />
         <div class="team-bg-gradient"></div>
-        <div class="team-bg-hud">
-          <span class="hud-tag-live">● LINK-16 // FRIENDLY FORCE</span>
-          <span class="hud-unit-name" id="heroUnitNameA">戰備就緒</span>
-          <span class="hud-status" id="heroStatusA">COMBAT OVERWATCH</span>
-        </div>
       </div>
-      <div class="team-units-box" id="teamUnitsA"></div>
+      <div class="team-units-box" id="teamUnitsA">
+        <div class="team-bg-hud" id="teamBgHudA">
+          <div class="hud-top-line">
+            <span class="hud-tag-live">● LINK-16 // FRIENDLY FORCE</span>
+            <span class="hud-status" id="heroStatusA">COMBAT OVERWATCH</span>
+          </div>
+          <div class="hud-unit-name" id="heroUnitNameA">戰備就緒</div>
+        </div>
+        <div class="units-card-list" id="unitsCardListA"></div>
+      </div>
     </div>
 
     <!-- 中間：中央火控態勢與整合戰況日誌 -->
@@ -150,6 +154,23 @@
           <div class="log-phase-tag" id="phaseTitle">準備交戰</div>
           <div class="log-rec-tag">● REC <b id="camTimer">00:00</b></div>
         </div>
+
+        <!-- 全息多域作戰態勢帶 (Holo Radar Strip) -->
+        <div class="holo-radar-strip" id="holoRadarStrip">
+          <div class="radar-scan-line"></div>
+          <div class="holo-domain-status">
+            <span class="holo-domain-badge domain-air" id="holoDomainAir"><i class="h-ico">✈️</i> 制空</span>
+            <span class="holo-domain-badge domain-ads" id="holoDomainAds"><i class="h-ico">🚀</i> 防空</span>
+            <span class="holo-domain-badge domain-arm" id="holoDomainArm"><i class="h-ico">🛡️</i> 裝甲</span>
+            <span class="holo-domain-badge domain-nav" id="holoDomainNav"><i class="h-ico">⚓</i> 制海</span>
+            <span class="holo-domain-badge domain-isr" id="holoDomainIsr"><i class="h-ico">📡</i> 電戰</span>
+          </div>
+          <div class="holo-telemetry" id="holoTelemetry">
+            <span class="holo-tele-item"><span class="holo-dot"></span> LINK-16 // SYNC</span>
+            <span class="holo-lock-tag" id="holoLockTag">[RADAR STANDBY]</span>
+          </div>
+        </div>
+
         <div class="log-action-ticker" id="stripAction">
           <span class="strip-who a" id="stripAttacker">友軍戰鬥群</span>
           <span class="strip-vector" id="stripVector">⚡ 戰術交鋒 ➔</span>
@@ -164,13 +185,17 @@
       <div class="team-bg-layer" id="teamBgLayerB">
         <img class="team-bg-img" id="teamBgImgB" alt="" />
         <div class="team-bg-gradient"></div>
-        <div class="team-bg-hud">
-          <span class="hud-tag-live">● OPFOR RADAR TRACK</span>
-          <span class="hud-unit-name" id="heroUnitNameB">敵軍雷達鎖定</span>
-          <span class="hud-status" id="heroStatusB">RADAR ACQUIRED</span>
-        </div>
       </div>
-      <div class="team-units-box" id="teamUnitsB"></div>
+      <div class="team-units-box" id="teamUnitsB">
+        <div class="team-bg-hud" id="teamBgHudB">
+          <div class="hud-top-line">
+            <span class="hud-tag-live">● OPFOR RADAR TRACK</span>
+            <span class="hud-status" id="heroStatusB">RADAR ACQUIRED</span>
+          </div>
+          <div class="hud-unit-name" id="heroUnitNameB">敵軍雷達鎖定</div>
+        </div>
+        <div class="units-card-list" id="unitsCardListB"></div>
+      </div>
     </div>
   </div>
 </section>

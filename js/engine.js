@@ -115,13 +115,47 @@ function resolveBattle(deckA, deckB, opts) {
       const a = r.a, t = a.tgt, at = a.att;
       if (!t.alive) continue;
       const pct = Math.round(r.p * 100);
+
+      // 決定軍規戰術代碼 (Brevity Code)
+      let brv = 'ENGAGE';
+      if (at.cat === 'air') {
+        brv = (t.cat === 'air') ? (at.traits.includes('LR') ? 'FOX-3' : 'DOGFIGHT') : 'CAS';
+      } else if (at.cat === 'air_defense' || at.traits.includes('AEGIS')) {
+        brv = 'BIRDS AWAY';
+      } else if (at.cat === 'armor') {
+        brv = (at.traits.includes('TRUE_AT') ? 'HEAT 破甲' : 'SABOT 穿甲');
+      } else if (at.cat === 'naval') {
+        brv = at.traits.includes('SUB') ? 'TORPEDO' : 'HARPOON';
+      } else if (at.cat === 'support') {
+        if (at.traits.includes('SEAD')) brv = 'SEAD 壓制';
+        else if (at.traits.includes('DEEP')) brv = 'DEEP 點穴';
+        else if (at.traits.includes('TRUE_AT')) brv = 'DRONE 突防';
+        else brv = 'ARTY 齊射';
+      }
+
       if (!r.ok) {
-        lines.push({ side: at.side, kind: 'miss', auid: at.uid, tuid: t.uid, text: `${at.name} → ${t.name}：未命中（${pct}%）` });
+        lines.push({
+          side: at.side,
+          kind: 'miss',
+          auid: at.uid,
+          tuid: t.uid,
+          brevity: 'EVADED',
+          text: `[EVADED 機動迴避] ${at.name} → ${t.name}：未命中（${pct}% 幾率）`,
+          hpAfter: Math.round(t.hp)
+        });
         continue;
       }
       if (t.traits.includes('APS') && !t.apsUsed) {
         t.apsUsed = true;
-        lines.push({ side: t.side, kind: 'block', auid: at.uid, tuid: t.uid, text: `${t.name} 的主動防護攔截了 ${at.name} 的攻擊！` });
+        lines.push({
+          side: t.side,
+          kind: 'block',
+          auid: at.uid,
+          tuid: t.uid,
+          brevity: 'APS-BLOCK',
+          text: `[APS 主動防護] ${t.name} 自動攔截 ${at.name} 首波打擊！`,
+          hpAfter: Math.round(t.hp)
+        });
         addKey(3, `${t.name} 的主動防護攔截了 ${at.name} 的首發攻擊`, t.side);
         continue;
       }
@@ -130,10 +164,30 @@ function resolveBattle(deckA, deckB, opts) {
       at.dmgDone += d;
       if (t.hp <= 0) {
         t.hp = 0; t.alive = false; t.killedBy = at;
-        lines.push({ side: at.side, kind: 'kill', auid: at.uid, tuid: t.uid, dmg: Math.round(d), text: `${at.name} 擊毀 ${t.name}！`, hpAfter: 0 });
+        const killCode = (t.cat === 'air') ? 'SPLASH' : (t.cat === 'armor') ? 'COOK-OFF' : 'KILL';
+        const killLabel = (t.cat === 'air') ? '凌空擊墜' : (t.cat === 'armor') ? '誘發殉爆' : '目標殲滅';
+        lines.push({
+          side: at.side,
+          kind: 'kill',
+          auid: at.uid,
+          tuid: t.uid,
+          brevity: killCode,
+          dmg: Math.round(d),
+          text: `[${killCode} ${killLabel}] ${at.name} 擊毀 ${t.name}！`,
+          hpAfter: 0
+        });
         addKey(t.cost * 2 + Math.max(0, t.cost - at.cost) * 2, `${at.name}（$${at.cost}）擊毀 ${t.name}（$${t.cost}）`, at.side);
       } else {
-        lines.push({ side: at.side, kind: 'hit', auid: at.uid, tuid: t.uid, dmg: Math.round(d), text: `${at.name} → ${t.name}：命中 −${Math.round(d / t.hpMax * 100)}%（${pct}%）`, hpAfter: Math.round(t.hp) });
+        lines.push({
+          side: at.side,
+          kind: 'hit',
+          auid: at.uid,
+          tuid: t.uid,
+          brevity: brv,
+          dmg: Math.round(d),
+          text: `[${brv}] ${at.name} → ${t.name}：命中 −${Math.round(d / t.hpMax * 100)}%（剩餘 ${pct}% 生命）`,
+          hpAfter: Math.round(t.hp)
+        });
       }
     }
     return lines;
