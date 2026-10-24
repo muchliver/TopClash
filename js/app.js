@@ -1542,14 +1542,21 @@ function playFx(ln) {
     }
 
     // 觸發兵種態勢燈高亮
-    if (aUnit.role) {
-      const roleMap = { air: 'domain-air', ad: 'domain-aa', arm: 'domain-armor', sea: 'domain-sea', ew: 'domain-ew' };
-      const domId = roleMap[aUnit.role];
+    const uCat = aUnit.cat;
+    if (uCat) {
+      const catMap = {
+        air: 'domain-air',
+        air_defense: 'domain-aa',
+        armor: 'domain-armor',
+        naval: 'domain-sea',
+        support: 'domain-ew'
+      };
+      const domId = catMap[uCat];
       if (domId) {
         const domEl = $('#' + domId);
         if (domEl) {
           domEl.classList.add('active');
-          setTimeout(() => domEl.classList.remove('active'), 500 / speed);
+          setTimeout(() => domEl.classList.remove('active'), 600 / speed);
         }
       }
     }

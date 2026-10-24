@@ -842,10 +842,10 @@ kbd{display:inline-block;padding:1.5px 5px;font-family:var(--mono);font-size:10p
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   padding: 8px 10px;
   margin-bottom: 8px;
-  background: rgba(15, 23, 42, 0.7);
+  background: rgba(15, 23, 42, 0.72);
   border: 1px solid rgba(56, 189, 248, 0.28);
   border-radius: 8px;
   backdrop-filter: blur(8px);
@@ -856,14 +856,20 @@ kbd{display:inline-block;padding:1.5px 5px;font-family:var(--mono);font-size:10p
 .team-col.b .team-bg-hud {
   border-color: rgba(244, 63, 94, 0.28);
 }
-.hud-tag {
+.hud-top-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.hud-tag, .hud-tag-live {
   font-family: var(--mono);
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.8px;
   color: #38bdf8;
 }
-.team-col.b .hud-tag {
+.team-col.b .hud-tag, .team-col.b .hud-tag-live {
   color: #f43f5e;
 }
 .hud-unit-name {
@@ -871,6 +877,9 @@ kbd{display:inline-block;padding:1.5px 5px;font-family:var(--mono);font-size:10p
   font-weight: 800;
   color: #fff;
   text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hud-status {
   font-family: var(--mono);
@@ -878,6 +887,9 @@ kbd{display:inline-block;padding:1.5px 5px;font-family:var(--mono);font-size:10p
   font-weight: 600;
   letter-spacing: 0.4px;
   color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 單位卡片死亡與擊毀標籤防碰撞重疊 */

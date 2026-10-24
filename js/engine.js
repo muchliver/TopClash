@@ -185,7 +185,7 @@ function resolveBattle(deckA, deckB, opts) {
           tuid: t.uid,
           brevity: brv,
           dmg: Math.round(d),
-          text: `[${brv}] ${at.name} → ${t.name}：命中 −${Math.round(d / t.hpMax * 100)}%（剩餘 ${pct}% 生命）`,
+          text: `[${brv}] ${at.name} → ${t.name}：命中 −${Math.round(d / t.hpMax * 100)}%（剩餘 ${Math.round(t.hp / t.hpMax * 100)}% 生命）`,
           hpAfter: Math.round(t.hp)
         });
       }

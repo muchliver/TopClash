@@ -157,17 +157,17 @@
 
         <!-- 全息多域作戰態勢帶 (Holo Radar Strip) -->
         <div class="holo-radar-strip" id="holoRadarStrip">
-          <div class="radar-scan-line"></div>
-          <div class="holo-domain-status">
-            <span class="holo-domain-badge domain-air" id="holoDomainAir"><i class="h-ico">✈️</i> 制空</span>
-            <span class="holo-domain-badge domain-ads" id="holoDomainAds"><i class="h-ico">🚀</i> 防空</span>
-            <span class="holo-domain-badge domain-arm" id="holoDomainArm"><i class="h-ico">🛡️</i> 裝甲</span>
-            <span class="holo-domain-badge domain-nav" id="holoDomainNav"><i class="h-ico">⚓</i> 制海</span>
-            <span class="holo-domain-badge domain-isr" id="holoDomainIsr"><i class="h-ico">📡</i> 電戰</span>
+          <div class="holo-sweep-line"></div>
+          <div class="holo-domains">
+            <span class="holo-domain" id="domain-air"><i class="dot"></i>✈️ 制空</span>
+            <span class="holo-domain" id="domain-aa"><i class="dot"></i>🚀 防空</span>
+            <span class="holo-domain" id="domain-armor"><i class="dot"></i>🛡️ 裝甲</span>
+            <span class="holo-domain" id="domain-sea"><i class="dot"></i>⚓ 制海</span>
+            <span class="holo-domain" id="domain-ew"><i class="dot"></i>📡 電戰</span>
           </div>
-          <div class="holo-telemetry" id="holoTelemetry">
-            <span class="holo-tele-item"><span class="holo-dot"></span> LINK-16 // SYNC</span>
-            <span class="holo-lock-tag" id="holoLockTag">[RADAR STANDBY]</span>
+          <div class="holo-status">
+            <span class="holo-code">LINK-16 // SYNC</span>
+            <span class="holo-tag" id="holoLockTag">[RADAR STANDBY]</span>
           </div>
         </div>
 
