@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>頂尖對戰：15元聯合作戰 | 軍武預算組隊對戰</title>
+<meta name="description" content="用 $15 預算組建五大兵種聯合作戰陣容，挑戰電腦、每日戰術殘局與沙盒模擬。三階段推演、戰場事件與戰術教條，一分鐘一局。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12l6-6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></div>
+    <div>
+      <h1>頂尖對戰 <small>15元聯合作戰</small></h1>
+      <p class="sub">TOP CLASH 15 · COMBINED ARMS</p>
+    </div>
+  </div>
+  <nav class="modes" id="modeTabs" aria-label="遊戲模式">
+    <button class="mode-btn active" data-mode="quick" id="tabQuick">快速對戰</button>
+    <button class="mode-btn" data-mode="ghost" id="tabGhost">幽靈對戰 🌐</button>
+    <button class="mode-btn" data-mode="bo3" id="tabBo3">BO5 征服賽 🏆</button>
+    <button class="mode-btn" data-mode="daily" id="tabDaily">每日殘局</button>
+    <button class="mode-btn" data-mode="sandbox" id="tabSandbox">沙盒模擬</button>
+  </nav>
+  <div class="hud-right">
+    <div class="hud-stats" id="hudStats"></div>
+    <a href="armory.html" class="nav-armory-btn" id="btnArmory" title="瀏覽 100 款軍武詳細圖鑑全鑑" target="_blank">📖 軍武圖鑑</a>
+    <button class="icon-btn" id="btnAudio" aria-label="切換戰場音效" title="開啟/關閉真實戰場音效"><span id="audioIcon">🔊</span></button>
+    <button class="icon-btn" id="btnTheme" aria-label="切換深淺色主題" title="切換為深色模式 (夜間指揮所)"><span id="themeIcon">🌙</span></button>
+    <button class="icon-btn" id="btnHelp" aria-label="遊戲說明">?</button>
+  </div>
+</header>
+
+<!-- 緊湊戰情橫幅 (Mission & Context Bar) -->
+<section class="mission-bar" id="missionBar">
+  <div class="mission-content" id="missionContent"></div>
+</section>
+
+<!-- 核心 5x5 全景矩陣看板 (Classic 5x5 Matrix Board) -->
+<main id="viewBuild" class="matrix-layout">
+  <nav class="mobile-cat-nav" id="mobileCatNav" aria-label="兵種切換分頁"></nav>
+  <div class="matrix-board" id="matrixBoard"></div>
+</main>
+
+<!-- 懸浮詳細情報 Tooltip (桌機滑鼠懸停) -->
+<div class="unit-tooltip" id="unitTooltip" hidden></div>
+
+<!-- 底部常駐作戰指揮台 (Fixed Bottom Command Deck) -->
+<footer class="command-deck" id="commandDeck">
+  <div class="deck-left">
+    <!-- A/B 雙陣容快速切換開關 -->
+    <div class="deck-ab-toggle" id="deckAbToggle" title="點擊切換陣容 [快捷鍵 Q]">
+      <button class="ab-btn active" data-ab="A" id="btnDeckA">A</button>
+      <button class="ab-btn" data-ab="B" id="btnDeckB">B</button>
+    </div>
+    <div class="budget-badge">
+      <div class="budget-top-row">
+        <span class="budget-label">預算</span>
+        <span class="slots-pill" id="slotsPill">0/5 槽位</span>
+      </div>
+      <div class="budget-main-row">
+        <div class="budget-digits"><b id="budgetUsed">0</b><span> / </span><span id="budgetMax">15</span></div>
+        <span class="budget-eff-tag" id="budgetEff">結餘 $15</span>
+      </div>
+      <div class="budget-mini-bar" id="budgetMiniBar"></div>
+    </div>
+  </div>
+
+  <div class="deck-mid">
+    <div class="doc-group">
+      <div class="deck-label-split">
+        <span>戰術</span>
+        <span>教條</span>
+      </div>
+      <div class="doc-toggles" id="docToggles"></div>
+    </div>
+    <div class="deck-tools">
+      <button class="tool-btn" id="btnRerollMarket" title="隨機調撥 5 大兵種不同價格軍火選項 [快捷鍵 D]">🎲 調撥軍火 <kbd>D</kbd></button>
+      <button class="tool-btn" id="btnRand" title="隨機組建剩餘或全部槽位 [快捷鍵 R]">隨機補滿 <kbd>R</kbd></button>
+      <div class="dropdown-wrap" id="tplDropdownWrap">
+        <button class="tool-btn" id="btnTplToggle">📋 經典陣容 ▾</button>
+        <div class="dropdown-menu" id="tplMenu" hidden></div>
+      </div>
+      <button class="tool-btn" id="btnClear" title="清空全部槽位 [快捷鍵 C]">清空 <kbd>C</kbd></button>
+      <div class="dropdown-wrap" id="codeDropdownWrap">
+        <button class="tool-btn" id="btnCodeToggle">代碼工具 ▾</button>
+        <div class="dropdown-menu" id="codeMenu" hidden>
+          <button class="menu-item" id="btnCopyCode">複製當前陣容代碼</button>
+          <button class="menu-item" id="btnImportCode">匯入他人分享代碼</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="deck-right">
+    <button class="btn primary launch-btn mega-launch-btn" id="btnGo" disabled title="發起戰鬥 [快捷鍵 Space 或 Enter]">
+      <span class="launch-icon" id="launchIcon">⏳</span>
+      <div class="launch-texts">
+        <span class="launch-title" id="launchTitle">尚 缺 5 個 槽 位</span>
+        <span class="launch-sub" id="launchSub">點擊上方槽位選取 · 或按 R 隨機補滿</span>
+      </div>
+      <span class="launch-arrow">➔</span>
+    </button>
+  </div>
+</footer>
+
+<section id="viewBattle" class="battle" hidden>
+  <div class="combat-fx-layer" id="combatFxLayer"></div>
+  <div class="battle-top">
+    <div class="phase-steps" id="phaseSteps">
+      <div class="ph" data-p="1"><i>1</i><span>電子戰</span></div>
+      <div class="ph" data-p="2"><i>2</i><span>空防·制海</span></div>
+      <div class="ph" data-p="3"><i>3</i><span>殲滅死鬥</span></div>
+    </div>
+    <div class="battle-meta" id="battleMeta"></div>
+    <div class="battle-ctl" id="battleCtl">
+      <button class="btn ghost sm" id="btnSpeed">速度 ×1</button>
+      <button class="btn ghost sm" id="btnSkip">跳過動畫 ⏭</button>
+      <button class="btn primary sm" id="btnReopenResult" hidden>查看結算 📊</button>
+      <button class="btn ghost sm" id="btnBattleExit" hidden>返回陣容 ✕</button>
+    </div>
+  </div>
+  <div class="battle-grid">
+    <!-- 左半邊：我方戰術區域（全景大背景 + 卡片層） -->
+    <div class="team-col a" id="teamA">
+      <div class="team-bg-layer" id="teamBgLayerA">
+        <img class="team-bg-img" id="teamBgImgA" alt="" />
+        <div class="team-bg-gradient"></div>
+        <div class="team-bg-hud">
+          <span class="hud-tag-live">● LINK-16 // FRIENDLY FORCE</span>
+          <span class="hud-unit-name" id="heroUnitNameA">戰備就緒</span>
+          <span class="hud-status" id="heroStatusA">COMBAT OVERWATCH</span>
+        </div>
+      </div>
+      <div class="team-units-box" id="teamUnitsA"></div>
+    </div>
+
+    <!-- 中間：中央火控態勢與整合戰況日誌 -->
+    <div class="log-col">
+      <div class="log-integrated-box">
+        <div class="log-header-bar">
+          <div class="log-phase-tag" id="phaseTitle">準備交戰</div>
+          <div class="log-rec-tag">● REC <b id="camTimer">00:00</b></div>
+        </div>
+        <div class="log-action-ticker" id="stripAction">
+          <span class="strip-who a" id="stripAttacker">友軍戰鬥群</span>
+          <span class="strip-vector" id="stripVector">⚡ 戰術交鋒 ➔</span>
+          <span class="strip-who b" id="stripTarget">敵方特遣部隊</span>
+        </div>
+        <div class="log" id="battleLog" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <!-- 右半邊：敵方戰術區域（全景大背景 + 卡片層） -->
+    <div class="team-col b" id="teamB">
+      <div class="team-bg-layer" id="teamBgLayerB">
+        <img class="team-bg-img" id="teamBgImgB" alt="" />
+        <div class="team-bg-gradient"></div>
+        <div class="team-bg-hud">
+          <span class="hud-tag-live">● OPFOR RADAR TRACK</span>
+          <span class="hud-unit-name" id="heroUnitNameB">敵軍雷達鎖定</span>
+          <span class="hud-status" id="heroStatusB">RADAR ACQUIRED</span>
+        </div>
+      </div>
+      <div class="team-units-box" id="teamUnitsB"></div>
+    </div>
+  </div>
+</section>
+
+<div class="modal" id="resultModal" hidden>
+  <div class="modal-card result-card" id="resultCard"></div>
+</div>
+<div class="modal" id="helpModal" hidden>
+  <div class="modal-card help-card" id="helpCard"></div>
+</div>
+<div class="modal" id="codeModal" hidden>
+  <div class="modal-card code-card">
+    <h2>匯入陣容代碼</h2>
+    <p class="muted">貼上他人分享的陣容代碼（例如 F22.M1A2.PAC3.VA.E7）。</p>
+    <input id="codeInput" class="input" placeholder="F22.M1A2.PAC3.VA.E7" autocomplete="off">
+    <div id="codeErr" class="err"></div>
+    <div class="row">
+      <button class="btn ghost" id="codeCancel">取消</button>
+      <button class="btn primary" id="codeOk">匯入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 部署防衛幽靈部隊 Modal -->
+<div class="modal" id="ghostDeployModal" hidden>
+  <div class="modal-card ghost-deploy-card">
+    <h2>部署防守幽靈部隊 🌐</h2>
+    <p class="muted">將你目前的 5 槽陣容上傳至全球防衛庫，其他真人玩家將能在天梯挑戰你的影子部隊！</p>
+    <div class="form-group" style="margin-top:12px">
+      <label class="label">指揮官代號 (Callsign)</label>
+      <input id="ghostCallsignInput" class="input" placeholder="例如：蒼鷹指揮官" maxlength="16">
+    </div>
+    <div class="form-group" style="margin-top:10px">
+      <label class="label">防守戰術格言 (Motto)</label>
+      <input id="ghostMottoInput" class="input" placeholder="例如：我的天空容不下任何敵機！" maxlength="32">
+    </div>
+    <div id="ghostDeployPreview" style="margin:14px 0"></div>
+    <div class="row">
+      <button class="btn ghost" id="ghostDeployCancel">取消</button>
+      <button class="btn primary" id="ghostDeployOk">確認部署至天梯防衛庫</button>
+    </div>
+  </div>
+</div>
+
+<!-- BO3 敗方戰術反制 / 禁用 Modal -->
+<div class="modal" id="bo3CounterModal" hidden>
+  <div class="modal-card bo3-counter-card">
+    <div class="bo3-head">
+      <span class="tag">TACTICAL COUNTER PHASE · 戰術反制</span>
+      <h2 id="bo3CounterTitle">戰局失利：啟動緊急戰術反制</h2>
+      <p class="muted" id="bo3CounterDesc">敗方獲得戰術反制特權：指定禁用勝方 1 件關鍵裝備，逼迫對手於下一局替換！</p>
+    </div>
+    <div class="bo3-ban-section">
+      <div class="label" style="margin-bottom:8px">請點選要禁用的敵方裝備 (BAN UNIT)：</div>
+      <div class="bo3-ban-grid" id="bo3BanGrid"></div>
+    </div>
+    <div class="bo3-next-info" id="bo3NextInfo" style="margin-top:14px"></div>
+    <div class="row" style="margin-top:18px;justify-content:flex-end">
+      <button class="btn primary block" id="bo3CounterConfirm">確認禁用並進入陣容反制調整</button>
+    </div>
+  </div>
+</div>
+
+<!-- BO3 系列賽終局結算 Modal -->
+<div class="modal" id="bo3SeriesModal" hidden>
+  <div class="modal-card bo3-series-card" id="bo3SeriesCard"></div>
+</div>
+
+<!-- 手機版裝備詳細情報 Bottom Sheet Modal -->
+<div class="modal mobile-sheet-modal" id="unitDetailModal" hidden>
+  <div class="modal-card unit-sheet-card" id="unitSheetCard"></div>
+</div>
+
+<!-- 手機版戰術司令部配置 Bottom Sheet Modal -->
+<div class="modal mobile-sheet-modal" id="deckMoreModal" hidden>
+  <div class="modal-card deck-sheet-card" id="deckSheetCard">
+    <div class="sheet-head">
+      <h3>戰術司令部配置</h3>
+      <button class="sheet-close" id="btnDeckSheetClose">✕</button>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">選擇戰術教條</div>
+      <div class="doc-sheet-list" id="docSheetList"></div>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">推薦陣容套用</div>
+      <div class="tpl-sheet-list" id="tplSheetList"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn ghost block" id="sheetBtnCopy">複製當前陣容代碼</button>
+      <button class="btn ghost block" id="sheetBtnImport">匯入代碼</button>
+      <button class="btn ghost block" id="sheetBtnClear" style="color:var(--red);border-color:rgba(255,93,110,.3)">清空所有槽位</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/data.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

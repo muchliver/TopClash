@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>頂尖對戰：15元聯合作戰 | 軍武庫圖鑑全鑑 (100 款現代軍武)</title>
+<meta name="description" content="收錄頂尖對戰：15元聯合作戰全部 100 款全差異化現代軍武圖鑑，涵蓋五大兵種、五階費用、高清實裝照片、五維數值與招牌戰術特性。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+/* =====================================================
+   軍武圖鑑專屬高質感樣式 (Armory Encyclopedia Styles)
+   ===================================================== */
+.armory-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 24px 28px 80px;
+  position: relative;
+  z-index: 2;
+}
+
+/* 頂部英雄區域 (Hero Banner) */
+.armory-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--panel);
+  border: 1px solid var(--line2);
+  border-radius: 18px;
+  padding: 24px 32px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.hero-title-group h2 {
+  font-family: var(--head);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: .03em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hero-title-group h2 span.badge {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(61,224,255,.2), rgba(167,139,250,.2));
+  color: var(--cyan);
+  border: 1px solid var(--line2);
+}
+.hero-title-group p {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* 核心指標徽章群 (Hero Stat Chips) */
+.hero-metrics {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.metric-box {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--line);
+  padding: 10px 18px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 90px;
+}
+[data-theme="light"] .metric-box {
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(15,23,42,.06);
+}
+.metric-box .num {
+  font-family: var(--head);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--cyan);
+  line-height: 1.1;
+}
+.metric-box .label {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .05em;
+  margin-top: 2px;
+}
+
+/* 控制工具列 (Controls & Filter Deck) */
+.filter-deck {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px 24px;
+  backdrop-filter: blur(12px);
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* 搜尋框 */
+.search-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 260px;
+}
+.search-input {
+  width: 100%;
+  padding: 11px 16px 11px 42px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--line2);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  transition: all .2s ease;
+  font-family: inherit;
+}
+[data-theme="light"] .search-input {
+  background: #ffffff;
+}
+.search-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px rgba(61,224,255,0.25);
+}
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  font-size: 16px;
+}
+
+/* 分類篩選按鈕 (Filter Pills) */
+.filter-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 7px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line);
+  transition: all .16s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+[data-theme="light"] .filter-btn {
+  background: #f8fafc;
+}
+.filter-btn:hover {
+  color: var(--text);
+  border-color: var(--line2);
+}
+.filter-btn.active {
+  background: linear-gradient(135deg, rgba(61,224,255,.24), rgba(61,224,255,.08));
+  color: var(--cyan);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(61,224,255,0.2);
+}
+[data-theme="light"] .filter-btn.active {
+  background: #e0f2fe;
+  color: #0284c7;
+  border-color: #0284c7;
+}
+
+/* 價格膠囊按鈕 */
+.cost-pills {
+  display: flex;
+  gap: 5px;
+}
+.cost-btn {
+  width: 36px;
+  height: 34px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--line);
+  color: var(--amber);
+  transition: all .16s;
+}
+.cost-btn:hover {
+  border-color: var(--amber);
+  transform: translateY(-1px);
+}
+.cost-btn.active {
+  background: var(--amber);
+  color: #000;
+  border-color: var(--amber);
+  box-shadow: 0 0 10px rgba(255,179,64,0.4);
+}
+
+/* 下拉選單與排序 */
+.select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.select-label {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.armory-select {
+  padding: 8px 14px;
+  border-radius: 9px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--line2);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+[data-theme="light"] .armory-select {
+  background: #ffffff;
+}
+
+/* 檢視切換 (Grid vs Table) */
+.view-switch {
+  display: flex;
+  background: rgba(0,0,0,0.25);
+  padding: 3px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  margin-left: auto;
+}
+[data-theme="light"] .view-switch {
+  background: #e2e8f0;
+}
+.view-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all .16s;
+}
+.view-btn.active {
+  background: var(--cyan);
+  color: #000;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* 狀態計數列 */
+.result-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.result-status-bar b {
+  color: var(--cyan);
+}
+
+/* =====================================================
+   卡片網格佈局 (Grid View)
+   ===================================================== */
+.armory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.unit-card {
+  background: var(--card-bg, rgba(20,31,48,.8));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all .24s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  cursor: pointer;
+}
+.unit-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--c, var(--cyan));
+  box-shadow: 0 12px 28px -6px rgba(0,0,0,0.35), 0 0 16px -4px var(--c, var(--cyan));
+}
+
+/* 卡片圖片容器 */
+.card-media-box {
+  width: 100%;
+  height: 190px;
+  position: relative;
+  overflow: hidden;
+  background: #080d15;
+}
+.card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform .4s ease;
+  filter: contrast(1.05);
+}
+.unit-card:hover .card-img {
+  transform: scale(1.06);
+}
+.card-media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 40%, rgba(6,10,18,0.95) 100%);
+  pointer-events: none;
+}
+[data-theme="light"] .card-media-overlay {
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 40%, rgba(255,255,255,0.95) 100%);
+}
+
+/* 圖片上方覆蓋的標籤與徽章 */
+.badge-cost {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(10,15,24,0.85);
+  border: 1px solid rgba(255,179,64,0.6);
+  color: var(--amber);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.badge-cat {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(10,15,24,0.85);
+  border: 1px solid var(--c);
+  color: var(--c);
+  backdrop-filter: blur(8px);
+  letter-spacing: .06em;
+}
+.badge-origin {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+[data-theme="light"] .badge-origin {
+  color: var(--text);
+  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+}
+.badge-style {
+  position: absolute;
+  bottom: 10px;
+  right: 12px;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--cyan);
+  background: rgba(0,0,0,0.65);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(61,224,255,0.3);
+}
+
+/* 卡片主體文字資訊 */
+.card-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+.card-head-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card-name {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+.card-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+.card-tagline {
+  font-size: 12px;
+  color: var(--cyan);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.card-weapon {
+  font-size: 12px;
+  color: var(--amber);
+  background: rgba(255,179,64,0.08);
+  border-left: 3px solid var(--amber);
+  padding: 6px 10px;
+  border-radius: 0 6px 6px 0;
+  line-height: 1.4;
+}
+.card-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  height: 36px;
+}
+
+/* 特性標籤膠囊 */
+.card-traits {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+.trait-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(61,224,255,0.12);
+  color: var(--cyan);
+  border: 1px solid rgba(61,224,255,0.25);
+  letter-spacing: .03em;
+}
+.trait-chip.cas { background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); }
+.trait-chip.aps { background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+.trait-chip.sub { background: rgba(34,211,238,0.15); color: #22d3ee; border-color: rgba(34,211,238,0.3); }
+.trait-chip.ew  { background: rgba(167,139,250,0.15); color: #a78bfa; border-color: rgba(167,139,250,0.3); }
+
+/* 5維屬性儀表條 (Stats Bars) */
+.card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  margin-top: auto;
+}
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  font-family: var(--mono);
+}
+.stat-name {
+  width: 44px;
+  color: var(--muted);
+}
+.stat-bar-track {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+[data-theme="light"] .stat-bar-track {
+  background: #e2e8f0;
+}
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--cyan);
+}
+.stat-bar-fill.hp  { background: linear-gradient(90deg, #38bdf8, #3b82f6); }
+.stat-bar-fill.atk { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.stat-bar-fill.def { background: linear-gradient(90deg, #10b981, #059669); }
+.stat-bar-fill.sth { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+.stat-bar-fill.ew  { background: linear-gradient(90deg, #6366f1, #a855f7); }
+.stat-val {
+  width: 42px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* =====================================================
+   表格檢視佈局 (Table View)
+   ===================================================== */
+.armory-table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow-x: auto;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.armory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+.armory-table th {
+  background: rgba(255,255,255,0.03);
+  padding: 12px 14px;
+  font-family: var(--head);
+  font-size: 14px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line2);
+  white-space: nowrap;
+}
+[data-theme="light"] .armory-table th {
+  background: #f1f5f9;
+}
+.armory-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.armory-table tr:hover td {
+  background: rgba(61,224,255,0.04);
+}
+.table-thumb {
+  width: 58px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  display: block;
+}
+
+/* =====================================================
+   全息情報模態窗 (Tactical Intel Modal)
+   ===================================================== */
+.intel-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.intel-modal-content {
+  background: var(--modal-bg, #0e1826);
+  border: 1px solid var(--line2);
+  border-radius: 22px;
+  max-width: 880px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  animation: modalIn .2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.intel-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 20px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all .2s;
+}
+.intel-close-btn:hover {
+  background: var(--red);
+  color: #fff;
+}
+.intel-hero-img-wrap {
+  width: 100%;
+  height: 320px;
+  position: relative;
+  background: #080d15;
+}
+.intel-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.intel-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 50%, var(--modal-bg, #0e1826) 100%);
+}
+.intel-body {
+  padding: 24px 32px 36px;
+}
+.intel-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.intel-h2 {
+  font-family: var(--head);
+  font-size: 30px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.intel-badges {
+  display: flex;
+  gap: 8px;
+}
+.intel-desc-full {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.intel-grid-specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.spec-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--line);
+  padding: 14px 16px;
+  border-radius: 12px;
+}
+[data-theme="light"] .spec-card {
+  background: #f8fafc;
+}
+.spec-card .k {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.spec-card .v {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--cyan);
+  margin-top: 4px;
+}
+
+/* 底部戰術百科辭典專區 (Reference Codex) */
+.codex-section {
+  margin-top: 48px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 32px;
+  backdrop-filter: blur(10px);
+}
+.codex-section h3 {
+  font-family: var(--head);
+  font-size: 22px;
+  color: var(--text);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.codex-traits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.trait-codex-card {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+[data-theme="light"] .trait-codex-card {
+  background: #ffffff;
+}
+.trait-codex-card b {
+  font-family: var(--mono);
+  color: var(--cyan);
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+.trait-codex-card p {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-glow" aria-hidden="true"></div>
+
+<!-- 頂部通用導航列 -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M12 12l6-6" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+    </div>
+    <div>
+      <h1>頂尖對戰 <small>軍武庫圖鑑全鑑</small></h1>
+      <p class="sub">ARMORY ENCYCLOPEDIA · 100 MODERN WARFARE ASSETS</p>
+    </div>
+  </div>
+
+  <div class="hud-right" style="margin-left: auto;">
+    <a href="index.html" class="nav-armory-btn" style="border-color: var(--cyan);" title="返回組隊對戰主指揮所">
+      ⚔️ 返回作戰指揮所
+    </a>
+    <button class="icon-btn" id="btnTheme" aria-label="切換深淺色主題" title="切換深色/淺色主題"><span id="themeIcon">🌙</span></button>
+  </div>
+</header>
+
+<!-- 軍武百科主內容容器 -->
+<div class="armory-container">
+
+  <!-- 英雄統計橫幅 -->
+  <section class="armory-hero">
+    <div class="hero-title-group">
+      <h2>現代軍武庫全鑑 <span class="badge">100 款全差異化武裝</span></h2>
+      <p>涵蓋全球現役與先導旗艦武器系統，五大作戰兵種 × 五階預算級距，收錄完整數值、作戰定位與招牌戰術特性。</p>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric-box">
+        <div class="num" id="totalUnitsCount">100</div>
+        <div class="label">收錄武器總數</div>
+      </div>
+      <div class="metric-box">
+        <div class="num" style="color:var(--amber);">5</div>
+        <div class="label">作戰兵種</div>
+      </div>
+      <div class="metric-box">
+        <div class="num" style="color:var(--green);">$1~$5</div>
+        <div class="label">費用階級</div>
+      </div>
+      <div class="metric-box">
+        <div class="num" style="color:var(--violet);">17</div>
+        <div class="label">專屬戰術特性</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 即時多維過濾與控制工具台 -->
+  <section class="filter-deck">
+    <!-- 第一行：搜尋、兵種膠囊 -->
+    <div class="filter-row">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" class="search-input" placeholder="搜尋武器名稱、代碼 (如 F22)、國家、主力武裝或特性 (如 匿蹤、神盾)..." autocomplete="off">
+      </div>
+
+      <div class="filter-pills" id="catFilterGroup">
+        <button class="filter-btn active" data-cat="all">全部兵種 (100)</button>
+        <button class="filter-btn" data-cat="air">✈️ 制空打擊 (20)</button>
+        <button class="filter-btn" data-cat="armor">🛡️ 重裝鐵騎 (20)</button>
+        <button class="filter-btn" data-cat="air_defense">🎯 區域防空 (20)</button>
+        <button class="filter-btn" data-cat="naval">⚓ 制海權威 (20)</button>
+        <button class="filter-btn" data-cat="support">🛰️ 情報/長程 (20)</button>
+      </div>
+    </div>
+
+    <!-- 第二行：預算費用、特性篩選、排序與視圖切換 -->
+    <div class="filter-row">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="select-label">預算費用：</span>
+        <div class="cost-pills" id="costFilterGroup">
+          <button class="cost-btn active" data-cost="all">全部</button>
+          <button class="cost-btn" data-cost="5">$5</button>
+          <button class="cost-btn" data-cost="4">$4</button>
+          <button class="cost-btn" data-cost="3">$3</button>
+          <button class="cost-btn" data-cost="2">$2</button>
+          <button class="cost-btn" data-cost="1">$1</button>
+        </div>
+      </div>
+
+      <div class="select-wrapper">
+        <span class="select-label">戰術特性：</span>
+        <select id="traitSelect" class="armory-select">
+          <option value="all">全部特性 (17種)</option>
+        </select>
+      </div>
+
+      <div class="select-wrapper">
+        <span class="select-label">排序方式：</span>
+        <select id="sortSelect" class="armory-select">
+          <option value="cost_desc">費用：高至低 ($5 → $1)</option>
+          <option value="cost_asc">費用：低至高 ($1 → $5)</option>
+          <option value="hp_desc">生命值 HP：高至低</option>
+          <option value="atk_desc">火力 ATK：高至低</option>
+          <option value="sth_desc">匿蹤 STH：高至低</option>
+          <option value="ew_desc">電戰 EW：高至低</option>
+          <option value="name_asc">名稱字母 A-Z</option>
+        </select>
+      </div>
+
+      <div class="view-switch">
+        <button class="view-btn active" id="btnViewGrid" title="大圖卡片網格檢視">🔲 卡片檢視</button>
+        <button class="view-btn" id="btnViewTable" title="緊湊數據表格檢視">📋 表格檢視</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 篩選結果狀態計數 -->
+  <div class="result-status-bar">
+    <div>目前符合條件：<b id="filteredCount">100</b> 款武器裝備</div>
+    <div style="font-size:12px;">點擊任何武器卡片可展開全息戰術情報大圖</div>
+  </div>
+
+  <!-- 視圖主容器 -->
+  <div id="armoryGrid" class="armory-grid"></div>
+  <div id="armoryTableWrap" class="armory-table-wrap" hidden>
+    <table class="armory-table">
+      <thead>
+        <tr>
+          <th>照片</th>
+          <th>名稱 / 型號</th>
+          <th>兵種</th>
+          <th>費用</th>
+          <th>國家</th>
+          <th>風格特性</th>
+          <th>主力武裝</th>
+          <th>HP</th>
+          <th>ATK</th>
+          <th>減傷</th>
+          <th>匿蹤</th>
+          <th>電戰</th>
+          <th>戰術特性</th>
+        </tr>
+      </thead>
+      <tbody id="armoryTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- 底部兵種克制與特性辭典專區 -->
+  <section class="codex-section">
+    <h3>📖 17 種現代戰術特性全辭典 (Tactical Trait Codex)</h3>
+    <div class="codex-traits-grid" id="codexTraitsGrid"></div>
+  </section>
+
+</div>
+
+<!-- 全息武器情報彈窗 (Modal) -->
+<div class="intel-modal-backdrop" id="intelModal" hidden>
+  <div class="intel-modal-content">
+    <button class="intel-close-btn" id="intelCloseBtn" aria-label="關閉彈窗">×</button>
+    <div class="intel-hero-img-wrap">
+      <img id="intelImg" class="intel-hero-img" src="" alt="武器照片">
+      <div class="intel-hero-overlay"></div>
+    </div>
+    <div class="intel-body">
+      <div class="intel-title-row">
+        <h2 class="intel-h2" id="intelTitle"></h2>
+        <div class="intel-badges" id="intelBadges"></div>
+      </div>
+      <div style="font-size:13px; color:var(--cyan); margin-bottom:12px; font-weight:700;" id="intelTagline"></div>
+      <div class="card-weapon" id="intelWeapon" style="margin-bottom:16px;"></div>
+      <p class="intel-desc-full" id="intelDesc"></p>
+
+      <div class="intel-grid-specs" id="intelSpecs"></div>
+
+      <div style="margin-top:20px; padding:16px; border-radius:12px; background:rgba(61,224,255,0.06); border:1px solid var(--line2);">
+        <b style="color:var(--cyan); font-size:13px;">💡 戰場實戰建議與定位</b>
+        <p style="font-size:13px; color:var(--text); margin-top:6px; line-height:1.5;" id="intelTacticalTips"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 腳本引入 -->
+<script src="js/data.js"></script>
+<script src="js/armory.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# OS metadata
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# Temporary files
+*.tmp
+*.log
+.tempmediaStorage/
+
+# Node
+node_modules/
+npm-debug.log*
+
+__pycache__/
+*.pyc
