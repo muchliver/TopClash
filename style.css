@@ -439,25 +439,664 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .modal-card h2{font-family:var(--head);font-size:24px;margin-bottom:6px}
 .code-card{width:min(480px,100%)} .code-card .input{margin:12px 0 6px}
 .err{color:var(--red);font-size:12.5px;min-height:18px;margin-bottom:8px}
-.result-card{width:min(860px,100%)}
-.res-banner{text-align:center;padding:10px 0 18px}
-.res-banner .tag{font-family:var(--mono);font-size:12px;letter-spacing:.3em;color:var(--muted)}
-.res-banner h2{font-size:48px;letter-spacing:.12em;margin:4px 0}
-.res-banner.win h2{color:var(--green);text-shadow:0 0 30px rgba(93,255,176,.5)}
-.res-banner.lose h2{color:var(--red);text-shadow:0 0 30px rgba(255,93,110,.5)}
-.res-banner.draw h2{color:var(--amber)}
-.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.vp-tbl{width:100%;border-collapse:collapse;font-size:13px}
-.vp-tbl th{font-family:var(--head);letter-spacing:.1em;color:var(--muted);font-weight:600;text-align:right;padding:4px 8px}
-.vp-tbl th:first-child{text-align:left}
-.vp-tbl td{padding:6px 8px;border-top:1px solid var(--line);text-align:right;font-family:var(--mono)}
-.vp-tbl td:first-child{text-align:left;font-family:inherit;color:var(--muted)}
-.vp-tbl tr.tot td{font-weight:700;font-size:15px;color:var(--text);border-top:1px solid var(--line2)}
-.vp-tbl .win{color:var(--green)}
-.why{display:grid;gap:7px;list-style:none}
-.why li{font-size:13px;padding:8px 11px;border-radius:9px;background:rgba(255,255,255,.04);border-left:3px solid var(--amber)}
-.why li.good{border-left-color:var(--green)} .why li.bad{border-left-color:var(--red)}
-.res-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:20px}
+
+/* ---------- 旗艦級戰略結算報告 (C4ISR Tactical After-Action Report, AAR) ---------- */
+.result-card{
+  width: min(940px, 96vw);
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 18px 24px;
+  background: var(--modal-bg);
+  border: 1px solid var(--line2);
+  box-shadow: 0 32px 80px -15px rgba(0,0,0,.85), 0 0 40px rgba(61,224,255,.08);
+}
+[data-theme="light"] .result-card{
+  box-shadow: 0 24px 70px -15px rgba(15,23,42,.22), 0 0 30px rgba(2,132,199,.1);
+}
+
+/* 頂部戰略評級戰報橫幅 (AAR Header) */
+.aar-header{
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+[data-theme="light"] .aar-header{
+  background: linear-gradient(135deg, rgba(2,132,199,.04), rgba(255,255,255,.9));
+  border-color: rgba(2,132,199,.18);
+}
+
+/* 勝利/敗北邊條微光飾紋 */
+.aar-header::before{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 6px;
+  background: var(--line2);
+}
+.aar-header.win::before{
+  background: linear-gradient(180deg, var(--green), #9dff6a);
+  box-shadow: 0 0 16px var(--green);
+}
+.aar-header.lose::before{
+  background: linear-gradient(180deg, var(--red), #ff8a5d);
+  box-shadow: 0 0 16px var(--red);
+}
+.aar-header.draw::before{
+  background: linear-gradient(180deg, var(--amber), #ffd36a);
+  box-shadow: 0 0 16px var(--amber);
+}
+
+/* 作戰評級立體微發光徽章 (Grade Badge) */
+.aar-grade-badge{
+  width: 78px;
+  height: 78px;
+  flex: none;
+  border-radius: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 2px solid rgba(255,255,255,.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  font-family: var(--head);
+  text-shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+.aar-grade-badge .grade-char{
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+}
+.aar-grade-badge .grade-label{
+  font-size: 10px;
+  letter-spacing: .2em;
+  font-family: var(--mono);
+  font-weight: 700;
+  margin-top: 2px;
+  opacity: .85;
+}
+
+/* S 級：至高完勝金色神光 */
+.grade-s{
+  background: radial-gradient(circle at 30% 30%, #fff7cc, #f59e0b 60%, #b45309);
+  color: #291500;
+  border-color: #fde68a;
+  box-shadow: 0 0 30px rgba(245,158,11,.6), 0 0 50px rgba(245,158,11,.3) inset;
+  animation: pulseGold 2s infinite ease-in-out;
+}
+@keyframes pulseGold{
+  0%, 100%{ box-shadow: 0 0 25px rgba(245,158,11,.55), 0 0 35px rgba(245,158,11,.25) inset; transform: scale(1); }
+  50%{ box-shadow: 0 0 40px rgba(245,158,11,.8), 0 0 50px rgba(245,158,11,.4) inset; transform: scale(1.03); }
+}
+
+/* A 級：精銳戰術青光 */
+.grade-a{
+  background: radial-gradient(circle at 30% 30%, #e0f2fe, #0284c7 65%, #0369a1);
+  color: #032b43;
+  border-color: #7dd3fc;
+  box-shadow: 0 0 25px rgba(2,132,199,.5);
+}
+
+/* B 級：戰術險勝翡翠光 */
+.grade-b{
+  background: radial-gradient(circle at 30% 30%, #dcfce7, #16a34a 65%, #14532d);
+  color: #052e16;
+  border-color: #86efac;
+  box-shadow: 0 0 20px rgba(22,163,74,.4);
+}
+
+/* Draw 級：平衡中性光 */
+.grade-draw{
+  background: radial-gradient(circle at 30% 30%, #fef3c7, #d97706 65%, #78350f);
+  color: #261502;
+  border-color: #fde68a;
+  box-shadow: 0 0 20px rgba(217,119,6,.4);
+}
+
+/* C/D 級：作戰惜敗/潰敗警報紅光 */
+.grade-c, .grade-d{
+  background: radial-gradient(circle at 30% 30%, #ffe4e6, #e11d48 65%, #881337);
+  color: #3f0713;
+  border-color: #fda4af;
+  box-shadow: 0 0 20px rgba(225,29,72,.45);
+}
+
+.aar-title-group{
+  flex: 1;
+  min-width: 0;
+}
+.aar-meta-row{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.aar-mode-tag{
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(61,224,255,.12);
+  color: var(--cyan);
+  border: 1px solid rgba(61,224,255,.25);
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.aar-env-tag{
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.aar-main-title{
+  font-family: var(--head);
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  line-height: 1.1;
+  margin: 0;
+}
+.aar-header.win .aar-main-title{
+  color: var(--green);
+  text-shadow: 0 0 20px rgba(93,255,176,.4);
+}
+.aar-header.lose .aar-main-title{
+  color: var(--red);
+  text-shadow: 0 0 20px rgba(255,93,110,.4);
+}
+.aar-header.draw .aar-main-title{
+  color: var(--amber);
+}
+.aar-sub-desc{
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* 雙方總戰略積分全息對比條 (AAR VP Gauge) */
+.aar-vp-gauge{
+  background: rgba(0,0,0,.28);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin-bottom: 12px;
+}
+[data-theme="light"] .aar-vp-gauge{
+  background: rgba(241,245,249,.8);
+  border-color: rgba(30,41,59,.12);
+}
+.gauge-labels{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-family: var(--head);
+  letter-spacing: .04em;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+.g-side{
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.g-side.g-a{ color: var(--cyan); }
+.g-side.g-b{ color: var(--red); }
+.g-side b{
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+}
+.g-side .g-alive{
+  font-family: var(--mono);
+  font-size: 11px;
+  opacity: .85;
+}
+.g-vs{
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .1em;
+  padding: 2px 8px;
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+}
+.gauge-bar-track{
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.08);
+  overflow: hidden;
+  display: flex;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,.3);
+}
+.gauge-fill-a{
+  background: linear-gradient(90deg, #0284c7, var(--cyan));
+  box-shadow: 0 0 10px rgba(61,224,255,.45);
+  transition: width .8s cubic-bezier(.2,1,.3,1);
+}
+.gauge-fill-b{
+  background: linear-gradient(90deg, #e11d48, #f43f5e);
+  box-shadow: 0 0 10px rgba(244,63,94,.45);
+  transition: width .8s cubic-bezier(.2,1,.3,1);
+}
+
+/* 中部雙欄網格 (Body Grid: MVP Showcase + VP Breakdown) */
+.aar-body-grid{
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+/* 全場 MVP 榮譽寫真展台 */
+.aar-mvp-showcase{
+  position: relative;
+  min-height: 200px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid var(--line2);
+  background: #09111c;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.3);
+}
+.aar-mvp-showcase.mine{
+  border-color: rgba(245,158,11,.4);
+  box-shadow: 0 10px 30px rgba(245,158,11,.15);
+}
+.aar-mvp-showcase.enemy{
+  border-color: rgba(239,68,68,.4);
+  box-shadow: 0 10px 30px rgba(239,68,68,.15);
+}
+
+.mvp-bg-img{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: .38;
+  filter: saturate(1.1) contrast(1.1);
+  transform: scale(1.02);
+  transition: transform .4s ease;
+  pointer-events: none;
+}
+.aar-mvp-showcase:hover .mvp-bg-img{
+  transform: scale(1.06);
+}
+
+.mvp-badge-tag{
+  position: relative;
+  z-index: 2;
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(245,158,11,.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245,158,11,.45);
+  box-shadow: 0 0 12px rgba(245,158,11,.3);
+}
+.aar-mvp-showcase.enemy .mvp-badge-tag{
+  background: rgba(239,68,68,.2);
+  color: #f87171;
+  border-color: rgba(239,68,68,.45);
+  box-shadow: 0 0 12px rgba(239,68,68,.3);
+}
+
+.mvp-overlay{
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, transparent, rgba(6,10,17,.92) 50%, rgba(6,10,17,.98));
+  margin: -16px;
+  padding: 30px 16px 16px;
+  margin-top: 30px;
+}
+[data-theme="light"] .mvp-overlay{
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.94) 50%, #ffffff);
+}
+.mvp-flag-name{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.mvp-flag-badge{
+  font-size: 16px;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: inline-grid;
+  place-items: center;
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--line2);
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  line-height: 1;
+  font-family: var(--head);
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+[data-theme="light"] .mvp-flag-badge{
+  background: #ffffff;
+  border-color: rgba(30,41,59,.15);
+  box-shadow: 0 1px 4px rgba(15,23,42,.08);
+}
+.mvp-name-box{
+  display: flex;
+  flex-direction: column;
+}
+.mvp-name{
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: .04em;
+}
+.mvp-sub-text{
+  font-size: 12px;
+  color: var(--muted);
+}
+.mvp-stats-row{
+  display: flex;
+  gap: 10px;
+}
+.mvp-stat-pill{
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+}
+[data-theme="light"] .mvp-stat-pill{
+  background: rgba(241,245,249,.8);
+  border-color: rgba(30,41,59,.1);
+}
+.mvp-stat-pill .lbl{
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.mvp-stat-pill .val{
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 800;
+}
+.mvp-stat-pill .val.gold{
+  color: var(--amber);
+  text-shadow: 0 0 10px rgba(255,179,64,.35);
+}
+.mvp-stat-pill .val.green{
+  color: var(--green);
+}
+.mvp-stat-pill .val.red{
+  color: var(--red);
+}
+
+/* 戰略積分三維度深度解析卡 */
+.aar-vp-breakdown-card{
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+[data-theme="light"] .aar-vp-breakdown-card{
+  background: #ffffff;
+  border-color: rgba(30,41,59,.12);
+  box-shadow: 0 2px 8px rgba(15,23,42,.04);
+}
+.breakdown-head{
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--cyan);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+.vp-dimension-item{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  margin-bottom: 6px;
+  border: 1px solid transparent;
+  transition: all .2s;
+}
+.vp-dimension-item:last-child{
+  margin-bottom: 0;
+}
+.vp-dimension-item:hover{
+  border-color: var(--line);
+  background: rgba(255,255,255,.04);
+}
+[data-theme="light"] .vp-dimension-item{
+  background: rgba(241,245,249,.6);
+}
+.vp-dim-info{
+  display: flex;
+  flex-direction: column;
+}
+.dim-name{
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.dim-desc{
+  font-size: 11px;
+  color: var(--muted);
+}
+.vp-dim-scores{
+  font-family: var(--mono);
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vp-dim-scores .s-a{ color: var(--cyan); }
+.vp-dim-scores .s-b{ color: var(--red); }
+.vp-dim-scores .s-sep{ color: var(--muted); font-size: 11px; }
+.vp-dim-scores .lead{
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* 下部網格：情報雙卡片 (Intel Grid: Key Turnings + Tactical Debrief) */
+.aar-intel-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.aar-intel-card{
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.02);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+[data-theme="light"] .aar-intel-card{
+  background: #ffffff;
+  border-color: rgba(30,41,59,.12);
+  box-shadow: 0 2px 8px rgba(15,23,42,.04);
+}
+.intel-card-title{
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+.aar-turn-list, .aar-debrief-list{
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+}
+.aar-turn-list li{
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.03);
+  border-left: 3px solid var(--muted);
+}
+[data-theme="light"] .aar-turn-list li{
+  background: rgba(241,245,249,.7);
+}
+.aar-turn-list li.k-side-a{
+  border-left-color: var(--cyan);
+  background: rgba(61,224,255,.05);
+}
+.aar-turn-list li.k-side-b{
+  border-left-color: var(--red);
+  background: rgba(255,93,110,.05);
+}
+.k-marker{
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 700;
+  flex: none;
+}
+.k-side-a .k-marker{
+  background: rgba(61,224,255,.15);
+  color: var(--cyan);
+}
+.k-side-b .k-marker{
+  background: rgba(255,93,110,.15);
+  color: var(--red);
+}
+.k-neutral{
+  color: var(--muted);
+  font-size: 12px;
+  padding: 8px 10px;
+}
+.k-text{
+  flex: 1;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* 參謀戰術復盤清單 */
+.aar-debrief-list li{
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+.aar-debrief-list li.d-good{
+  background: rgba(93,255,176,.06);
+  border-left: 3px solid var(--green);
+  color: var(--text);
+}
+.aar-debrief-list li.d-bad{
+  background: rgba(255,93,110,.06);
+  border-left: 3px solid var(--red);
+  color: var(--text);
+}
+.aar-debrief-list li.d-neutral{
+  background: rgba(255,255,255,.03);
+  border-left: 3px solid var(--amber);
+  color: var(--text);
+}
+[data-theme="light"] .aar-debrief-list li.d-good{ background: rgba(22,163,74,.08); }
+[data-theme="light"] .aar-debrief-list li.d-bad{ background: rgba(220,38,38,.08); }
+[data-theme="light"] .aar-debrief-list li.d-neutral{ background: rgba(245,158,11,.08); }
+.d-bullet{
+  font-weight: 800;
+  flex: none;
+}
+.d-good .d-bullet{ color: var(--green); }
+.d-bad .d-bullet{ color: var(--red); }
+.d-neutral .d-bullet{ color: var(--amber); }
+
+/* 底部行動指令列 (Actions) */
+.aar-actions{
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.aar-btn-main{
+  padding: 10px 24px;
+  font-size: 15px;
+  box-shadow: 0 4px 20px rgba(61,224,255,.4);
+  animation: pulseMainBtn 2.4s infinite ease-in-out;
+}
+@keyframes pulseMainBtn{
+  0%, 100%{ box-shadow: 0 4px 20px rgba(61,224,255,.35); transform: translateY(0); }
+  50%{ box-shadow: 0 6px 26px rgba(61,224,255,.6); transform: translateY(-1px); }
+}
+
+/* 響應式適配 (RWD: Mobile & Tablet) */
+@media (max-width: 768px){
+  .result-card{
+    padding: 16px 14px;
+    width: 96vw;
+  }
+  .aar-header{
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
+    padding: 16px 12px;
+  }
+  .aar-meta-row{
+    justify-content: center;
+  }
+  .aar-body-grid, .aar-intel-grid{
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .aar-mvp-showcase{
+    min-height: 180px;
+  }
+  .aar-actions{
+    flex-direction: column;
+    gap: 8px;
+  }
+  .aar-actions .btn{
+    width: 100%;
+  }
+}
+
 .help-card{width:min(760px,100%)}
 .help-card h3{margin:16px 0 6px;font-family:var(--head);color:var(--cyan);letter-spacing:.1em}
 .help-card ul{margin-left:18px;display:grid;gap:6px;color:#b7c7da;font-size:13.5px}

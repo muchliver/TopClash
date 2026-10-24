@@ -2277,42 +2277,204 @@ function showBo3SeriesResult(isPlayerWon) {
   $('#bo3Close').onclick = () => { $('#bo3SeriesModal').hidden = true; closeBattle(); state.bo3.active = false; setMode('quick'); };
 }
 
-/* ---------- 戰鬥結算彈窗 ---------- */
+/* ---------- 旗艦級戰鬥結算報告 (C4ISR Tactical After-Action Report, AAR) ---------- */
 function showResult(res, bo3Custom) {
   const won = res.winner === 'A', draw = res.winner === 'draw';
   const A = res.vp.A, B = res.vp.B;
   const f = x => x.toFixed(1);
-  const row = (n, a, b) => `<tr><td>${n}</td><td class="${a > b ? 'win' : ''}">${f(a)}</td><td class="${b > a ? 'win' : ''}">${f(b)}</td></tr>`;
   const why = buildWhy(res);
-  
-  let headerText = won ? '勝 利' : draw ? '平 手' : '敗 北';
+
+  // 1. 計算作戰評級 (Combat Grade)
+  let grade = 'B', gradeTitle = '險 勝', gradeDesc = '戰局焦灼，驚險獲勝', gradeClass = 'grade-b';
+  if (won) {
+    const allAlive = res.final.A.every(u => u.alive);
+    if (res.wipeout || allAlive) {
+      grade = 'S';
+      gradeTitle = '戰 略 完 勝';
+      gradeDesc = allAlive ? 'ACE 全隊全員生還 · 完美殲敵' : '全殲敵方全體特遣部隊';
+      gradeClass = 'grade-s';
+    } else if (A.total - B.total >= 10) {
+      grade = 'A';
+      gradeTitle = '戰 術 大 勝';
+      gradeDesc = '火力全面壓制，取得決定性戰略分差';
+      gradeClass = 'grade-a';
+    } else {
+      grade = 'B';
+      gradeTitle = '戰 術 險 勝';
+      gradeDesc = '雙方互有折損，以微弱積分優勢勝出';
+      gradeClass = 'grade-b';
+    }
+  } else if (draw) {
+    grade = '⚖';
+    gradeTitle = '戰 略 僵 局';
+    gradeDesc = '雙方勢均力敵，戰略積分打平';
+    gradeClass = 'grade-draw';
+  } else {
+    if (A.total > 0 && B.total - A.total < 10) {
+      grade = 'C';
+      gradeTitle = '作 戰 惜 敗';
+      gradeDesc = '重創敵方主力，僅因微幅戰術分差落敗';
+      gradeClass = 'grade-c';
+    } else {
+      grade = 'D';
+      gradeTitle = '作 戰 潰 敗';
+      gradeDesc = '部隊遭受壓制性打擊，建議調整戰術教條';
+      gradeClass = 'grade-d';
+    }
+  }
+
+  // 2. 計算 MVP 王牌軍武單位
+  const mvpSide = won ? 'A' : 'B';
+  const mvpUnit = res.mvp[mvpSide] || (won ? res.final.A[0] : res.final.B[0]);
+  const mvpMeta = UNIT_MAP[mvpUnit.id] || {};
+  const mvpIsMine = mvpSide === 'A';
+
+  // 3. 雙方生還統計與得分對比
+  const aliveCountA = res.final.A.filter(u => u.alive).length;
+  const aliveCountB = res.final.B.filter(u => u.alive).length;
+  const sumVP = A.total + B.total;
+  const pctA = sumVP > 0 ? Math.round((A.total / sumVP) * 100) : 50;
+  const pctB = 100 - pctA;
+
   let subtitle = `${esc(res.ev.icon + ' ' + res.ev.name)}`;
   if (state.mode === 'daily') subtitle += ' · 每日殘局 #' + dailyNo();
   else if (state.mode === 'ghost') subtitle += ` · 幽靈對戰 (${state.ghostTarget.callsign})`;
-  else if (state.mode === 'bo3') subtitle += ` · BO3 第 ${state.bo3.round} 局 (比分 ${state.bo3.winsA} - ${state.bo3.winsB})`;
+  else if (state.mode === 'bo3') subtitle += ` · BO5 第 ${state.bo3.round} 局 (比分 ${state.bo3.winsA} - ${state.bo3.winsB})`;
+  else subtitle += ' · 快速交鋒聯合作戰';
 
   $('#resultCard').innerHTML = `
     <button class="modal-x" id="rCloseX" title="關閉彈窗並檢視戰場情形">✕</button>
-    <div class="res-banner ${won ? 'win' : draw ? 'lose' : 'lose'} ${draw ? 'draw' : ''}">
-      <div class="tag">${res.wipeout ? 'DECISIVE · 全殲' : 'STRATEGIC POINTS · 戰略積分'}</div>
-      <h2>${headerText}</h2>
-      <div class="muted">${subtitle}</div>
+
+    <!-- 頂部旗艦級戰略評級戰報橫幅 -->
+    <div class="aar-header ${won ? 'win' : draw ? 'draw' : 'lose'}">
+      <div class="aar-grade-badge ${gradeClass}">
+        <span class="grade-char">${grade}</span>
+        <span class="grade-label">GRADE</span>
+      </div>
+      <div class="aar-title-group">
+        <div class="aar-meta-row">
+          <span class="aar-mode-tag">${res.wipeout ? '💥 DECISIVE WIPEOUT · 全殲' : '🎯 STRATEGIC VICTORY · 戰略判定'}</span>
+          <span class="aar-env-tag">${subtitle}</span>
+        </div>
+        <h2 class="aar-main-title">${gradeTitle}</h2>
+        <div class="aar-sub-desc">${gradeDesc}</div>
+      </div>
     </div>
-    <div class="res-grid">
-      <div><h3 style="font-family:var(--head);letter-spacing:.14em;color:var(--muted);font-size:13px;margin-bottom:6px">積分明細</h3>
-      <table class="vp-tbl"><tr><th></th><th>我方</th><th>敵方</th></tr>
-        ${row('殘餘戰力（Σ費用×血量%×4）', A.remain, B.remain)}${row('戰線控制（裝甲/空優/海權）', A.control, B.control)}${row('以小博大（越級擊殺）', A.upset, B.upset)}
-        <tr class="tot"><td>總分</td><td class="${A.total > B.total ? 'win' : ''}">${f(A.total)}</td><td class="${B.total > A.total ? 'win' : ''}">${f(B.total)}</td></tr></table></div>
-      <div><h3 style="font-family:var(--head);letter-spacing:.14em;color:var(--muted);font-size:13px;margin-bottom:6px">戰局轉折點</h3>
-      <ul class="why">${res.key.length ? res.key.map(k => `<li class="${k.side === 'A' ? 'good' : 'bad'}">${esc(k.text)}</li>`).join('') : '<li>雙方僵持，沒有決定性的轉折。</li>'}</ul></div>
+
+    <!-- 雙方總戰略積分全息對比條 -->
+    <div class="aar-vp-gauge">
+      <div class="gauge-labels">
+        <span class="g-side g-a">友軍戰鬥群 <b>${f(A.total)} VP</b> <span class="g-alive">(生還 ${aliveCountA}/5)</span></span>
+        <span class="g-vs">VS</span>
+        <span class="g-side g-b">敵軍特遣隊 <b>${f(B.total)} VP</b> <span class="g-alive">(生還 ${aliveCountB}/5)</span></span>
+      </div>
+      <div class="gauge-bar-track">
+        <div class="gauge-fill-a" style="width:${pctA}%"></div>
+        <div class="gauge-fill-b" style="width:${pctB}%"></div>
+      </div>
     </div>
-    <h3 style="font-family:var(--head);letter-spacing:.14em;color:var(--muted);font-size:13px;margin-bottom:6px">為什麼會這樣？</h3>
-    <ul class="why">${why.map(w => `<li class="${w.t}">${esc(w.s)}</li>`).join('')}</ul>
-    <div class="res-actions">
-      ${bo3Custom ? `<button class="btn amber" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary" id="rRematch">${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
-      <button class="btn" id="rReview">檢視戰場情形 🔍</button>
-      <button class="btn ghost" id="rEdit">返回編輯陣容</button>
-    </div>`;
+
+    <!-- 中部網格：全場 MVP 寫真展台 + 戰略積分三維度解析 -->
+    <div class="aar-body-grid">
+      <!-- 左側：全場 MVP 榮譽寫真展台 -->
+      <div class="aar-mvp-showcase ${mvpIsMine ? 'mine' : 'enemy'}">
+        <div class="mvp-badge-tag">👑 COMBAT MVP · 王牌作戰單位</div>
+        ${mvpMeta.img ? `<img class="mvp-bg-img" src="${mvpMeta.img}" alt="${esc(mvpMeta.name || '')}" onerror="this.style.display='none'"/>` : ''}
+        <div class="mvp-overlay">
+          <div class="mvp-flag-name">
+            <span class="mvp-flag-badge">${mvpMeta.flag || '🌐'}</span>
+            <div class="mvp-name-box">
+              <strong class="mvp-name">${esc(mvpUnit.name)}</strong>
+              <span class="mvp-sub-text">${esc(mvpMeta.origin || '')} · $${mvpUnit.cost} · ${mvpUnit.v}型</span>
+            </div>
+          </div>
+          <div class="mvp-stats-row">
+            <div class="mvp-stat-pill">
+              <span class="lbl">累計輸出傷害</span>
+              <strong class="val gold">${Math.round(mvpUnit.dmgDone || 0)}</strong>
+            </div>
+            <div class="mvp-stat-pill">
+              <span class="lbl">作戰生還態勢</span>
+              <strong class="val ${mvpUnit.alive ? 'green' : 'red'}">${mvpUnit.alive ? '🛡️ 存活生還' : '💥 光榮擊毀'}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右側：積分三維度細節卡 -->
+      <div class="aar-vp-breakdown-card">
+        <div class="breakdown-head">📊 戰略積分維度結算</div>
+        <div class="vp-dimension-item">
+          <div class="vp-dim-info">
+            <span class="dim-name">🛡️ 殘餘戰力 (Force Survival)</span>
+            <small class="dim-desc">以生還單位造價、殘餘耐久%折算</small>
+          </div>
+          <div class="vp-dim-scores">
+            <b class="s-a ${A.remain >= B.remain ? 'lead' : ''}">${f(A.remain)}</b>
+            <span class="s-sep">:</span>
+            <b class="s-b ${B.remain >= A.remain ? 'lead' : ''}">${f(B.remain)}</b>
+          </div>
+        </div>
+        <div class="vp-dimension-item">
+          <div class="vp-dim-info">
+            <span class="dim-name">🎯 戰線控制 (Zone Dominance)</span>
+            <small class="dim-desc">陸空海三大戰場領域主導權控制分</small>
+          </div>
+          <div class="vp-dim-scores">
+            <b class="s-a ${A.control >= B.control ? 'lead' : ''}">${f(A.control)}</b>
+            <span class="s-sep">:</span>
+            <b class="s-b ${B.control >= A.control ? 'lead' : ''}">${f(B.control)}</b>
+          </div>
+        </div>
+        <div class="vp-dimension-item">
+          <div class="vp-dim-info">
+            <span class="dim-name">⚡ 以小博大 (Tactical Upset)</span>
+            <small class="dim-desc">平民輕型單位越級狙殺敵主力之奇蹟分</small>
+          </div>
+          <div class="vp-dim-scores">
+            <b class="s-a ${A.upset >= B.upset ? 'lead' : ''}">${f(A.upset)}</b>
+            <span class="s-sep">:</span>
+            <b class="s-b ${B.upset >= A.upset ? 'lead' : ''}">${f(B.upset)}</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下部網格：戰局關鍵轉折點 + 參謀本部戰術復盤 -->
+    <div class="aar-intel-grid">
+      <div class="aar-intel-card">
+        <div class="intel-card-title">⚡ 戰局關鍵轉折點 (KEY TURNING POINTS)</div>
+        <ul class="aar-turn-list">
+          ${res.key && res.key.length ? res.key.map(k => `
+            <li class="${k.side === 'A' ? 'k-side-a' : 'k-side-b'}">
+              <span class="k-marker">${k.side === 'A' ? '友軍制勝' : '敵方突破'}</span>
+              <span class="k-text">${esc(k.text)}</span>
+            </li>
+          `).join('') : '<li class="k-neutral">雙方平穩消耗，未發生決定性轉折</li>'}
+        </ul>
+      </div>
+
+      <div class="aar-intel-card">
+        <div class="intel-card-title">💡 參謀本部戰後復盤 (TACTICAL DEBRIEF)</div>
+        <ul class="aar-debrief-list">
+          ${why.map(w => `
+            <li class="${w.t === 'good' ? 'd-good' : w.t === 'bad' ? 'd-bad' : 'd-neutral'}">
+              <span class="d-bullet">${w.t === 'good' ? '✔' : w.t === 'bad' ? '⚠' : 'ℹ'}</span>
+              <span>${esc(w.s)}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    </div>
+
+    <!-- 底部現代軍規行動指令列 -->
+    <div class="aar-actions">
+      ${bo3Custom ? `<button class="btn amber" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary aar-btn-main" id="rRematch">🔥 ${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
+      <button class="btn ghost" id="rReview">🔍 檢視戰場情形</button>
+      <button class="btn ghost" id="rShareDebrief" title="複製精美戰報至剪貼簿">📋 複製戰報代碼</button>
+      <button class="btn ghost" id="rEdit">⚙️ 返回編輯陣容</button>
+    </div>
+  `;
 
   currentActiveModal = $('#resultModal');
   $('#resultModal').hidden = false;
@@ -2330,6 +2492,16 @@ function showResult(res, bo3Custom) {
   $('#rCloseX').onclick = reviewBattlefield;
   $('#resultModal').onclick = (e) => {
     if (e.target === $('#resultModal')) reviewBattlefield();
+  };
+
+  // 複製戰報代碼功能
+  $('#rShareDebrief').onclick = () => {
+    const txt = shareText(res);
+    navigator.clipboard.writeText(txt).then(() => {
+      toast('📋 已複製精彩戰報與陣容代碼至剪貼簿！可直接貼上分享給戰友！');
+    }).catch(() => {
+      toast('代碼：' + encodeDeck(state.deck));
+    });
   };
 
   if (bo3Custom) {
