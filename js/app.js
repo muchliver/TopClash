@@ -776,22 +776,22 @@ function renderCommandDeck() {
     if (isReady) {
       if (state.mode === 'sandbox') {
         if (launchIcon) launchIcon.textContent = '⚡';
-        launchTitle.textContent = '開 始 300 場 模 擬';
+        launchTitle.textContent = '開始 300 場模擬';
       } else if (state.mode === 'bo3') {
         if (launchIcon) launchIcon.textContent = '🏆';
-        launchTitle.textContent = `第 ${state.bo3.round} 局 開 戰 (${state.bo3.winsA}-${state.bo3.winsB})`;
+        launchTitle.textContent = `第 ${state.bo3.round} 局開戰 (${state.bo3.winsA}-${state.bo3.winsB})`;
       } else {
         if (launchIcon) launchIcon.textContent = '⚔️';
-        launchTitle.textContent = '開 始 聯 合 作 戰';
+        launchTitle.textContent = '開始聯合作戰';
       }
       launchSub.textContent = '陣容就緒 · SPACE / ENTER';
     } else if (errs.length > 0 && missing === 0) {
       if (launchIcon) launchIcon.textContent = '🚫';
-      launchTitle.textContent = '預 算 超 額';
+      launchTitle.textContent = '預算超額';
       launchSub.textContent = errs[0];
     } else {
       if (launchIcon) launchIcon.textContent = '⏳';
-      launchTitle.textContent = `尚 缺 ${missing} 個 槽 位`;
+      launchTitle.textContent = `尚缺 ${missing} 個槽位`;
       launchSub.textContent = '點擊上方槽位選取 · 或按 R 隨機補滿';
     }
   }

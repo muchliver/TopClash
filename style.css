@@ -253,16 +253,66 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 [data-theme="light"] .menu-item:hover{background:#f0f9ff;color:var(--cyan)}
 .menu-item small{color:var(--amber);font-family:var(--head);font-weight:700}
 
-/* 右欄：作戰開戰指令大按鈕 (固定寬度 250px，置右，杜絕重疊碰撞) */
+/* 右欄：作戰開戰指令大按鈕 (左右視覺均衡對稱，左側圖章與右側箭頭雙翼佈局) */
 .deck-right{display:flex;align-items:center;justify-content:flex-end;width:100%;min-width:0}
 .deck-hint{display:none!important}
 
-.mega-launch-btn{width:250px;min-width:240px;max-width:260px;height:48px;padding:0 16px;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;justify-content:space-between;gap:10px;transition:all .24s cubic-bezier(.4,0,.2,1);box-sizing:border-box}
-.mega-launch-btn .launch-icon{font-size:20px;flex:none;display:flex;align-items:center}
-.mega-launch-btn .launch-texts{display:flex;flex-direction:column;align-items:flex-start;text-align:left;flex:1;min-width:0;overflow:hidden}
-.mega-launch-btn .launch-title{font-size:14.5px;font-weight:800;letter-spacing:.06em;line-height:1.2;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;width:100%}
-.mega-launch-btn .launch-sub{font-size:9.5px;font-family:var(--mono);letter-spacing:.02em;opacity:.85;margin-top:2px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;width:100%}
-.mega-launch-btn .launch-arrow{font-size:16px;transition:transform .2s ease;flex:none}
+.mega-launch-btn{
+  width:260px;min-width:250px;max-width:270px;height:50px;
+  padding:0 14px 0 12px;border-radius:11px;white-space:nowrap;
+  display:inline-flex;align-items:center;justify-content:space-between;gap:10px;
+  transition:all .22s cubic-bezier(.4,0,.2,1);box-sizing:border-box;
+}
+
+/* 左側專屬戰術圖章底座 (完美垂直水平置中，杜絕左側貼邊與不均) */
+.mega-launch-btn .launch-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;flex:none;line-height:1;
+  box-shadow:0 1px 4px rgba(0,0,0,.18);
+  transition:transform .2s ease,background .2s ease;
+}
+[data-theme="light"] .mega-launch-btn.status-missing .launch-icon,
+[data-theme="light"] .mega-launch-btn:disabled:not(.status-error) .launch-icon{
+  background:rgba(15,23,42,.07);color:var(--muted);box-shadow:none;
+}
+
+/* 中間戰略指令文字組 (上下行左緣平齊，垂直居中呼吸感充足) */
+.mega-launch-btn .launch-texts{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  text-align:left;flex:1;min-width:0;overflow:hidden;gap:2px;
+}
+.mega-launch-btn .launch-title{
+  font-family:var(--head);font-size:15px;font-weight:800;
+  letter-spacing:.08em;line-height:1.15;white-space:nowrap;
+  text-overflow:ellipsis;overflow:hidden;width:100%;
+}
+.mega-launch-btn .launch-sub{
+  font-size:10px;font-family:var(--mono);letter-spacing:.04em;
+  opacity:.88;line-height:1.1;white-space:nowrap;
+  text-overflow:ellipsis;overflow:hidden;width:100%;
+}
+
+/* 右側前進指針膠囊底座 (與左側圖章對稱呼應，消滅右側大片空洞) */
+.mega-launch-btn .launch-arrow{
+  width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex:none;line-height:1;
+  transition:transform .2s ease,background .2s ease;
+}
+[data-theme="light"] .mega-launch-btn.status-missing .launch-arrow,
+[data-theme="light"] .mega-launch-btn:disabled:not(.status-error) .launch-arrow{
+  background:rgba(15,23,42,.05);color:var(--muted);
+}
+.mega-launch-btn:not(:disabled):hover .launch-arrow{
+  background:rgba(255,255,255,.24);
+  transform:translateX(3px);
+}
+.mega-launch-btn:not(:disabled):hover .launch-icon{
+  transform:scale(1.06);
+}
 
 /* 狀態一：尚未就緒 (未選滿槽位) - 科技沉穩灰 */
 .mega-launch-btn.status-missing,
