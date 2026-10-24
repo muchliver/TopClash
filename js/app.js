@@ -297,60 +297,27 @@ state.variants = state.variants || {};
 state.marketPool = state.marketPool || null;
 
 // 保證可解演算法：隨機產生 5 兵種各 5 筆不同價格與型號的裝備，且保證至少存在 3 組以上 <= 15 的合法陣容
+// 嚴格分層隨機抽樣：保證 5 大兵種每一類別均嚴格維持 5, 4, 3, 2, 1 各一個武器選項，杜絕金額等級重複
 function generateRandomMarketPool() {
   const cats = ['air', 'armor', 'air_defense', 'naval', 'support'];
+  const costs = [5, 4, 3, 2, 1];
   const pool = {};
-  let attempts = 0;
-  let valid = false;
 
-  while (!valid && attempts < 120) {
-    attempts++;
-    cats.forEach(cat => {
-      const allCatUnits = UNITS.filter(u => u.cat === cat);
-      // 隨機洗牌，抽取 5 款不重複武器，並按費用與火力排序
-      const shuffled = allCatUnits.slice().sort(() => Math.random() - 0.5);
-      pool[cat] = shuffled.slice(0, 5).sort((a, b) => b.cost - a.cost || b.atk - a.atk);
-    });
-
-    // 檢查可解性
-    if (checkPoolSolvable(pool)) {
-      valid = true;
-    }
-  }
+  cats.forEach(cat => {
+    pool[cat] = costs.map(cost => {
+      // 找出該兵種該價位的 4 款不同型號裝備 (A/B/C/D)
+      const cand = UNITS.filter(u => u.cat === cat && u.cost === cost);
+      if (!cand.length) return null;
+      // 隨機抽選其中一款型號
+      const picked = cand[Math.floor(Math.random() * cand.length)];
+      // 同步記錄該價位的型號選擇
+      state.variants[`${cat}-${cost}`] = picked.v;
+      return picked;
+    }).filter(Boolean);
+  });
 
   state.marketPool = pool;
   return pool;
-}
-
-function checkPoolSolvable(pool) {
-  const cats = ['air', 'armor', 'air_defense', 'naval', 'support'];
-  if (!pool[cats[0]] || !pool[cats[1]] || !pool[cats[2]] || !pool[cats[3]] || !pool[cats[4]]) return true;
-  const c0 = pool[cats[0]].map(u => u.cost);
-  const c1 = pool[cats[1]].map(u => u.cost);
-  const c2 = pool[cats[2]].map(u => u.cost);
-  const c3 = pool[cats[3]].map(u => u.cost);
-  const c4 = pool[cats[4]].map(u => u.cost);
-
-  let validCount = 0;
-  for (const a of c0) {
-    for (const b of c1) {
-      if (a + b >= 15) continue;
-      for (const c of c2) {
-        if (a + b + c >= 15) continue;
-        for (const d of c3) {
-          if (a + b + c + d >= 15) continue;
-          for (const e of c4) {
-            const sum = a + b + c + d + e;
-            if (sum >= 13 && sum <= 15) {
-              validCount++;
-              if (validCount >= 3) return true;
-            }
-          }
-        }
-      }
-    }
-  }
-  return validCount > 0;
 }
 
 function rerollMarketPool() {
@@ -574,10 +541,14 @@ function renderMatrix() {
     // 取得當前兵種隨機抽出的 5 筆武器選項
     let displayUnits = state.marketPool[cat] || [];
 
-    // 確保已在隊伍中的該兵種武器必定在畫面上可見
+    // 確保已在隊伍中的該兵種裝備精準對齊在同一價位槽位，嚴格維持 5, 4, 3, 2, 1 結構
     const equippedInDeck = state.deck.map(id => id ? UNIT_MAP[id] : null).find(unit => unit && unit.cat === cat);
-    if (equippedInDeck && !displayUnits.some(u => u.id === equippedInDeck.id)) {
-      displayUnits = [equippedInDeck, ...displayUnits.slice(0, 4)].sort((a, b) => b.cost - a.cost || b.atk - a.atk);
+    if (equippedInDeck) {
+      const matchIdx = displayUnits.findIndex(u => u.cost === equippedInDeck.cost);
+      if (matchIdx >= 0) {
+        displayUnits = displayUnits.slice();
+        displayUnits[matchIdx] = equippedInDeck;
+      }
     }
 
     const cardsHtml = displayUnits.map(u => {
