@@ -2262,17 +2262,46 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(56, 189, 248, 0.08);
 }
 .my-tier-badge {
-  font-size: 42px;
   width: 72px;
   height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: radial-gradient(circle, rgba(56, 189, 248, 0.2), transparent 70%);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 12px;
   flex-shrink: 0;
   box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+  overflow: hidden;
+  text-align: center;
+  padding: 4px;
+  position: relative;
+}
+.tier-stars-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 60px;
+  line-height: 1;
+  user-select: none;
+}
+.tier-stars-box.single {
+  font-size: 34px;
+}
+.tier-stars-box.stars-2 {
+  font-size: 22px;
+  gap: 2px;
+}
+.tier-stars-box.stars-3 {
+  font-size: 18px;
+  gap: 2px;
+  max-width: 58px;
+}
+.tier-stars-box.stars-4 {
+  font-size: 16px;
+  gap: 2px 4px;
+  max-width: 42px; /* 完美 2x2 四星將官星陣！ */
 }
 .my-info-col {
   flex: 1;
@@ -2980,7 +3009,107 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 [data-theme="light"] .ladder-rules-strip { background: #f8fafc; border-color: rgba(2, 132, 199, 0.3); }
 [data-theme="light"] .rules-desc { color: #64748b; }
 [data-theme="light"] .rules-desc b { color: #0f172a; }
-[data-theme="light"] .roster-row:hover { background: #f1f5f9; }
+
+/* 淺色模式天梯名冊本體徹底白底美化 */
+[data-theme="light"] .roster-table-box {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.07);
+}
+[data-theme="light"] .roster-row {
+  border-bottom-color: rgba(15, 23, 42, 0.07);
+}
+[data-theme="light"] .roster-row:hover {
+  background: #f8fafc;
+}
+[data-theme="light"] .roster-row.is-me {
+  background: #f0f9ff;
+  border-left-color: #0284c7;
+  box-shadow: inset 0 0 16px rgba(2, 132, 199, 0.08);
+}
+[data-theme="light"] .roster-row.engageable {
+  background: rgba(2, 132, 199, 0.03);
+}
+[data-theme="light"] .roster-row.engageable:hover {
+  background: rgba(2, 132, 199, 0.08);
+}
+[data-theme="light"] .roster-row.top-1 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), transparent); border-left-color: #f59e0b; }
+[data-theme="light"] .roster-row.top-2 { background: linear-gradient(90deg, rgba(148, 163, 184, 0.12), transparent); border-left-color: #94a3b8; }
+[data-theme="light"] .roster-row.top-3 { background: linear-gradient(90deg, rgba(205, 127, 50, 0.12), transparent); border-left-color: #b45309; }
+
+[data-theme="light"] .r-rank { color: #64748b; }
+[data-theme="light"] .r-name { color: #0f172a; }
+[data-theme="light"] .r-title-sub { color: #64748b; }
+[data-theme="light"] .r-rp { color: #0284c7; }
+[data-theme="light"] .r-rp small { color: #94a3b8; }
+[data-theme="light"] .r-deck-chip { background: #f1f5f9; border-color: #cbd5e1; }
+[data-theme="light"] .r-deck-chip.masked { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 4px, #e2e8f0 4px, #e2e8f0 8px); border-color: #cbd5e1; }
+[data-theme="light"] .r-action-pill.locked { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
+[data-theme="light"] .r-action-pill.beaten { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+[data-theme="light"] .r-action-pill.you { background: #e0f2fe; color: #0284c7; border-color: #bae6fd; }
+
+[data-theme="light"] .roster-tab {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #64748b;
+}
+[data-theme="light"] .roster-tab.active {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0284c7;
+}
+
+/* 指揮官自訂呼號 Modal 樣式 */
+.commander-card {
+  max-width: 460px;
+  background: var(--modal-bg, #0f172a);
+  border: 1.5px solid var(--line2, rgba(56, 189, 248, 0.4));
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+}
+.flag-picker-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.flag-opt {
+  font-size: 24px;
+  width: 44px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.15));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.flag-opt:hover {
+  transform: translateY(-2px);
+  border-color: var(--cyan, #38bdf8);
+}
+.flag-opt.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+[data-theme="light"] .commander-card {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.35);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+}
+[data-theme="light"] .flag-opt {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+[data-theme="light"] .flag-opt.active {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  box-shadow: 0 0 8px rgba(2, 132, 199, 0.3);
+}
 
 @media (max-width: 768px) {
   .ladder-layout { padding: 12px 10px 100px; gap: 14px; }

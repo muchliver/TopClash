@@ -1263,6 +1263,11 @@ function setMode(m) {
     if (commandDeck) commandDeck.hidden = true;
     renderLadderView();
     toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪五星特級上將席位！');
+    // 若尚未自訂過呼號，首次切換進入天梯時引導登記任命狀
+    const p = LadderEngine.getState().player;
+    if (!p.hasCustomName) {
+      setTimeout(() => openCommanderModal(), 400);
+    }
     return;
   } else {
     if (viewLadder) viewLadder.hidden = true;
@@ -1292,8 +1297,14 @@ function renderLadderView() {
   // 1. 渲染頂部個人戰情卡
   const myTierBadge = $('#myTierBadge');
   if (myTierBadge) {
-    myTierBadge.textContent = pTier.icon;
-    myTierBadge.title = pTier.en;
+    const iconStr = pTier.icon || '🎖️';
+    const starCount = (iconStr.match(/⭐/g) || []).length;
+    if (starCount >= 2) {
+      myTierBadge.innerHTML = `<div class="tier-stars-box stars-${starCount}">${iconStr}</div>`;
+    } else {
+      myTierBadge.innerHTML = `<div class="tier-stars-box single">${iconStr}</div>`;
+    }
+    myTierBadge.title = `${pTier.name} (${pTier.en})`;
   }
   const myFlag = $('#myFlag');
   if (myFlag) myFlag.textContent = player.flag || '🇹🇼';
@@ -1527,6 +1538,68 @@ $('#viewLadder')?.addEventListener('click', e => {
     toast(`⚔️ 已派出聯合作戰群，向第 #${targetUser.rank} 名【${targetUser.name}】發起階梯突擊！`);
     return;
   }
+
+  // 4. 自訂指揮官呼號與旗幟
+  if (e.target.closest('#btnEditCallsign') || e.target.closest('#myCallsign')) {
+    openCommanderModal();
+    return;
+  }
+});
+
+/* ---------- 🎖️ 指揮官呼號與任命狀 Modal ---------- */
+const RANDOM_CALLSIGNS = [
+  '蒼鷹特遣隊・李少校', '天弓先鋒作戰群', '深藍幽靈艦隊', '鐵血近衛第一旅',
+  '雷霆防衛指揮部', '極限獵鷹中隊', '黑曜突擊戰鬥群', '赤焰遊騎兵分隊',
+  '北極星巡弋部隊', '海神無人作戰群', '神盾防空聯隊', '紫電裝甲突擊軍'
+];
+let selectedFlag = '🇹🇼';
+
+function openCommanderModal() {
+  const p = LadderEngine.getState().player;
+  const modal = $('#commanderModal');
+  if (!modal) return;
+  currentActiveModal = modal;
+  $('#commanderNameInput').value = p.name || '我方聯合戰術作戰群';
+  selectedFlag = p.flag || '🇹🇼';
+
+  document.querySelectorAll('.flag-opt').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.flag === selectedFlag);
+  });
+
+  modal.hidden = false;
+  setTimeout(() => $('#commanderNameInput').focus(), 100);
+}
+
+// 綁定 commanderModal 互動
+$('#flagPickerRow')?.addEventListener('click', e => {
+  const btn = e.target.closest('.flag-opt');
+  if (!btn) return;
+  selectedFlag = btn.dataset.flag;
+  document.querySelectorAll('.flag-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+});
+
+$('#btnRandomCallsign')?.addEventListener('click', () => {
+  const rName = pick(RANDOM_CALLSIGNS);
+  $('#commanderNameInput').value = rName;
+});
+
+$('#commanderCancel')?.addEventListener('click', () => {
+  $('#commanderModal').hidden = true;
+  currentActiveModal = null;
+});
+
+$('#commanderSave')?.addEventListener('click', () => {
+  const val = $('#commanderNameInput').value.trim();
+  if (!val) {
+    toast('⚠️ 指揮官呼號不可為空！');
+    return;
+  }
+  LadderEngine.setPlayerProfile(val, selectedFlag);
+  $('#commanderModal').hidden = true;
+  currentActiveModal = null;
+  renderLadderView();
+  toast(`🎖️ 戰術任命狀已頒布！指揮官【${selectedFlag} ${val}】正式進駐戰區！`);
 });
 
 function prune() {

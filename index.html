@@ -221,7 +221,8 @@
       <div class="my-info-col">
         <div class="my-name-row">
           <span class="my-flag" id="myFlag">🇹🇼</span>
-          <strong class="my-callsign" id="myCallsign">我方聯合戰術作戰群</strong>
+          <strong class="my-callsign" id="myCallsign" title="點擊自訂指揮官呼號">我方聯合戰術作戰群</strong>
+          <button class="btn-micro" id="btnEditCallsign" title="自訂指揮官呼號與代表旗幟">✏️ 改名</button>
           <span class="my-tier-name" id="myTierName">戰區上校</span>
           <span class="my-streak-badge" id="myStreakBadge">🛡️ 駐榜 1 天</span>
         </div>
@@ -298,6 +299,43 @@
     <div class="row">
       <button class="btn ghost" id="codeCancel">取消</button>
       <button class="btn primary" id="codeOk">匯入</button>
+    </div>
+  </div>
+</div>
+
+<!-- 指揮官呼號與旗幟自訂 Modal -->
+<div class="modal" id="commanderModal" hidden>
+  <div class="modal-card commander-card">
+    <div class="commander-modal-header">
+      <div class="badge-tag" style="display:inline-block;margin-bottom:6px;font-size:11px;font-family:var(--mono);color:#38bdf8;background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;border:1px solid rgba(56,189,248,0.4);">🎖️ 戰術任命狀</div>
+      <h2 style="font-size:18px;margin:4px 0 8px;">指揮官代號授權登記 (CALLSIGN REGISTRATION)</h2>
+      <p class="muted" style="font-size:12.5px;line-height:1.5;">設定您的軍事作戰呼號與代表旗幟，將永久登錄於全球 TOP 30 天梯殿堂與作戰報告中！</p>
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label class="label" style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;">
+        <span>作戰呼號 (Callsign，最多 16 字元)</span>
+        <button class="btn-micro" id="btnRandomCallsign" type="button">🎲 隨機呼號</button>
+      </label>
+      <input id="commanderNameInput" class="input" placeholder="例如：蒼鷹特遣隊・李少校" maxlength="16" autocomplete="off">
+    </div>
+    <div class="form-group" style="margin-top:14px">
+      <label class="label" style="font-size:12px;margin-bottom:6px;display:block;">代表軍徽 / 旗幟</label>
+      <div class="flag-picker-row" id="flagPickerRow" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button type="button" class="flag-opt active" data-flag="🇹🇼">🇹🇼</button>
+        <button type="button" class="flag-opt" data-flag="🇺🇸">🇺🇸</button>
+        <button type="button" class="flag-opt" data-flag="🇯🇵">🇯🇵</button>
+        <button type="button" class="flag-opt" data-flag="🇺🇦">🇺🇦</button>
+        <button type="button" class="flag-opt" data-flag="🇩🇪">🇩🇪</button>
+        <button type="button" class="flag-opt" data-flag="🇬🇧">🇬🇧</button>
+        <button type="button" class="flag-opt" data-flag="🇫🇷">🇫🇷</button>
+        <button type="button" class="flag-opt" data-flag="🇪🇺">🇪🇺</button>
+        <button type="button" class="flag-opt" data-flag="🌐">🌐</button>
+        <button type="button" class="flag-opt" data-flag="🏴‍☠️">🏴‍☠️</button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:20px;">
+      <button class="btn ghost" id="commanderCancel">稍後再設</button>
+      <button class="btn primary" id="commanderSave">正式進駐戰區 (CONFIRM)</button>
     </div>
   </div>
 </div>

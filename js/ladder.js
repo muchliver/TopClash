@@ -384,6 +384,23 @@ const LadderEngine = (function() {
     save();
   }
 
+  function setPlayerProfile(name, flag) {
+    if (name && typeof name === 'string' && name.trim()) {
+      state.player.name = name.trim().slice(0, 16);
+      state.player.hasCustomName = true;
+    }
+    if (flag && typeof flag === 'string') {
+      state.player.flag = flag;
+    }
+    // 同步更新 roster 中的玩家自身
+    const me = state.roster.find(u => u.id === state.player.id);
+    if (me) {
+      me.name = state.player.name;
+      me.flag = state.player.flag;
+    }
+    save();
+  }
+
   return {
     init,
     getState: () => state,
@@ -394,6 +411,7 @@ const LadderEngine = (function() {
     getMatchCandidates,
     resolveMatch,
     setDefenseFleet,
+    setPlayerProfile,
     checkDailyReset,
     save
   };
