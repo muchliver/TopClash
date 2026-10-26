@@ -5,7 +5,8 @@
    ===================================================== */
 
 const LadderEngine = (function() {
-  const STORAGE_KEY = 'topbattle_ladder_v3';
+  const STORAGE_KEY = 'topclash_ladder_v3';
+  const LEGACY_STORAGE_KEY = 'topbattle_ladder_v3';
 
   let state = {
     player: {
@@ -39,7 +40,7 @@ const LadderEngine = (function() {
 
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw);
         if (saved && saved.player && Array.isArray(saved.roster) && saved.roster.length > 0) {

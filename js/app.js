@@ -2906,7 +2906,7 @@ function downloadPoster(res) {
   });
   g.fillStyle = '#3de0ff'; g.font = '700 30px "JetBrains Mono",monospace'; g.fillText('CODE  ' + encodeDeck(state.deck), 70, y + 50);
   g.fillStyle = '#7f93ab'; g.font = '500 26px "Noto Sans TC",sans-serif'; g.fillText('用 $15 組出你的聯合作戰陣容，來挑戰我！', 70, y + 100);
-  const a = document.createElement('a'); a.download = 'defense-budget-15.png'; a.href = c.toDataURL('image/png'); a.click();
+  const a = document.createElement('a'); a.download = 'topclash-15.png'; a.href = c.toDataURL('image/png'); a.click();
   toast('海報已下載');
 }
 function roundRect(g, x, y, w, h, r) {

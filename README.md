@@ -1,9 +1,9 @@
-# 頂尖對戰：15元聯合作戰 (TopBattle)
+# 頂尖對戰：15元聯合作戰 (TopClash)
 
 > **極限軍武預算決策 · 三階段聯合作戰推演引擎 · 100 款現代軍武全鑑**  
 > 一分鐘一局、確定性隨機種子、全差異化 100 款現代軍武、三階段多維攻防結算、Web Audio 即時合成音效、每日戰術殘局挑戰、HTML5 Canvas 戰報海報。
 
-[![GitHub Repository](https://img.shields.io/badge/GitHub-muchliver%2FTopBattle-blue?logo=github)](https://github.com/muchliver/TopBattle)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-muchliver%2FTopClash-blue?logo=github)](https://github.com/muchliver/TopClash)
 [![Weapons Count](https://img.shields.io/badge/現代軍武庫-100%20款全鑑-emerald)](#軍武庫全鑑系統-armoryhtml)
 [![Budget](https://img.shields.io/badge/作戰預算-%2415%20極限配置-amber)](#1-組隊規則-deck-building)
 [![Tech Stack](https://img.shields.io/badge/技術架構-HTML5%20%7C%20CSS3%20%7C%20WebAudio-purple)](#技術架構與特色-tech-stack)
@@ -136,7 +136,7 @@ graph TD
 ## 📁 專案目錄結構
 
 ```
-TopBattle/
+TopClash/
 ├── index.html              # 主遊戲頁面（5x5看板、預算配置、戰鬥動畫、戰報海報）
 ├── armory.html             # 軍武庫全鑑圖鑑系統（100款軍武檢索、全息彈窗、音效試聽）
 ├── audit_sheet.html        # 全庫 100 款武器照片官方視覺審查大表
@@ -150,6 +150,7 @@ TopBattle/
 ├── js/
 │   ├── data.js             # 100 款軍武數值矩陣、特性常數、各國元數據
 │   ├── engine.js           # 種子化三階段推演引擎、VP 結算、沙盒大數據模擬
+│   ├── ladder.js           # 天梯段位積分系統與昨日前十強排行榜
 │   └── app.js              # 介面互動、Web Audio 音效、Canvas 戰報、手機抽屜
 ├── tools/
 │   └── balance.js          # 6,000 場循環賽平衡性模擬工具
@@ -162,11 +163,16 @@ TopBattle/
 
 ## 🚀 歷史版本演進 (Changelog)
 
+- **v3.5 (2026-10-26) — 旗艦 AAR 戰報、300 場沙盒模擬、每日殘局階梯與 TopClash 全面正名**
+  - **專案正名**：專案名稱正式確立為 **TopClash**（頂尖對戰：15元聯合作戰），同步更新全站 Meta、說明手冊與 GitHub 遠端倉庫。
+  - **C4ISR AAR 旗艦戰報**：重構結算彈窗為全景作戰總結，整合攻防五維雷達對比、三維戰略積分拆解（殘餘/戰線/以小博大）、雙方單位戰損存活狀態卡與 AI 戰術教官深度得失評析。
+  - **300 場大數據沙盒模擬**：實作大數據快速推演引擎，提供勝率常態分佈折線圖、三階段戰損比統計與全自動戰術平衡診斷。
+  - **每日殘局 $19~$25 隨機對手梯隊**：升級每日戰術殘局為 $19~$25 元 7 大超標預算對手池（高達 15 組歷史名陣），隨機抽籤匹配，具備破局提示與通關星級評等。
+  - **本土裝備用語規範**：全面統整軍武庫圖鑑中台灣製造之軍備標籤，嚴格規範以「台灣製造」標示。
 - **v3.0 (2026-10-24) — 百款全鑑與全圖官方軍規認證**
   - 軍武擴增至 100 款（5 兵種 × 5 價位 × 4 款 A/B/C/D 全獨立），數值 100% 全差異化。
   - 完成全庫 100 款照片地毯式清查，全面更換為官方與原廠高解析 16:9 戰鬥實裝照。
   - 推出「軍武庫圖鑑全鑑」`armory.html`，具備搜尋、過濾、全息彈窗與一鍵帶入組隊。
-  - 專案正式正名為「頂尖對戰：15元聯合作戰 (TopBattle)」，建立官方 GitHub 儲存庫。
 - **v2.5 — 音效與戰報系統升級**
   - 引入 Web Audio API 純演算法即時合成 6 種軍武音效，零加載、零延遲。
   - 實作 HTML5 Canvas 戰術戰報海報下載功能。
