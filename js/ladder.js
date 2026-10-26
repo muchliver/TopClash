@@ -8,9 +8,19 @@ const LadderEngine = (function() {
   const STORAGE_KEY = 'topclash_ladder_v3';
   const LEGACY_STORAGE_KEY = 'topbattle_ladder_v3';
 
+  function generateCommanderUID() {
+    const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    let code = '';
+    for (let i = 0; i < 4; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `CMD-${code}`;
+  }
+
   let state = {
     player: {
       id: 'player_me',
+      uid: 'CMD-7392', // 指揮官永久專屬軍事識別碼 (對應綁定使用者名稱)
       name: '我方聯合戰術作戰群',
       flag: '🇹🇼',
       rp: 2055,
@@ -46,6 +56,10 @@ const LadderEngine = (function() {
         const saved = JSON.parse(raw);
         if (saved && saved.player && Array.isArray(saved.roster) && saved.roster.length > 0) {
           state = saved;
+          // 確保玩家擁有永久不可變的專屬 UID (對應綁定其呼號)
+          if (!state.player.uid) {
+            state.player.uid = generateCommanderUID();
+          }
           // 若舊存檔玩家排名在 30 名外，自動邀請進入 Top 30 爭霸戰 (定級第 25 名)
           if (!state.player.rank || state.player.rank > 30) {
             state.player.rp = 2055;
@@ -58,6 +72,9 @@ const LadderEngine = (function() {
           }
           // 確保每位 NPC 都有合理的連續駐榜天數 streakDays
           state.roster.forEach((u, i) => {
+            if (u.id === state.player.id) {
+              u.uid = state.player.uid;
+            }
             if (typeof u.streakDays !== 'number' || u.streakDays < 1) {
               u.streakDays = i === 0 ? 5 : i === 1 ? 4 : i === 2 ? 3 : Math.floor(Math.random() * 4 + 1);
             }
@@ -384,26 +401,77 @@ const LadderEngine = (function() {
     save();
   }
 
+  /* 檢查特定呼號是否已被天梯中的其他席位使用 (名稱不可重複) */
+  function isCallsignTaken(name, excludeOwn = true) {
+    if (!name || typeof name !== 'string') return false;
+    const clean = name.trim().toLowerCase();
+    if (!clean) return false;
+    return state.roster.some(u => {
+      if (excludeOwn && (u.id === state.player.id || u.uid === state.player.uid)) {
+        return false;
+      }
+      return (u.name || '').trim().toLowerCase() === clean;
+    });
+  }
+
+  /* 驗證使用者輸入的作戰呼號，包含長度、保留字元與全域唯一性 */
+  function validateCallsign(name) {
+    if (!name || typeof name !== 'string') {
+      return { ok: false, reason: '請輸入有效的作戰呼號！' };
+    }
+    const clean = name.trim();
+    if (clean.length < 2) {
+      return { ok: false, reason: '呼號長度至少需 2 個字元！' };
+    }
+    if (clean.length > 16) {
+      return { ok: false, reason: '呼號長度不可超過 16 個字元！' };
+    }
+    const reservedWords = ['系統', '裁判', '管理員', 'system', 'admin', 'npc'];
+    if (reservedWords.some(w => clean.toLowerCase().includes(w))) {
+      return { ok: false, reason: '該呼號包含系統保留關鍵字，無法使用！' };
+    }
+    if (isCallsignTaken(clean, true)) {
+      return { ok: false, reason: `該軍武呼號【${clean}】已被現役席次佔用，請重新命名！` };
+    }
+    return { ok: true, cleanName: clean };
+  }
+
+  /* 設定使用者指揮官呼號與代表旗幟 (保證 ID 對應與名稱唯一性) */
   function setPlayerProfile(name, flag) {
-    if (name && typeof name === 'string' && name.trim()) {
-      state.player.name = name.trim().slice(0, 16);
-      state.player.hasCustomName = true;
+    const valid = validateCallsign(name);
+    if (!valid.ok) {
+      return { success: false, reason: valid.reason };
+    }
+
+    state.player.name = valid.cleanName;
+    state.player.hasCustomName = true;
+    if (!state.player.uid) {
+      state.player.uid = generateCommanderUID();
     }
     if (flag && typeof flag === 'string') {
       state.player.flag = flag;
     }
-    // 同步更新 roster 中的玩家自身
-    const me = state.roster.find(u => u.id === state.player.id);
+
+    // 同步更新 roster 中的玩家自身 (維持 UID 與名稱永久映射)
+    const me = state.roster.find(u => u.id === state.player.id || u.uid === state.player.uid);
     if (me) {
       me.name = state.player.name;
       me.flag = state.player.flag;
+      me.uid = state.player.uid;
     }
     save();
+    return {
+      success: true,
+      uid: state.player.uid,
+      name: state.player.name,
+      flag: state.player.flag
+    };
   }
 
   return {
     init,
     getState: () => state,
+    getPlayerUID: () => (state.player && state.player.uid) || 'CMD-7392',
     getRankTier,
     getRosterTop30,
     getRosterUserByRank,
@@ -412,6 +480,9 @@ const LadderEngine = (function() {
     resolveMatch,
     setDefenseFleet,
     setPlayerProfile,
+    isCallsignTaken,
+    validateCallsign,
+    generateCommanderUID,
     checkDailyReset,
     save
   };

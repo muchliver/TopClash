@@ -1310,6 +1310,8 @@ function renderLadderView() {
   if (myFlag) myFlag.textContent = player.flag || '🇹🇼';
   const myCallsign = $('#myCallsign');
   if (myCallsign) myCallsign.textContent = player.name;
+  const myUidPill = $('#myUidPill');
+  if (myUidPill) myUidPill.textContent = player.uid || 'CMD-7392';
   const myTierName = $('#myTierName');
   if (myTierName) {
     myTierName.textContent = pTier.name;
@@ -1450,7 +1452,7 @@ function renderLadderRosterTable() {
       <div class="r-commander">
         <span style="font-size:18px">${u.flag}</span>
         <div class="r-name-block">
-          <span class="r-name">${esc(u.name)} ${isMe ? '<b style="color:#38bdf8;font-size:11px">[我方]</b>' : ''}</span>
+          <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
           <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b></span>
         </div>
       </div>
@@ -1546,28 +1548,94 @@ $('#viewLadder')?.addEventListener('click', e => {
   }
 });
 
-/* ---------- 🎖️ 指揮官呼號與任命狀 Modal ---------- */
+/* ---------- 🎖️ 指揮官呼號與任命狀 Modal (UID 對應與名稱唯一性驗證) ---------- */
 const RANDOM_CALLSIGNS = [
   '蒼鷹特遣隊・李少校', '天弓先鋒作戰群', '深藍幽靈艦隊', '鐵血近衛第一旅',
   '雷霆防衛指揮部', '極限獵鷹中隊', '黑曜突擊戰鬥群', '赤焰遊騎兵分隊',
-  '北極星巡弋部隊', '海神無人作戰群', '神盾防空聯隊', '紫電裝甲突擊軍'
+  '北極星巡弋部隊', '海神無人作戰群', '神盾防空聯隊', '紫電裝甲突擊軍',
+  '玉山鋼鐵防衛聯隊', '風暴領主打擊群', '熾天使近距支援隊', '深淵潛龍特勤隊'
 ];
 let selectedFlag = '🇹🇼';
 
+/* 即時驗證使用者輸入的作戰呼號 (檢查長度、保留字與名稱是否與現役席次重複) */
+function checkCallsignInputValidity() {
+  const input = $('#commanderNameInput');
+  const feedback = $('#callsignFeedback');
+  const saveBtn = $('#commanderSave');
+  if (!input || !feedback) return false;
+
+  const val = input.value.trim();
+  const p = LadderEngine.getState().player;
+  const pUid = p.uid || LadderEngine.getPlayerUID();
+
+  if (!val) {
+    feedback.className = 'callsign-feedback invalid';
+    feedback.innerHTML = '⚠️ 請輸入 2 ~ 16 字元的作戰部隊呼號！';
+    input.classList.add('input-error');
+    if (saveBtn) saveBtn.disabled = true;
+    return false;
+  }
+
+  // 若與自身目前的名稱完全相同，提示維持現狀並允許保存
+  if (val === p.name) {
+    feedback.className = 'callsign-feedback unchanged';
+    feedback.innerHTML = `ℹ️ 目前呼號已對應綁定專屬軍籍編號 [<b>${pUid}</b>]`;
+    input.classList.remove('input-error');
+    if (saveBtn) saveBtn.disabled = false;
+    return true;
+  }
+
+  // 調用 LadderEngine 全域名稱唯一性校驗
+  const valid = LadderEngine.validateCallsign(val);
+  if (!valid.ok) {
+    feedback.className = 'callsign-feedback invalid';
+    feedback.innerHTML = `❌ ${valid.reason}`;
+    input.classList.add('input-error');
+    if (saveBtn) saveBtn.disabled = true;
+    return false;
+  }
+
+  // 驗證通過：名稱唯一且符合軍規
+  feedback.className = 'callsign-feedback valid';
+  feedback.innerHTML = `✅ 呼號可用！確認後將與軍籍編號 [<b>${pUid}</b>] 永久綁定`;
+  input.classList.remove('input-error');
+  if (saveBtn) saveBtn.disabled = false;
+  return true;
+}
+
 function openCommanderModal() {
   const p = LadderEngine.getState().player;
+  const pUid = p.uid || LadderEngine.getPlayerUID();
   const modal = $('#commanderModal');
   if (!modal) return;
   currentActiveModal = modal;
-  $('#commanderNameInput').value = p.name || '我方聯合戰術作戰群';
+
+  // 1. 填入專屬軍籍 UID (不可變)
+  const idDisplay = $('#commanderIdDisplay');
+  if (idDisplay) idDisplay.textContent = pUid;
+
+  // 2. 填入目前呼號與旗幟
+  const nameInput = $('#commanderNameInput');
+  if (nameInput) {
+    nameInput.value = p.name || '我方聯合戰術作戰群';
+    nameInput.classList.remove('input-error');
+  }
   selectedFlag = p.flag || '🇹🇼';
 
   document.querySelectorAll('.flag-opt').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.flag === selectedFlag);
   });
 
+  // 3. 執行初始驗證狀態反饋
+  checkCallsignInputValidity();
+
   modal.hidden = false;
-  setTimeout(() => $('#commanderNameInput').focus(), 100);
+  setTimeout(() => {
+    if (nameInput) {
+      nameInput.focus();
+      nameInput.select();
+    }
+  }, 100);
 }
 
 // 綁定 commanderModal 互動
@@ -1579,9 +1647,36 @@ $('#flagPickerRow')?.addEventListener('click', e => {
   btn.classList.add('active');
 });
 
+// 即時輸入重複性檢驗監聽
+$('#commanderNameInput')?.addEventListener('input', () => {
+  checkCallsignInputValidity();
+});
+
+// 🎲 隨機呼號 (智慧過濾已被佔用的呼號，保證產出絕對可用)
 $('#btnRandomCallsign')?.addEventListener('click', () => {
-  const rName = pick(RANDOM_CALLSIGNS);
-  $('#commanderNameInput').value = rName;
+  const available = RANDOM_CALLSIGNS.filter(name => !LadderEngine.isCallsignTaken(name, true));
+  const pool = available.length > 0 ? available : RANDOM_CALLSIGNS;
+  const rName = pick(pool);
+  const input = $('#commanderNameInput');
+  if (input) {
+    input.value = rName;
+    checkCallsignInputValidity();
+  }
+});
+
+// 📋 複製軍籍編號 (UID)
+$('#btnCopyCommanderId')?.addEventListener('click', () => {
+  const p = LadderEngine.getState().player;
+  const uid = p.uid || LadderEngine.getPlayerUID();
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(uid).then(() => {
+      toast(`📋 軍籍指戰編號 [${uid}] 已複製到剪貼簿！`);
+    }).catch(() => {
+      toast(`📋 指戰編號: ${uid}`);
+    });
+  } else {
+    toast(`📋 指戰編號: ${uid}`);
+  }
 });
 
 $('#commanderCancel')?.addEventListener('click', () => {
@@ -1590,16 +1685,21 @@ $('#commanderCancel')?.addEventListener('click', () => {
 });
 
 $('#commanderSave')?.addEventListener('click', () => {
-  const val = $('#commanderNameInput').value.trim();
-  if (!val) {
-    toast('⚠️ 指揮官呼號不可為空！');
+  const val = ($('#commanderNameInput')?.value || '').trim();
+  if (!checkCallsignInputValidity()) {
+    toast('⚠️ 呼號格式不合規或已被現有席次佔用，請重新命名！');
     return;
   }
-  LadderEngine.setPlayerProfile(val, selectedFlag);
+  const result = LadderEngine.setPlayerProfile(val, selectedFlag);
+  if (!result || !result.success) {
+    toast(`⚠️ 任命失敗：${(result && result.reason) || '未知錯誤'}`);
+    checkCallsignInputValidity();
+    return;
+  }
   $('#commanderModal').hidden = true;
   currentActiveModal = null;
   renderLadderView();
-  toast(`🎖️ 戰術任命狀已頒布！指揮官【${selectedFlag} ${val}】正式進駐戰區！`);
+  toast(`🎖️ 戰術任命狀已頒布！指揮官【${selectedFlag} ${result.name}】(${result.uid}) 正式進駐戰區！`);
 });
 
 function prune() {

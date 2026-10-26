@@ -222,6 +222,7 @@
         <div class="my-name-row">
           <span class="my-flag" id="myFlag">🇹🇼</span>
           <strong class="my-callsign" id="myCallsign" title="點擊自訂指揮官呼號">我方聯合戰術作戰群</strong>
+          <span class="my-uid-pill" id="myUidPill" title="終身軍籍識別編號 (永久對應呼號與戰績)">CMD-7392</span>
           <button class="btn-micro" id="btnEditCallsign" title="自訂指揮官呼號與代表旗幟">✏️ 改名</button>
           <span class="my-tier-name" id="myTierName">戰區上校</span>
           <span class="my-streak-badge" id="myStreakBadge">🛡️ 駐榜 1 天</span>
@@ -311,12 +312,27 @@
       <h2 style="font-size:18px;margin:4px 0 8px;">指揮官代號授權登記 (CALLSIGN REGISTRATION)</h2>
       <p class="muted" style="font-size:12.5px;line-height:1.5;">設定您的軍事作戰呼號與代表旗幟，將永久登錄於全球 TOP 30 天梯殿堂與作戰報告中！</p>
     </div>
-    <div class="form-group" style="margin-top:16px">
+
+    <!-- 軍籍指戰編號 (UID) 與呼號永久對應 -->
+    <div class="commander-id-tag-box">
+      <div class="cid-header">
+        <span class="cid-label">🪖 終身軍籍編號 (COMMANDER UID)</span>
+        <button type="button" class="btn-micro" id="btnCopyCommanderId" title="複製專屬軍籍編號">📋 複製編號</button>
+      </div>
+      <div class="cid-val-row">
+        <span class="cid-chip" id="commanderIdDisplay">CMD-7392</span>
+        <span class="cid-status">🔒 唯一指派·永久綁定</span>
+      </div>
+      <div class="cid-hint">此編號對應您的指揮官身分，天梯名次與勝點皆綁定此 ID，改名不會丟失戰績。</div>
+    </div>
+
+    <div class="form-group" style="margin-top:14px">
       <label class="label" style="display:flex;justify-content:space-between;align-items:center;font-size:12px;margin-bottom:6px;">
-        <span>作戰呼號 (Callsign，最多 16 字元)</span>
+        <span>作戰呼號 (Callsign，2~16 字元，不可與現役席次重複)</span>
         <button class="btn-micro" id="btnRandomCallsign" type="button">🎲 隨機呼號</button>
       </label>
       <input id="commanderNameInput" class="input" placeholder="例如：蒼鷹特遣隊・李少校" maxlength="16" autocomplete="off">
+      <div id="callsignFeedback" class="callsign-feedback"></div>
     </div>
     <div class="form-group" style="margin-top:14px">
       <label class="label" style="font-size:12px;margin-bottom:6px;display:block;">代表軍徽 / 旗幟</label>
