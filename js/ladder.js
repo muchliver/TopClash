@@ -13,17 +13,18 @@ const LadderEngine = (function() {
       id: 'player_me',
       name: '我方聯合戰術作戰群',
       flag: '🇹🇼',
-      rp: 1020,
-      rank: 55,
-      yesterdayRank: 58,
-      yesterdayRP: 995,
+      rp: 2055,
+      rank: 25,
+      yesterdayRank: 27,
+      yesterdayRP: 2010,
       orders: 5, // 今日剩餘作戰派遣令
       lastResetDate: '',
+      streakDays: 1, // 連續維持該名次天數
       defenseDeck: ['F16V', 'M1A2', 'TC2', 'TUOCHIANG', 'FPV'],
       defenseDoc: 'air_sup',
-      stats: { wins: 0, losses: 0, highestRank: 55, highestRP: 1020, miracleKills: 0 }
+      stats: { wins: 0, losses: 0, highestRank: 25, highestRP: 2055, miracleKills: 0, streakBreaks: 0 }
     },
-    roster: [], // 全體天梯名冊 (包含玩家與 100 位對手，即時依 rp 降序)
+    roster: [], // 全體天梯名冊 (包含玩家與對手，即時依 rp 降序)
     yesterdayTop10: [] // 昨日前十強榮譽殿堂快照
   };
 
@@ -45,6 +46,22 @@ const LadderEngine = (function() {
         const saved = JSON.parse(raw);
         if (saved && saved.player && Array.isArray(saved.roster) && saved.roster.length > 0) {
           state = saved;
+          // 若舊存檔玩家排名在 30 名外，自動邀請進入 Top 30 爭霸戰 (定級第 25 名)
+          if (!state.player.rank || state.player.rank > 30) {
+            state.player.rp = 2055;
+            state.player.rank = 25;
+            state.player.yesterdayRank = 27;
+            state.player.yesterdayRP = 2010;
+          }
+          if (typeof state.player.streakDays !== 'number' || state.player.streakDays < 1) {
+            state.player.streakDays = 1;
+          }
+          // 確保每位 NPC 都有合理的連續駐榜天數 streakDays
+          state.roster.forEach((u, i) => {
+            if (typeof u.streakDays !== 'number' || u.streakDays < 1) {
+              u.streakDays = i === 0 ? 5 : i === 1 ? 4 : i === 2 ? 3 : Math.floor(Math.random() * 4 + 1);
+            }
+          });
           return;
         }
       }
@@ -54,6 +71,11 @@ const LadderEngine = (function() {
 
     // 首次初始化天梯資料
     state.roster = JSON.parse(JSON.stringify(LADDER_PRESETS));
+    // 為 NPC 初始化擬真的連續在榜天數 (1~7 天)
+    state.roster.forEach((u, i) => {
+      u.streakDays = i === 0 ? 5 : i === 1 ? 4 : i === 2 ? 3 : Math.floor(Math.random() * 4 + 1);
+    });
+
     state.roster.push(state.player);
     state.player.lastResetDate = getTodayDateStr();
     sortAndReindex();
@@ -79,7 +101,13 @@ const LadderEngine = (function() {
   function checkDailyReset() {
     const today = getTodayDateStr();
     if (state.player.lastResetDate !== today) {
-      // 1. 鎖定昨日最終排名與昨日 RP
+      // 1. 結算連續在位天數 streakDays
+      if (state.player.yesterdayRank === state.player.rank) {
+        state.player.streakDays = (state.player.streakDays || 1) + 1;
+      } else {
+        state.player.streakDays = 1;
+      }
+
       state.player.yesterdayRank = state.player.rank;
       state.player.yesterdayRP = state.player.rp;
       state.player.orders = 5; // 恢復每日 5 次挑戰派遣令
@@ -91,12 +119,18 @@ const LadderEngine = (function() {
         finalRank: idx + 1
       }));
 
-      // 3. 模擬世界天梯演化：全體 NPC 指揮官產生微量分數波動 (±1 ~ 15 RP)
+      // 3. 模擬世界天梯演化：全體 NPC 指揮官產生微量分數波動 (±1 ~ 15 RP) 並更新連續天數
       state.roster.forEach(u => {
         if (u.id !== state.player.id) {
           const shift = Math.floor((Math.random() - 0.48) * 16);
-          u.yesterdayRank = u.rank || 50;
+          const oldRank = u.rank || 50;
+          u.yesterdayRank = oldRank;
           u.rp = Math.max(700, u.rp + shift);
+          if (oldRank === u.rank) {
+            u.streakDays = (u.streakDays || 1) + 1;
+          } else {
+            u.streakDays = 1;
+          }
         }
       });
 
@@ -127,6 +161,25 @@ const LadderEngine = (function() {
       if (rp >= r.minRP) return r;
     }
     return LADDER_RANKS[LADDER_RANKS.length - 1];
+  }
+
+  /* 取得 Top 30 名冊清單 */
+  function getRosterTop30() {
+    sortAndReindex();
+    return state.roster.slice(0, 30);
+  }
+
+  /* 依排名取得指揮官資料 */
+  function getRosterUserByRank(rank) {
+    sortAndReindex();
+    return state.roster.find(u => u.rank === rank) || null;
+  }
+
+  /* 判斷特定名次是否在玩家可挑戰的最近 5 名內 */
+  function canChallengeRank(targetRank) {
+    const pRank = state.player.rank;
+    // 只能挑戰比自己高、且距離在 5 名以內之對手 (例如排名 25 只能挑戰 20, 21, 22, 23, 24)
+    return targetRank < pRank && targetRank >= pRank - 5;
   }
 
   /* 挑選 3 名具備挑戰梯度的候選對手 (附帶戰術偵察迷霧) */
@@ -259,11 +312,28 @@ const LadderEngine = (function() {
       state.player.stats.miracleKills += miracleCount;
     }
 
+    // 4. 終結者加成 (Streak Breaker Bonus)：若敵方連續霸榜/守位 >= 3 天，給予超額終結者獎金
+    let streakBreakerBonus = 0;
+    const oppInRoster = state.roster.find(u => u.id === enemy.id);
+    if (isWin && oppInRoster && oppInRoster.streakDays >= 3) {
+      streakBreakerBonus = 15;
+      state.player.stats.streakBreaks = (state.player.stats.streakBreaks || 0) + 1;
+      oppInRoster.streakDays = 1; // 霸榜被終結
+    }
+
     // 總分計算
     let totalDelta = 0;
     if (isWin) {
-      totalDelta = Math.round((baseDelta + diffBonus) * excellenceMult) + miracleBonus;
-      totalDelta = Math.max(10, totalDelta); // 獲勝保底 +10 分
+      totalDelta = Math.round((baseDelta + diffBonus) * excellenceMult) + miracleBonus + streakBreakerBonus;
+      totalDelta = Math.max(12, totalDelta); // 獲勝保底 +12 分
+
+      // 階梯篡位保障：若挑戰的是比自己高的對手，保證結算後 RP 至少超越該對手，達成直升！
+      if (oppInRoster && oppInRoster.rp >= state.player.rp) {
+        const minNeeded = (oppInRoster.rp - state.player.rp) + 4;
+        if (totalDelta < minNeeded) {
+          totalDelta = minNeeded;
+        }
+      }
     } else {
       totalDelta = Math.min(-4, baseDelta + diffBonus) + miracleBonus;
     }
@@ -272,7 +342,6 @@ const LadderEngine = (function() {
     state.player.rp = Math.max(600, state.player.rp + totalDelta);
 
     // 對手分數同步微幅變動
-    const oppInRoster = state.roster.find(u => u.id === enemy.id);
     if (oppInRoster) {
       oppInRoster.rp = Math.max(600, oppInRoster.rp - Math.round(totalDelta * 0.65));
     }
@@ -282,6 +351,9 @@ const LadderEngine = (function() {
 
     const newRank = state.player.rank;
     const rankDelta = oldRank - newRank; // 正數代表名次上升
+    if (rankDelta !== 0) {
+      state.player.streakDays = 1; // 名次發生變更，重新計算駐留天數
+    }
 
     return {
       isWin,
@@ -292,6 +364,7 @@ const LadderEngine = (function() {
       diffBonus,
       miracleBonus,
       miracleCount,
+      streakBreakerBonus,
       aceBonus,
       blitzBonus,
       oldRank,
@@ -315,6 +388,9 @@ const LadderEngine = (function() {
     init,
     getState: () => state,
     getRankTier,
+    getRosterTop30,
+    getRosterUserByRank,
+    canChallengeRank,
     getMatchCandidates,
     resolveMatch,
     setDefenseFleet,

@@ -1305,6 +1305,12 @@ function renderLadderView() {
     myTierName.style.color = pTier.color;
     myTierName.style.borderColor = pTier.color;
   }
+  const myStreakBadge = $('#myStreakBadge');
+  if (myStreakBadge) {
+    const days = player.streakDays || 1;
+    myStreakBadge.textContent = days >= 3 ? `👑 霸榜 ${days} 天` : `🛡️ 駐榜 ${days} 天`;
+    myStreakBadge.className = days >= 3 ? 'my-streak-badge gold' : 'my-streak-badge';
+  }
   const myRankVal = $('#myRankVal');
   if (myRankVal) myRankVal.textContent = `#${player.rank}`;
 
@@ -1349,57 +1355,8 @@ function renderLadderView() {
     }).join('');
   }
 
-  // 2. 渲染衛星戰術情報推薦目標 (3 梯隊)
-  renderLadderReconGrid();
-
-  // 3. 渲染天梯榜單
+  // 2. 渲染 Top 30 單列階梯天梯榜
   renderLadderRosterTable();
-}
-
-function renderLadderReconGrid() {
-  const reconGrid = $('#reconGrid');
-  if (!reconGrid) return;
-  const candidates = LadderEngine.getMatchCandidates();
-
-  reconGrid.innerHTML = candidates.map((cand, idx) => {
-    return `<div class="recon-card ${cand.tagClass}">
-      <div class="recon-top">
-        <span class="recon-rank-badge">#${cand.rank}</span>
-        <span class="recon-diff-tag ${cand.tagClass}">${cand.label} (${cand.rpDiff >= 0 ? '+' : ''}${cand.rpDiff} RP)</span>
-      </div>
-      <div class="recon-who">
-        <span style="font-size:20px">${cand.flag}</span>
-        <div>
-          <div class="recon-name">${esc(cand.name)}</div>
-          <div class="recon-rp">${cand.rp.toLocaleString()} RP · ${esc(cand.title || '戰術指揮官')}</div>
-        </div>
-      </div>
-      <div class="recon-doc-tag">戰術教條: <b>${esc(DOCTRINES.find(d => d.id === cand.doc)?.name || cand.doc)}</b></div>
-      
-      <!-- 戰術迷霧偵察槽 -->
-      <div class="recon-deck-row">
-        ${cand.intelDeck.map(slot => {
-          if (slot.isMasked) {
-            return `<div class="recon-slot masked" title="受電戰迷霧遮蔽：未知裝備">
-              <span class="mask-icon">📡</span>
-              <span class="mask-lbl">CLASSIFIED</span>
-            </div>`;
-          }
-          return `<div class="recon-slot" title="${esc(slot.name)} ($${slot.cost})">
-            <img src="${slot.img}" alt="${esc(slot.name)}" onerror="this.style.display='none'"/>
-            <span class="slot-cost">$${slot.cost}</span>
-          </div>`;
-        }).join('')}
-      </div>
-
-      <button class="recon-engage-btn" data-candidate-idx="${idx}">
-        <span>⚡ 發起挑戰 (ENGAGE)</span>
-      </button>
-    </div>`;
-  }).join('');
-
-  // 儲存當前推薦對手供發起挑戰時使用
-  state.currentLadderCandidates = candidates;
 }
 
 function renderLadderRosterTable() {
@@ -1409,13 +1366,19 @@ function renderLadderRosterTable() {
   const player = lState.player;
 
   const isLive = currentRosterTab === 'live';
-  const list = isLive ? lState.roster.slice(0, 100) : lState.yesterdayTop10;
+  const list = isLive ? LadderEngine.getRosterTop30() : lState.yesterdayTop10;
 
   tableBox.innerHTML = list.map((u, idx) => {
     const isMe = u.id === player.id;
     const rankNo = u.rank || (idx + 1);
     const topClass = rankNo === 1 ? 'top-1' : rankNo === 2 ? 'top-2' : rankNo === 3 ? 'top-3' : '';
     const tier = LadderEngine.getRankTier(u.rp);
+    const streak = u.streakDays || 1;
+
+    // 挑戰規則判定：只能挑戰比自己高、且在前方 5 名以內之對手 (例如排名 25 只能挑戰 20~24 名)
+    const canEngage = isLive && (rankNo < player.rank) && (rankNo >= player.rank - 5);
+    const isOverRank = isLive && (rankNo < player.rank - 5); // 跨級鎖定
+    const isBeaten = isLive && (rankNo > player.rank); // 已超越名次
 
     // 排名趨勢
     let trendHtml = '<span class="r-trend flat">− 持平</span>';
@@ -1425,24 +1388,64 @@ function renderLadderRosterTable() {
       else if (diff < 0) trendHtml = `<span class="r-trend down">▼ ${diff}</span>`;
     }
 
-    return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass}">
+    // 連續維持該名次天數徽章
+    let streakBadgeHtml = '';
+    if (streak >= 5) {
+      streakBadgeHtml = `<span class="r-streak-tag top" title="霸榜 ${streak} 天！擊敗可獲終結者超額獎勵">👑 霸榜 ${streak} 天</span>`;
+    } else if (streak >= 3) {
+      streakBadgeHtml = `<span class="r-streak-tag high" title="頑強守位 ${streak} 天！擊敗可獲終結者超額獎勵">🛡️ 守位 ${streak} 天</span>`;
+    } else if (streak >= 2) {
+      streakBadgeHtml = `<span class="r-streak-tag mid">🛡️ 守位 ${streak} 天</span>`;
+    } else {
+      streakBadgeHtml = `<span class="r-streak-tag new">🔥 今日新晉</span>`;
+    }
+
+    // 防守陣容預覽 (若為可挑戰的高位對手，中間部分槽位受電戰迷霧遮蔽增添策略性)
+    const deckChipsHtml = (u.deck || []).map((id, slotIdx) => {
+      const unit = UNIT_MAP[id];
+      // 距離 3~5 名之對手中間 2 槽受迷霧遮蔽
+      const isMasked = canEngage && (player.rank - rankNo >= 3) && (slotIdx === 1 || slotIdx === 2);
+      if (isMasked) {
+        return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
+          <span style="font-size:10px">📡</span>
+        </div>`;
+      }
+      if (!unit) return '<div class="r-deck-chip"></div>';
+      return `<div class="r-deck-chip" title="${esc(unit.name)} ($${unit.cost})">
+        <img src="${unit.img || `assets/units/${unit.id}.jpg`}" alt="${esc(unit.name)}" onerror="this.style.display='none'"/>
+        <span class="chip-cost">$${unit.cost}</span>
+      </div>`;
+    }).join('');
+
+    // 右側動作狀態欄
+    let actionColHtml = '';
+    if (isMe) {
+      actionColHtml = `<span class="r-action-pill you">📍 我方作戰群</span>`;
+    } else if (canEngage) {
+      actionColHtml = `<button class="btn-ladder-engage" data-target-rank="${rankNo}" data-target-id="${u.id}">
+        <span>⚔️ 挑戰</span>
+        ${streak >= 3 ? '<b class="breaker-dot" title="終結者加成目標">+15</b>' : ''}
+      </button>`;
+    } else if (isOverRank) {
+      actionColHtml = `<span class="r-action-pill locked" title="階梯限制：僅可挑戰前方 5 名內之目標">🔒 跨級鎖定</span>`;
+    } else if (isBeaten) {
+      actionColHtml = `<span class="r-action-pill beaten">✓ 已超越</span>`;
+    }
+
+    return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass} ${canEngage ? 'engageable' : ''}">
       <div class="r-rank">${rankNo <= 3 ? ['🥇','🥈','🥉'][rankNo - 1] : '#' + rankNo}</div>
       <div class="r-trend">${trendHtml}</div>
+      <div class="r-streak">${streakBadgeHtml}</div>
       <div class="r-commander">
         <span style="font-size:18px">${u.flag}</span>
-        <span class="r-name">${esc(u.name)} ${isMe ? '<b style="color:#38bdf8;font-size:11px">[我方]</b>' : ''}</span>
-        <span class="r-tier-icon" title="${tier.en}">${tier.icon}</span>
+        <div class="r-name-block">
+          <span class="r-name">${esc(u.name)} ${isMe ? '<b style="color:#38bdf8;font-size:11px">[我方]</b>' : ''}</span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b></span>
+        </div>
       </div>
-      <div class="r-rp">${u.rp.toLocaleString()} RP</div>
-      <div class="r-deck-preview">
-        ${(u.deck || []).map(id => {
-          const unit = UNIT_MAP[id];
-          if (!unit) return '<div class="r-deck-chip"></div>';
-          return `<div class="r-deck-chip" title="${esc(unit.name)} ($${unit.cost})">
-            <img src="${unit.img || `assets/units/${unit.id}.jpg`}" alt="${esc(unit.name)}" onerror="this.style.display='none'"/>
-          </div>`;
-        }).join('')}
-      </div>
+      <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
+      <div class="r-deck-preview">${deckChipsHtml}</div>
+      <div class="r-action">${actionColHtml}</div>
     </div>`;
   }).join('');
 }
@@ -1477,35 +1480,51 @@ $('#viewLadder')?.addEventListener('click', e => {
     return;
   }
 
-  // 3. 發起天梯挑戰
-  const engageBtn = e.target.closest('.recon-engage-btn');
+  // 3. 發起天梯單列階梯挑戰 (點擊 ⚔️ 挑戰 按鈕)
+  const engageBtn = e.target.closest('.btn-ladder-engage');
   if (engageBtn) {
-    const idx = +engageBtn.dataset.candidateIdx;
-    const candidate = (state.currentLadderCandidates || [])[idx];
-    if (!candidate) return;
+    const targetRank = +engageBtn.dataset.targetRank;
+    const targetId = engageBtn.dataset.targetId;
+    const lState = LadderEngine.getState();
+    const targetUser = lState.roster.find(u => u.rank === targetRank || u.id === targetId);
+    if (!targetUser) {
+      toast('❌ 目標指揮官資料已過期，請重新整理！');
+      return;
+    }
+
+    // 檢查防跨級規則 (嚴格檢驗是否在玩家前方 5 名內)
+    const pRank = lState.player.rank;
+    if (targetUser.rank >= pRank) {
+      toast('⚠️ 該名次低於或等於我方當前排名，無需重複挑戰！');
+      return;
+    }
+    if (pRank - targetUser.rank > 5) {
+      toast('🔒 階梯交戰守則：不可跨級挑戰！僅可挑戰前方最近 5 名以內之對手。');
+      return;
+    }
 
     if (!state.deck.every(Boolean)) {
       toast('⚠️ 你的出征部隊尚未配置滿 5 個槽位！請先切換至快速對戰補齊裝備。');
       return;
     }
 
-    const playerOrders = LadderEngine.getState().player.orders;
+    const playerOrders = lState.player.orders;
     if (playerOrders <= 0) {
       toast('❌ 今日作戰派遣令已耗盡 (0/5)！每日 00:00 補給完畢。');
       return;
     }
 
     // 啟動天梯挑戰！
-    state.ladderEnemy = candidate;
-    state.enemy = candidate.rawDeck.slice();
-    state.enemyName = `${candidate.flag} ${candidate.name}`;
-    state.enemyDoc = candidate.doc || 'defense';
+    state.ladderEnemy = targetUser;
+    state.enemy = targetUser.deck.slice();
+    state.enemyName = `${targetUser.flag} ${targetUser.name}`;
+    state.enemyDoc = targetUser.doc || 'defense';
     state.event = pick(EVENTS);
 
-    // 關閉天梯視圖，切換至對戰視圖
+    // 關閉天梯視圖，切換至對戰視圖開始推演
     $('#viewLadder').hidden = true;
     startBattle();
-    toast(`⚔️ 已派出聯合作戰群，向【${candidate.name}】發起天梯突擊！`);
+    toast(`⚔️ 已派出聯合作戰群，向第 #${targetUser.rank} 名【${targetUser.name}】發起階梯突擊！`);
     return;
   }
 });
@@ -2372,6 +2391,7 @@ function handleLadderMatchEnd(res) {
       ${rep.aceBonus ? `<div class="l-breakdown-row" style="color:#4ade80"><span>🎖️ ACE 完勝獎章 (全隊全員生還)</span><b>倍率 +25%</b></div>` : ''}
       ${rep.blitzBonus ? `<div class="l-breakdown-row" style="color:#38bdf8"><span>⚡ 閃擊先制獎章 (前置階段全殲)</span><b>倍率 +15%</b></div>` : ''}
       ${rep.miracleBonus > 0 ? `<div class="l-breakdown-row" style="color:#fbbf24"><span>🌟 以小博大奇蹟賞金 (${rep.miracleCount} 次)</span><b>+${rep.miracleBonus} RP</b></div>` : ''}
+      ${rep.streakBreakerBonus > 0 ? `<div class="l-breakdown-row" style="color:#f59e0b"><span>💥 終結者大捷 (擊墜霸榜守將)</span><b>+${rep.streakBreakerBonus} RP</b></div>` : ''}
     </div>
 
     <div class="res-actions">
