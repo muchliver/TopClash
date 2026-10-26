@@ -450,16 +450,36 @@ const ARCHETYPES = [
   { id: 'naval',    name: '海上霸權', desc: '以萬噸大驅為核心，海空聯動。',     plan: [['air', 3], ['armor', 2], ['air_defense', 2], ['naval', 5], ['support', 3]] },
   { id: 'ew',       name: '電戰蜂群', desc: '預警機搭配無人機與快艇，以小博大。', plan: [['air', 2], ['armor', 3], ['air_defense', 2], ['naval', 3], ['support', 5]] }
 ];
-/* 每日挑戰：對手預算 $19（五大兵種各 1 件超標配置），玩家僅 $15 */
+/* 每日挑戰：對手預算 $19~$25 元超標階梯配置（玩家僅 $15，以小博大破局挑戰） */
 const DAILY_PLANS = [
-  { id: 'fleet',   name: '超標空海艦隊', desc: '5元五代戰機＋4元神盾驅逐艦制海，海空雙重壓迫。', plan: [['air', 5], ['armor', 4], ['air_defense', 4], ['naval', 3], ['support', 3]] },
-  { id: 'armor',   name: '超標裝甲集群', desc: '5元主戰坦克領軍衝鋒，重型遠程火砲密集覆蓋。', plan: [['air', 4], ['armor', 5], ['air_defense', 3], ['naval', 4], ['support', 3]] },
-  { id: 'fortress',name: '超標防空堡壘', desc: '5元遠程地對空防空網，全面禁絕中高空空襲。', plan: [['air', 4], ['armor', 3], ['air_defense', 5], ['naval', 4], ['support', 3]] },
-  { id: 'ew',      name: '超標電戰蜂群', desc: '5元高階電戰機雜訊致盲，搭配無人機長程引導。', plan: [['air', 3], ['armor', 4], ['air_defense', 4], ['naval', 3], ['support', 5]] },
-  { id: 'stealth', name: '超標匿蹤刺客', desc: '5元隱匿空優戰機搭配潛艦突襲，雷達難以捕捉。', plan: [['air', 5], ['armor', 3], ['air_defense', 3], ['naval', 4], ['support', 4]] },
-  { id: 'battleship',name:'超標海上堡壘', desc: '5元萬噸萬能巡洋艦，全頻譜打擊與海空統治。', plan: [['air', 4], ['armor', 3], ['air_defense', 3], ['naval', 5], ['support', 4]] },
-  { id: 'artillery',name:'超標末日火雨', desc: '5元大口徑火箭砲縱深齊射，首輪火力毀滅性打擊。', plan: [['air', 3], ['armor', 4], ['air_defense', 3], ['naval', 4], ['support', 5]] },
-  { id: 'ironcurtain',name:'超標鐵幕聯軍', desc: '均衡高階配置，全兵種堅韌抗揍無死角。', plan: [['air', 4], ['armor', 4], ['air_defense', 4], ['naval', 4], ['support', 3]] }
+  // --- $19 超標階梯 ---
+  { id: 'fleet-19',      cost: 19, name: '超標空海艦隊', desc: '5元五代戰機＋4元神盾驅逐艦制海，海空雙重壓迫。', plan: [['air', 5], ['armor', 4], ['air_defense', 4], ['naval', 3], ['support', 3]] },
+  { id: 'armor-19',      cost: 19, name: '超標裝甲集群', desc: '5元主戰坦克領軍衝鋒，重型遠程火砲密集覆蓋。', plan: [['air', 4], ['armor', 5], ['air_defense', 3], ['naval', 4], ['support', 3]] },
+  { id: 'fortress-19',   cost: 19, name: '超標防空堡壘', desc: '5元遠程地對空防空網，全面禁絕中高空空襲。', plan: [['air', 4], ['armor', 3], ['air_defense', 5], ['naval', 4], ['support', 3]] },
+  { id: 'ew-19',         cost: 19, name: '超標電戰蜂群', desc: '5元高階電戰機雜訊致盲，搭配無人機長程引導。', plan: [['air', 3], ['armor', 4], ['air_defense', 4], ['naval', 3], ['support', 5]] },
+
+  // --- $20 雙核主力階梯 ---
+  { id: 'twin-air-sea-20',cost: 20, name: '超標雙核空海特遣隊', desc: '5元戰機＋5元萬噸戰艦，海空雙星極限施壓。', plan: [['air', 5], ['naval', 5], ['air_defense', 4], ['armor', 3], ['support', 3]] },
+  { id: 'twin-armor-ad-20',cost: 20, name: '超標雙核鋼鐵防空營', desc: '5元重裝甲＋5元頂級防空天網，地面防線固若金湯。', plan: [['armor', 5], ['air_defense', 5], ['air', 4], ['naval', 3], ['support', 3]] },
+
+  // --- $21 精銳集團階梯 ---
+  { id: 'strike-21',     cost: 21, name: '超標空陸雙神突擊隊', desc: '5元隱形空優＋5元主戰坦克，搭配4元神盾與4元防空。', plan: [['air', 5], ['armor', 5], ['air_defense', 4], ['naval', 4], ['support', 3]] },
+  { id: 'sea-shield-21', cost: 21, name: '超標海空神盾阻擊網', desc: '5元空優＋5元頂級防空＋5元驅逐艦，外層絕對禁飛區。', plan: [['air', 5], ['air_defense', 5], ['naval', 5], ['armor', 3], ['support', 3]] },
+
+  // --- $22 三核重裝階梯 ---
+  { id: 'tri-air-sea-22',cost: 22, name: '超標三核制空防空海權', desc: '5元制空＋5元防空＋5元海權＋4元重裝甲，三維火力網。', plan: [['air', 5], ['air_defense', 5], ['naval', 5], ['armor', 4], ['support', 3]] },
+  { id: 'tri-land-sea-22',cost: 22, name: '超標三核重裝地面要塞', desc: '5元重裝甲＋5元防空＋5元海權＋4元高階支援，正面抗壓極限。', plan: [['armor', 5], ['air_defense', 5], ['naval', 5], ['support', 4], ['air', 3]] },
+
+  // --- $23 準神裝狂瀾階梯 ---
+  { id: 'apex-assault-23',cost: 23, name: '超標三核頂峰空陸狂瀾', desc: '三兵種全滿5元頂配＋雙4元次頂支援，壓制力極強。', plan: [['air', 5], ['armor', 5], ['air_defense', 5], ['naval', 4], ['support', 4]] },
+  { id: 'multi-dom-23',  cost: 23, name: '超標四維立體戰略壓制', desc: '5元制空＋5元海權＋5元支援＋雙4元地面防空，全方位壓迫。', plan: [['air', 5], ['naval', 5], ['support', 5], ['armor', 4], ['air_defense', 4]] },
+
+  // --- $24 四天王準全神裝 ---
+  { id: 'four-kings-24', cost: 24, name: '超標四大天王準全神裝', desc: '四大兵種全部5元頂級神裝，僅支援位留有些許破局破綻。', plan: [['air', 5], ['armor', 5], ['air_defense', 5], ['naval', 5], ['support', 4]] },
+
+  // --- $25 終極滅世五星神裝 (極限挑戰) ---
+  { id: 'pantheon-25',   cost: 25, name: '五星神裝滅世聯軍', desc: '【終極滅世挑戰】五大兵種全部配置 $5 頂級神裝！考驗極限以小博大！', plan: [['air', 5], ['armor', 5], ['air_defense', 5], ['naval', 5], ['support', 5]] },
+  { id: 'titan-apex-25', cost: 25, name: '泰坦終極決戰特遣隊', desc: '【終極滅世挑戰】全兵種頂配神裝，唯有精準教條與戰線控制能克敵！', plan: [['air', 5], ['armor', 5], ['air_defense', 5], ['naval', 5], ['support', 5]] }
 ];
 
 function buildFromPlan(plan, rng) {

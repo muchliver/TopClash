@@ -240,12 +240,17 @@ const currentBanned = () => (state.mode === 'bo3' && state.bo3.bannedByB ? [stat
 function setupMatch() {
   if (state.mode === 'daily') {
     const isToday = state.dailyPlanId === 'today';
-    const seedNum = isToday ? hashStr('db15-' + dateKey()) : hashStr('db15-' + dateKey() + '-' + state.dailyPlanId);
+    const isRandomTier = state.dailyPlanId === 'random_tier';
+    const seedNum = isToday ? hashStr('db15-' + dateKey()) : (isRandomTier ? ((Math.random() * 4294967296) >>> 0) : hashStr('db15-' + dateKey() + '-' + state.dailyPlanId));
     const rng = mulberry32(seedNum);
     state.event = EVENTS[Math.floor(rng() * EVENTS.length)];
     let p = null;
     if (isToday) {
+      // 今日官方特選：依據當日種子決定難度階梯 ($19 ~ $25 均勻隨機)
       p = DAILY_PLANS[Math.floor(rng() * DAILY_PLANS.length)];
+    } else if (isRandomTier) {
+      // 隨機殘局對手：每次切換都隨機抽取 $19~$25 的題目
+      p = DAILY_PLANS[Math.floor(Math.random() * DAILY_PLANS.length)];
     } else {
       p = DAILY_PLANS.find(x => x.id === state.dailyPlanId) || DAILY_PLANS[0];
     }
@@ -481,16 +486,31 @@ function renderMissionBar() {
   } else if (mode === 'daily') {
     const k = state.dailyPlanId === 'today' ? ('db15_daily_' + dateKey()) : ('db15_daily_' + dateKey() + '_' + state.dailyPlanId);
     const rec = LS.get(k, null);
-    h = `<span class="mission-tag">DAILY TACTICS · 每日殘局 #${dailyNo()}</span>
+    const enemyCost = deckCost(state.enemy);
+    const overCost = enemyCost - 15;
+
+    // 將題目按預算分組
+    const tiers = [19, 20, 21, 22, 23, 24, 25];
+    const groupedOptions = tiers.map(cost => {
+      const plans = DAILY_PLANS.filter(p => p.cost === cost);
+      if (!plans.length) return '';
+      const label = cost === 25 ? `─── $25 終極滅世神裝 ───` : `─── $${cost} 超標階梯 ───`;
+      return `<optgroup label="${label}">
+        ${plans.map(dp => `<option value="${dp.id}" ${state.dailyPlanId === dp.id ? 'selected' : ''}>${dp.name} ($${dp.cost}超標)</option>`).join('')}
+      </optgroup>`;
+    }).join('');
+
+    h = `<span class="mission-tag" style="background:rgba(239,68,68,.16);color:var(--red);border-color:rgba(239,68,68,.4);font-weight:800">DAILY TACTICS · 每日殘局 #${dailyNo()}</span>
       <div class="mission-item">
         <span class="muted">選擇殘局：</span>
         <select class="select sm" id="dailyPlanSel" style="padding:3px 8px;width:auto;font-size:12px;font-weight:700">
-          <option value="today" ${state.dailyPlanId === 'today' ? 'selected' : ''}>🌟 今日官方特選題目</option>
-          ${DAILY_PLANS.map(dp => `<option value="${dp.id}" ${state.dailyPlanId === dp.id ? 'selected' : ''}>${dp.name} ($19超標)</option>`).join('')}
+          <option value="today" ${state.dailyPlanId === 'today' ? 'selected' : ''}>🌟 今日官方特選 (每日隨機 $19~$25)</option>
+          <option value="random_tier" ${state.dailyPlanId === 'random_tier' ? 'selected' : ''}>🎲 隨機自由對手 ($19~$25 隨機抽題)</option>
+          ${groupedOptions}
         </select>
       </div>
       <div class="mission-item" style="margin-left:8px">
-        <span>對手：<b style="color:var(--amber)">$${deckCost(state.enemy)}</b>（${esc(state.enemyName)}）</span>
+        <span>對手：<b style="color:${enemyCost >= 25 ? '#ff3b30' : enemyCost >= 22 ? 'var(--amber)' : 'var(--cyan)'}">$${enemyCost}</b>（${esc(state.enemyName)} · 超標 +$${overCost}）</span>
         <span class="muted" style="margin-left:8px">教條: ${esc(DOCTRINES.find(d => d.id === state.enemyDoc).name)}</span>
         ${rec ? `<span style="margin-left:8px" class="${rec.won ? 'badge-ok' : 'badge-no'}">${rec.won ? '✔ 已破局' : '尚未破局'} (${rec.tries}次)</span>` : ''}
       </div>`;
@@ -1185,17 +1205,33 @@ $('#missionBar').addEventListener('change', e => {
     renderAll();
   }
   if (e.target.id === 'dailyPlanSel') {
-    state.dailyPlanId = e.target.value;
-    setupMatch();
-    renderAll();
-    const planName = state.dailyPlanId === 'today' ? '今日官方特選題目' : (DAILY_PLANS.find(p => p.id === state.dailyPlanId)?.name || '');
-    toast(`已切換殘局題目：${planName}`);
+    handleDailyPlanChange(e.target.value);
   }
   if (e.target.id === 'sandEnemy') state.sandEnemy = e.target.value;
   if (e.target.id === 'sandEvent') state.sandEvent = e.target.value;
 });
 
+function handleDailyPlanChange(val) {
+  state.dailyPlanId = val;
+  setupMatch();
+  renderAll();
+  let planName = '今日官方特選題目';
+  const c = deckCost(state.enemy);
+  if (val === 'random_tier') {
+    planName = `🎲 隨機抽題【${state.enemyName}】($${c}超標 · +$${c - 15})`;
+  } else if (val === 'today') {
+    planName = `🌟 今日特選【${state.enemyName}】($${c}超標 · +$${c - 15})`;
+  } else {
+    const found = DAILY_PLANS.find(p => p.id === val);
+    planName = found ? `【${found.name}】($${c}超標 · +$${c - 15})` : state.enemyName;
+  }
+  toast(`已切換每日殘局題目：${planName}`);
+}
+
 $('#missionBar').addEventListener('change', e => {
+  if (e.target.id === 'dailyPlanSel') {
+    handleDailyPlanChange(e.target.value);
+  }
   if (e.target.id === 'sandEnemy') state.sandEnemy = e.target.value;
   if (e.target.id === 'sandEvent') state.sandEvent = e.target.value;
   if (e.target.id === 'aiArchSel') {
@@ -2896,7 +2932,7 @@ function showHelp() {
     <li><b>快速對戰</b>：對戰 6 種 AI 風格，每場事件與對手皆不同。</li>
     <li><b>幽靈對戰 🌐</b>：非同步挑戰其他真人玩家部署的防衛陣容，升級你的天梯軍銜（准尉 ➔ 上將），亦可部署自己的影子陣容！</li>
     <li><b>BO5 征服賽 🏆</b>：五局三勝制！敗方享有「戰術反制」特權，指定禁用敵方上一局的 1 件裝備，考驗臨場反制與更換配裝。</li>
-    <li><b>每日殘局</b>：對手擁有 $19 超標陣容，你只有 $15，全球同題破局。</li>
+    <li><b>每日殘局</b>：對手擁有 <b>$19 ~ $25</b> 超標陣容，你只有 $15，全球同題挑戰極限以小博大破局！</li>
     <li><b>沙盒模擬</b>：一鍵模擬 300 場，查看勝率與各事件表現。</li>
   </ul>
   <h3>三、三階段推演與勝負</h3><ul><li>階段一：電戰值比拼（壓制敵命中率），SEAD／縱深打擊先制點穴。</li><li>階段二：防空攔截戰機（×2.5 傷害）➔ 空戰 ➔ 制海互射。</li><li>階段三：地面決戰，存活戰機密接轟炸（CAS ×1.7），火砲無人機持續支援。</li><li>積分判定：殘餘戰力 ＋ 戰線控制（裝甲/空優/海權）＋ 以小博大擊殺。</li></ul>
