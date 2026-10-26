@@ -1195,6 +1195,16 @@ $('#missionBar').addEventListener('change', e => {
   if (e.target.id === 'sandEvent') state.sandEvent = e.target.value;
 });
 
+$('#missionBar').addEventListener('change', e => {
+  if (e.target.id === 'sandEnemy') state.sandEnemy = e.target.value;
+  if (e.target.id === 'sandEvent') state.sandEvent = e.target.value;
+  if (e.target.id === 'aiArchSel') {
+    state.aiArch = e.target.value;
+    setupMatch();
+    renderAll();
+  }
+});
+
 /* ---------- 模式切換與預算修剪 ---------- */
 $('#modeTabs').addEventListener('click', e => {
   const b = e.target.closest('[data-mode]'); if (!b) return;
@@ -1519,18 +1529,288 @@ function copyText(t) {
   else { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (e) {} a.remove(); }
 }
 
-/* ---------- 沙盒 ---------- */
+/* ---------- 沙盒大數據模擬系統 (Sandbox 300 Simulation Engine) ---------- */
 function runSandbox() {
-  const archs = state.sandEnemy === 'random' ? ARCHETYPES : [ARCHETYPES.find(a => a.id === state.sandEnemy)];
-  const per = Math.ceil(300 / archs.length);
-  const total = { n: 0, win: 0, lose: 0, draw: 0, sumA: 0, sumB: 0, byEvent: {} };
-  EVENTS.forEach(e => { total.byEvent[e.id] = { win: 0, n: 0 }; });
-  archs.forEach((a, k) => {
-    const r = simulate(state.deck, buildFromPlan(a.plan, mulberry32(k + 3)), per, { docA: state.doctrine, seed: 99 + k, event: state.sandEvent === 'all' ? null : EVENTS.find(e => e.id === state.sandEvent) });
-    ['n', 'win', 'lose', 'draw', 'sumA', 'sumB'].forEach(f => { total[f] += r[f]; });
-    EVENTS.forEach(e => { total.byEvent[e.id].win += r.byEvent[e.id].win; total.byEvent[e.id].n += r.byEvent[e.id].n; });
+  const deck = state.deck.slice();
+  const errs = validateDeck(deck, budgetLimit(), currentBanned());
+  if (errs.length > 0) {
+    toast('⚠️ 陣容未就緒：' + (errs[0] || '請先組建合法的 5 槽陣容再啟動模擬'));
+    return;
+  }
+
+  // 1. 取得對手風格群
+  const archs = state.sandEnemy === 'random' ? ARCHETYPES : [ARCHETYPES.find(a => a.id === state.sandEnemy)].filter(Boolean);
+  const targetRuns = 300;
+  const per = Math.ceil(targetRuns / archs.length);
+
+  const total = {
+    n: 0,
+    win: 0,
+    lose: 0,
+    draw: 0,
+    sumA: 0,
+    sumB: 0,
+    byEvent: {},
+    byArch: {}
+  };
+
+  EVENTS.forEach(e => {
+    total.byEvent[e.id] = { win: 0, lose: 0, draw: 0, n: 0, name: e.name, icon: e.icon };
   });
-  state.sandResult = total; renderSide();
+  archs.forEach(a => {
+    total.byArch[a.id] = { win: 0, lose: 0, draw: 0, n: 0, name: a.name };
+  });
+
+  const baseSeed = (Date.now() ^ (Math.random() * 4294967296)) >>> 0;
+
+  archs.forEach((a, k) => {
+    const enemyDeck = buildFromPlan(a.plan, mulberry32(baseSeed + k * 17 + 3));
+    const r = simulate(deck, enemyDeck, per, {
+      docA: state.doctrine,
+      seed: (baseSeed + k * 997) >>> 0,
+      event: state.sandEvent === 'all' ? null : EVENTS.find(e => e.id === state.sandEvent)
+    });
+
+    ['n', 'win', 'lose', 'draw', 'sumA', 'sumB'].forEach(f => {
+      total[f] += r[f];
+    });
+
+    total.byArch[a.id].win += r.win;
+    total.byArch[a.id].lose += r.lose;
+    total.byArch[a.id].draw += r.draw;
+    total.byArch[a.id].n += r.n;
+
+    EVENTS.forEach(e => {
+      if (r.byEvent[e.id]) {
+        total.byEvent[e.id].win += r.byEvent[e.id].win;
+        total.byEvent[e.id].n += r.byEvent[e.id].n;
+      }
+    });
+  });
+
+  state.sandResult = total;
+  showSandboxModal(total);
+}
+
+function showSandboxModal(res) {
+  const modal = $('#sandboxModal');
+  const card = $('#sandboxCard');
+  if (!modal || !card) return;
+
+  const total = res.n || 1;
+  const winRate = ((res.win / total) * 100).toFixed(1);
+  const loseRate = ((res.lose / total) * 100).toFixed(1);
+  const drawRate = ((res.draw / total) * 100).toFixed(1);
+  const avgVpA = (res.sumA / total).toFixed(1);
+  const avgVpB = (res.sumB / total).toFixed(1);
+
+  // 綜合戰略評級 (Grade)
+  let grade = 'B', gradeTitle = '戰 術 均 勢', gradeDesc = '與主流陣容互有勝負，建議針對弱點調整配件', gradeClass = 'grade-b';
+  const numWinRate = parseFloat(winRate);
+  if (numWinRate >= 70) {
+    grade = 'S';
+    gradeTitle = '戰 略 霸 權';
+    gradeDesc = '大數據展現壓倒性勝率，具備強大泛用統治力';
+    gradeClass = 'grade-s';
+  } else if (numWinRate >= 55) {
+    grade = 'A';
+    gradeTitle = '優 勢 陣 容';
+    gradeDesc = '整體戰術穩定克敵，大部分地形皆能佔據主動';
+    gradeClass = 'grade-a';
+  } else if (numWinRate >= 45) {
+    grade = 'B';
+    gradeTitle = '勢 均 力 敵';
+    gradeDesc = '抗衡主流戰術，勝負取決於戰場隨機事件與臨場教條';
+    gradeClass = 'grade-b';
+  } else {
+    grade = 'C';
+    gradeTitle = '風 險 陣 容';
+    gradeDesc = '抗壓能力受限，在特定極端環境中容易被強勢克制';
+    gradeClass = 'grade-c';
+  }
+
+  // 陣容簡要
+  const currentDoc = DOCTRINES.find(d => d.id === state.doctrine) || DOCTRINES[0];
+
+  // 分析最強環境與最弱環境
+  const evArr = Object.values(res.byEvent).filter(e => e.n > 0);
+  evArr.sort((a, b) => (b.win / b.n) - (a.win / a.n));
+  const bestEvent = evArr[0];
+  const worstEvent = evArr[evArr.length - 1];
+
+  // 分析最克制風格與最苦手風格
+  const archArr = Object.values(res.byArch).filter(a => a.n > 0);
+  archArr.sort((a, b) => (b.win / b.n) - (a.win / a.n));
+  const bestArch = archArr[0];
+  const worstArch = archArr[archArr.length - 1];
+
+  card.innerHTML = `
+    <button class="modal-x" id="sandCloseX" title="關閉大數據報告">✕</button>
+
+    <!-- 頂部旗艦級橫幅 -->
+    <div class="aar-header ${numWinRate >= 50 ? 'win' : 'lose'}" style="margin-bottom:14px">
+      <div class="aar-grade-badge ${gradeClass}">
+        <span class="grade-char">${grade}</span>
+        <span class="grade-label">SIM-META</span>
+      </div>
+      <div class="aar-title-group">
+        <div class="aar-meta-row">
+          <span class="aar-mode-tag">⚡ MONTE CARLO · 蒙地卡羅大數據</span>
+          <span class="aar-env-tag">已完成 ${res.n} 場模擬推演 · 採用【${esc(currentDoc.name)}】教條</span>
+        </div>
+        <h2 class="aar-main-title">${gradeTitle} · 總勝率 ${winRate}%</h2>
+        <div class="aar-sub-desc">${gradeDesc}</div>
+      </div>
+    </div>
+
+    <!-- 核心數據 KPI 看板 -->
+    <div class="sand-kpi-grid">
+      <div class="sand-kpi-card highlight">
+        <div class="sand-kpi-lbl">整體作戰勝率</div>
+        <div class="sand-kpi-val ${numWinRate >= 50 ? 'green' : 'amber'}">${winRate}%</div>
+        <div class="sand-kpi-sub">300 局確定性種子迭代</div>
+      </div>
+      <div class="sand-kpi-card">
+        <div class="sand-kpi-lbl">戰績分佈統計</div>
+        <div class="sand-record-pills">
+          <span class="sand-pill win"><b>${res.win}</b> 勝</span>
+          <span class="sand-pill lose"><b>${res.lose}</b> 敗</span>
+          <span class="sand-pill draw"><b>${res.draw}</b> 平</span>
+        </div>
+        <div class="sand-kpi-sub">勝 ${winRate}% · 負 ${loseRate}% · 平 ${drawRate}%</div>
+      </div>
+      <div class="sand-kpi-card">
+        <div class="sand-kpi-lbl">雙方平均戰略積分 (VP)</div>
+        <div class="sand-kpi-val cyan">${avgVpA} <small style="font-size:12px;color:var(--muted)">vs</small> <span style="color:var(--red)">${avgVpB}</span></div>
+        <div class="sand-kpi-sub">友軍平均 VP 領先 ${(avgVpA - avgVpB).toFixed(1)} 分</div>
+      </div>
+    </div>
+
+    <!-- 雙欄進度分析：左側戰場環境適性 + 右側敵方風格抗性 -->
+    <div class="sand-breakdown-grid">
+      <!-- 戰場環境表現 -->
+      <div class="sand-panel">
+        <div class="sand-panel-head">
+          <span>🌍 戰場環境適性矩陣</span>
+          <small class="muted">各事件輪替 ${evArr[0]?.n || 0} 場</small>
+        </div>
+        <div class="sand-bar-list">
+          ${evArr.map(e => {
+            const wr = e.n > 0 ? Math.round((e.win / e.n) * 100) : 0;
+            const barCol = wr >= 60 ? 'var(--green)' : wr >= 45 ? 'var(--cyan)' : wr >= 35 ? 'var(--amber)' : 'var(--red)';
+            return `
+              <div class="sand-bar-row">
+                <div class="sand-bar-info">
+                  <span class="sand-bar-name">${e.icon} ${esc(e.name)}</span>
+                  <span class="sand-bar-num" style="color:${barCol}">${wr}% (${e.win}/${e.n})</span>
+                </div>
+                <div class="sand-bar-track">
+                  <div class="sand-bar-fill" style="width:${wr}%;background:${barCol}"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <!-- 敵方 AI 風格克制抗性 -->
+      <div class="sand-panel">
+        <div class="sand-panel-head">
+          <span>⚔️ 假想敵風格克制分析</span>
+          <small class="muted">對決主流戰術流派</small>
+        </div>
+        <div class="sand-bar-list">
+          ${archArr.map(a => {
+            const wr = a.n > 0 ? Math.round((a.win / a.n) * 100) : 0;
+            const barCol = wr >= 60 ? 'var(--green)' : wr >= 45 ? 'var(--cyan)' : wr >= 35 ? 'var(--amber)' : 'var(--red)';
+            return `
+              <div class="sand-bar-row">
+                <div class="sand-bar-info">
+                  <span class="sand-bar-name">🎯 ${esc(a.name)}</span>
+                  <span class="sand-bar-num" style="color:${barCol}">${wr}% (${a.win}/${a.n})</span>
+                </div>
+                <div class="sand-bar-track">
+                  <div class="sand-bar-fill" style="width:${wr}%;background:${barCol}"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- 參謀本部戰略綜合診斷 -->
+    <div class="sand-debrief-box">
+      <div class="sand-debrief-title">💡 參謀本部大數據戰略診斷 (STRATEGIC INSIGHTS)</div>
+      <ul class="aar-debrief-list">
+        ${bestEvent ? `
+          <li class="d-good">
+            <span class="d-bullet">✔</span>
+            <span><b>最佳戰場優勢</b>：此陣容在【${bestEvent.icon} ${esc(bestEvent.name)}】表現最為強勁，勝率達 <b>${Math.round((bestEvent.win / bestEvent.n) * 100)}%</b>，部隊裝備與環境特性具備高度綜效。</span>
+          </li>
+        ` : ''}
+        ${worstEvent && worstEvent !== bestEvent ? `
+          <li class="${(worstEvent.win / worstEvent.n) < 0.45 ? 'd-bad' : 'd-neutral'}">
+            <span class="d-bullet">${(worstEvent.win / worstEvent.n) < 0.45 ? '⚠' : 'ℹ'}</span>
+            <span><b>環境適應警報</b>：在【${worstEvent.icon} ${esc(worstEvent.name)}】勝率降至 <b>${Math.round((worstEvent.win / worstEvent.n) * 100)}%</b>，面對該地形的特殊修正易處於火力劣勢。</span>
+          </li>
+        ` : ''}
+        ${bestArch ? `
+          <li class="d-good">
+            <span class="d-bullet">🎯</span>
+            <span><b>戰術克制掌握</b>：對戰【${esc(bestArch.name)}】具備壓制性優勢 (勝率 <b>${Math.round((bestArch.win / bestArch.n) * 100)}%</b>)。</span>
+          </li>
+        ` : ''}
+        ${worstArch && worstArch !== bestArch ? `
+          <li class="d-bad">
+            <span class="d-bullet">🛡️</span>
+            <span><b>潛在克制對手</b>：對陣【${esc(worstArch.name)}】遭遇較大阻力 (勝率僅 <b>${Math.round((worstArch.win / worstArch.n) * 100)}%</b>)，建議微調單位配比或更換戰術教條。</span>
+          </li>
+        ` : ''}
+      </ul>
+    </div>
+
+    <!-- 底部行動指令列 -->
+    <div class="aar-actions" style="margin-top:14px">
+      <button class="btn primary aar-btn-main" id="sandRerun">⚡ 重新迭代 300 場模擬</button>
+      <button class="btn ghost" id="sandCopyReport">📋 複製大數據評測結果</button>
+      <button class="btn ghost" id="sandToBattle">⚔️ 以此陣容開戰一場</button>
+      <button class="btn ghost" id="sandClose">返回調整陣容</button>
+    </div>
+  `;
+
+  modal.hidden = false;
+
+  // 事件綁定
+  const closeModal = () => { modal.hidden = true; };
+  $('#sandClose').onclick = closeModal;
+  $('#sandCloseX').onclick = closeModal;
+  modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+  $('#sandRerun').onclick = () => {
+    toast('⚡ 正在運行新種子 300 場蒙地卡羅推演...');
+    setTimeout(runSandbox, 50);
+  };
+
+  $('#sandCopyReport').onclick = () => {
+    const text = `【頂尖對戰：15元聯合作戰 - 300場大數據沙盒評測報告】\\n` +
+      `陣容代碼：${encodeDeck(state.deck)}\\n` +
+      `戰術教條：${currentDoc.name}\\n` +
+      `綜合勝率：${winRate}% (${res.win}勝 / ${res.lose}敗 / ${res.draw}平)\\n` +
+      `平均積分：友軍 ${avgVpA} VP vs 敵軍 ${avgVpB} VP\\n` +
+      `最佳戰場：${bestEvent?.name} (${Math.round((bestEvent?.win / bestEvent?.n) * 100)}%)\\n` +
+      `最克制風格：${bestArch?.name} (${Math.round((bestArch?.win / bestArch?.n) * 100)}%)`;
+    navigator.clipboard.writeText(text).then(() => {
+      toast('📋 已複製 300 場大數據評測報告至剪貼簿！');
+    }).catch(() => {
+      toast('代碼：' + encodeDeck(state.deck));
+    });
+  };
+
+  $('#sandToBattle').onclick = () => {
+    modal.hidden = true;
+    startBattle();
+  };
 }
 
 /* ---------- 戰鬥啟動 ---------- */
@@ -2665,6 +2945,7 @@ document.addEventListener('keydown', e => {
     $('#bo3SeriesModal').hidden = true;
     if ($('#unitDetailModal')) $('#unitDetailModal').hidden = true;
     if ($('#deckMoreModal')) $('#deckMoreModal').hidden = true;
+    if ($('#sandboxModal')) $('#sandboxModal').hidden = true;
     return;
   }
 

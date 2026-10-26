@@ -2795,7 +2795,211 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 [data-theme="light"] .roster-table-box { background: #ffffff; border-color: rgba(15, 23, 42, 0.12); }
 [data-theme="light"] .r-name { color: #0f172a; }
 [data-theme="light"] .roster-row:hover { background: #f1f5f9; }
-[data-theme="light"] .roster-row.is-me { background: rgba(2, 132, 199, 0.08); border-left-color: #0284c7; }
+/* =====================================================
+   沙盒 300 場大數據模擬報告 (Sandbox Simulation AAR Modal)
+   ===================================================== */
+.sandbox-modal-card {
+  width: min(940px, 96vw);
+  max-height: 94vh;
+  overflow-y: auto;
+  padding: 20px 26px;
+  background: var(--modal-bg);
+  border: 1px solid var(--line2);
+  box-shadow: 0 32px 80px -15px rgba(0, 0, 0, 0.85), 0 0 40px rgba(61, 224, 255, 0.08);
+}
+[data-theme="light"] .sandbox-modal-card {
+  box-shadow: 0 24px 70px -15px rgba(15, 23, 42, 0.22), 0 0 30px rgba(2, 132, 199, 0.1);
+}
+
+/* 核心 KPI 看板 (3 欄) */
+.sand-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.sand-kpi-card {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+.sand-kpi-card.highlight {
+  background: linear-gradient(135deg, rgba(61, 224, 255, 0.08), rgba(255, 255, 255, 0.02));
+  border-color: rgba(61, 224, 255, 0.35);
+  box-shadow: 0 0 20px rgba(61, 224, 255, 0.1) inset;
+}
+[data-theme="light"] .sand-kpi-card {
+  background: #ffffff;
+  border-color: rgba(30, 41, 59, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+[data-theme="light"] .sand-kpi-card.highlight {
+  background: linear-gradient(135deg, #f0f9ff, #ffffff);
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+.sand-kpi-lbl {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.sand-kpi-val {
+  font-family: var(--head);
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+.sand-kpi-val.green { color: var(--green); text-shadow: 0 0 15px rgba(93, 255, 176, 0.3); }
+.sand-kpi-val.amber { color: var(--amber); }
+.sand-kpi-val.cyan { color: var(--cyan); }
+.sand-kpi-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--mono);
+  margin-top: 4px;
+}
+
+/* 戰績膠囊列 */
+.sand-record-pills {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: 4px 0;
+}
+.sand-pill {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+.sand-pill.win { background: rgba(93, 255, 176, 0.15); color: var(--green); border: 1px solid rgba(93, 255, 176, 0.3); }
+.sand-pill.lose { background: rgba(255, 93, 110, 0.15); color: var(--red); border: 1px solid rgba(255, 93, 110, 0.3); }
+.sand-pill.draw { background: rgba(255, 179, 64, 0.15); color: var(--amber); border: 1px solid rgba(255, 179, 64, 0.3); }
+
+/* 雙欄分析網格 */
+.sand-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.sand-panel {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+[data-theme="light"] .sand-panel {
+  background: #ffffff;
+  border-color: rgba(30, 41, 59, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.sand-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--head);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--cyan);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
+}
+
+.sand-bar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sand-bar-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.sand-bar-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.sand-bar-name {
+  color: var(--text);
+  font-weight: 600;
+}
+.sand-bar-num {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.sand-bar-track {
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+[data-theme="light"] .sand-bar-track {
+  background: rgba(15, 23, 42, 0.08);
+}
+.sand-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.2, 1, 0.3, 1);
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* 參謀戰略診斷盒 */
+.sand-debrief-box {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+[data-theme="light"] .sand-debrief-box {
+  background: #ffffff;
+  border-color: rgba(30, 41, 59, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.sand-debrief-title {
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 手機與平板響應式適配 */
+@media (max-width: 768px) {
+  .sandbox-modal-card {
+    padding: 16px 12px;
+    width: 96vw;
+  }
+  .sand-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .sand-breakdown-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
 
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
