@@ -172,6 +172,7 @@ const activeSlot = LS.get('db15_active_slot', 'A');
 
 const state = {
   mode: 'quick',
+  quickSubMode: 'ai', // 'ai' (預設 AI 演習) 或 'ghost' (全球名將異步幽靈)
   deckSlot: activeSlot,
   dualDecks: { A: savedDeckA, B: savedDeckB },
   dualDocs: { A: savedDocA, B: savedDocB },
@@ -264,18 +265,24 @@ function setupMatch() {
     state.enemyName = p.name;
     state.enemyDoc = DOCTRINES[Math.floor(rng() * 3)].id;
   } else if (state.mode === 'quick') {
-    const arch = state.aiArch === 'random' ? pick(ARCHETYPES) : ARCHETYPES.find(a => a.id === state.aiArch);
     state.event = pick(EVENTS);
-    state.enemy = buildFromPlan(arch.plan, Math.random);
-    state.enemyName = arch.name;
-    state.enemyDoc = pick(DOCTRINES).id;
+    if (state.quickSubMode === 'ghost') {
+      const pool = getGhostPool();
+      state.ghostTarget = state.ghostTarget || pick(pool);
+      state.enemy = state.ghostTarget.deck.slice();
+      state.enemyName = state.ghostTarget.callsign;
+      state.enemyDoc = state.ghostTarget.doctrine;
+    } else {
+      const arch = state.aiArch === 'random' ? pick(ARCHETYPES) : ARCHETYPES.find(a => a.id === state.aiArch);
+      state.enemy = buildFromPlan(arch.plan, Math.random);
+      state.enemyName = arch.name;
+      state.enemyDoc = pick(DOCTRINES).id;
+    }
   } else if (state.mode === 'ghost') {
-    const pool = getGhostPool();
-    state.ghostTarget = state.ghostTarget || pick(pool);
-    state.event = pick(EVENTS);
-    state.enemy = state.ghostTarget.deck.slice();
-    state.enemyName = state.ghostTarget.callsign;
-    state.enemyDoc = state.ghostTarget.doctrine;
+    state.mode = 'quick';
+    state.quickSubMode = 'ghost';
+    setupMatch();
+    return;
   } else if (state.mode === 'bo3') {
     if (!state.bo3.active) {
       initBo3Series();
@@ -479,35 +486,54 @@ function renderMissionBar() {
   let h = '';
 
   if (mode === 'quick') {
+    const isGhost = (state.quickSubMode === 'ghost');
+    const t = state.ghostTarget;
+
     h = `<span class="mission-tag">RAPID BATTLE · 快速交鋒</span>
+      <!-- 對手類型二維切換膠囊 -->
+      <div class="btn-group-pill quick-submode-pill" style="display:inline-flex;margin:0 4px">
+        <button class="pill-btn sm ${!isGhost ? 'active' : ''}" data-submode="ai" title="切換為電腦即時演算法對手">🤖 AI 演習</button>
+        <button class="pill-btn sm ${isGhost ? 'active' : ''}" data-submode="ghost" title="切換為全球名將與真實玩家影子部隊">🌐 全球幽靈</button>
+      </div>
+
       <div class="mission-item">
         <span style="font-size:18px">${state.event.icon}</span>
         <div><b>${esc(state.event.name)}</b> <span class="muted" style="font-size:11.5px">(${esc(state.event.desc)})</span></div>
-      </div>
-      <div class="mission-item" style="margin-left:10px">
-        <span class="muted">AI 風格：</span>
-        <select class="select sm" id="aiSel" style="padding:3px 8px;width:auto;font-size:12px">
-          <option value="random">隨機對手</option>
-          ${ARCHETYPES.map(a => `<option value="${a.id}" ${state.aiArch === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
-        </select>
-      </div>
-      <label class="check" style="margin-left:10px;font-size:12px">
-        <input type="checkbox" id="scoutChk" ${state.scout ? 'checked' : ''}>
-        <span>情報偵察 (預算 −$1)</span>
-      </label>
-      ${state.scout ? `<span class="mission-tag" style="color:var(--amber);border-color:rgba(255,179,64,.3)">偵得：${esc(state.enemyName)} · ${esc(UNIT_MAP[state.enemy[state.scoutIdx]].name)}</span>` : ''}`;
-  } else if (mode === 'ghost') {
-    const t = state.ghostTarget;
-    h = `<span class="mission-tag">GHOST MATCH · 全球天梯</span>
-      <div class="mission-item">
-        <b>${esc(t.callsign)}</b>
-        <span class="ghost-rank" style="font-size:11px;padding:1px 6px">${t.title} · ${t.rating} RP</span>
-        <span class="muted" style="font-size:11.5px">戰績: ${t.wins}勝 ${t.losses}負 · 「${esc(t.motto)}」</span>
-      </div>
-      <div class="mission-actions">
-        <button class="btn ghost sm" id="btnRerollGhost">換一批對手 🔄</button>
-        <button class="btn amber sm" id="btnDeployGhost">部署防守部隊 🌐</button>
       </div>`;
+
+    if (!isGhost) {
+      h += `
+        <div class="mission-item" style="margin-left:8px">
+          <span class="muted">AI 風格：</span>
+          <select class="select sm" id="aiSel" style="padding:3px 8px;width:auto;font-size:12px">
+            <option value="random">隨機對手</option>
+            ${ARCHETYPES.map(a => `<option value="${a.id}" ${state.aiArch === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
+          </select>
+        </div>
+        <label class="check" style="margin-left:8px;font-size:12px">
+          <input type="checkbox" id="scoutChk" ${state.scout ? 'checked' : ''}>
+          <span>情報偵察 (預算 −$1)</span>
+        </label>
+        ${state.scout ? `<span class="mission-tag" style="color:var(--amber);border-color:rgba(255,179,64,.3)">偵得：${esc(state.enemyName)} · ${esc(UNIT_MAP[state.enemy[state.scoutIdx]].name)}</span>` : ''}`;
+    } else {
+      if (t) {
+        h += `
+          <div class="mission-item" style="margin-left:8px">
+            <b>${esc(t.callsign)}</b>
+            <span class="ghost-rank" style="font-size:11px;padding:1px 6px">${t.title} · ${t.rating} RP</span>
+            <span class="muted" style="font-size:11.5px">戰績: ${t.wins}勝 ${t.losses}負 · 「${esc(t.motto)}」</span>
+          </div>
+          <div class="mission-actions">
+            <button class="btn ghost sm" id="btnRerollGhost" title="隨機換一位幽靈名將對手">換一位名將 🔄</button>
+            <button class="btn amber sm" id="btnDeployGhost" title="上傳當前陣容為世界影子防禦部隊">部署防禦部隊 🌐</button>
+          </div>`;
+      }
+    }
+  } else if (mode === 'ghost') {
+    state.mode = 'quick';
+    state.quickSubMode = 'ghost';
+    renderMissionBar();
+    return;
   } else if (mode === 'bo3') {
     const b = state.bo3;
     if (state.isOnlinePvp) {
@@ -1231,6 +1257,17 @@ document.addEventListener('click', e => {
 
 // 橫幅事件代理
 $('#missionBar').addEventListener('click', e => {
+  const subBtn = e.target.closest('[data-submode]');
+  if (subBtn) {
+    const targetSub = subBtn.dataset.submode;
+    if (state.quickSubMode !== targetSub) {
+      state.quickSubMode = targetSub;
+      setupMatch();
+      renderAll();
+      toast(targetSub === 'ghost' ? '🌐 已切換至「全球幽靈」：挑戰世界名將異步防禦戰隊！' : '🤖 已切換至「AI 演習」：自由挑戰各流派 AI 戰術教條！');
+    }
+    return;
+  }
   if (e.target.closest('#btnRerollGhost')) {
     const pool = getGhostPool();
     state.ghostTarget = pick(pool.filter(g => g.id !== (state.ghostTarget && state.ghostTarget.id)));
@@ -1365,6 +1402,12 @@ function setMode(m) {
   // 無論何時點選上方功能列（即使在戰鬥中或檢視戰場情形），立即乾淨退出戰鬥
   exitActiveBattle();
 
+  // 相容舊 ghost 模式：自動映射至快速對戰之幽靈子模式
+  if (m === 'ghost') {
+    m = 'quick';
+    state.quickSubMode = 'ghost';
+  }
+
   const prevMode = state.mode;
   state.mode = m; state.sandResult = null; state.scout = false;
   document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === m));
@@ -1408,15 +1451,15 @@ function setMode(m) {
   prune(); setupMatch(); renderAll();
   if (m === 'bo3') {
     toast(`🏆 已進入 BO5 征服賽：五局三勝制！配對對手【${state.bo3.rivalName}】，輸掉該局之一方可啟動戰術反制，禁用對方關鍵裝備！`);
-  } else if (m === 'ghost') {
-    toast('🌐 已進入幽靈對戰：與全球玩家上傳之真實作戰陣容交鋒！');
   } else if (m === 'daily') {
     toast(`🎯 已進入精選對戰 #${dailyNo()}：挑戰超標對手，考驗戰略微操！`);
   } else if (m === 'sandbox') {
     toast('🧪 已進入沙盒模擬：推演 300 場大規模戰術大數據！');
   } else if (m === 'quick') {
-    if (prevMode !== 'quick') {
-      toast('⚡ 已切換至快速對戰模式');
+    if (state.quickSubMode === 'ghost') {
+      toast('🌐 已進入快速對戰 · 全球名將異步幽靈！');
+    } else if (prevMode !== 'quick') {
+      toast('⚡ 已切換至快速對戰 · AI 戰術演習！');
     } else {
       toast('⚡ 已返回快速對戰陣容指揮所');
     }
@@ -2680,7 +2723,7 @@ function finishBattle(res) {
   }
 
   /* 幽靈天梯積分結算 */
-  if (state.mode === 'ghost') {
+  if (state.mode === 'ghost' || (state.mode === 'quick' && state.quickSubMode === 'ghost')) {
     if (won) {
       playerGhost.rp += 25; playerGhost.wins++;
       if (state.ghostTarget) state.ghostTarget.losses++;
@@ -3067,9 +3110,9 @@ function showResult(res, bo3Custom) {
 
   let subtitle = `${esc(res.ev.icon + ' ' + res.ev.name)}`;
   if (state.mode === 'daily') subtitle += ' · 精選對戰 #' + dailyNo();
-  else if (state.mode === 'ghost') subtitle += ` · 幽靈對戰 (${state.ghostTarget.callsign})`;
+  else if (state.mode === 'ghost' || (state.mode === 'quick' && state.quickSubMode === 'ghost')) subtitle += ` · 幽靈對決 (${state.ghostTarget?.callsign || '名將'})`;
   else if (state.mode === 'bo3') subtitle += ` · BO5 第 ${state.bo3.round} 局 (比分 ${state.bo3.winsA} - ${state.bo3.winsB})`;
-  else subtitle += ' · 快速交鋒聯合作戰';
+  else subtitle += ' · 快速交鋒 · AI 戰術演練';
 
   $('#resultCard').innerHTML = `
     <button class="modal-x" id="rCloseX" title="關閉彈窗並檢視戰場情形">✕</button>
@@ -3284,8 +3327,8 @@ function buildWhy(res) {
 
 function shareText(res) {
   const won = res.winner === 'A';
-  const names = state.deck.map(id => UNIT_MAP[id].name).join('｜');
-  return `【頂尖對戰】${state.mode === 'daily' ? '精選對戰 #' + dailyNo() : state.mode === 'ghost' ? '幽靈對戰' : '快速對戰'} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n你能用 $15 做得更好嗎？`;
+  const modeName = state.mode === 'daily' ? '精選對戰 #' + dailyNo() : (state.mode === 'ghost' || (state.mode === 'quick' && state.quickSubMode === 'ghost')) ? '幽靈對決' : '快速交鋒';
+  return `【頂尖對戰】${modeName} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n你能用 $15 做得更好嗎？`;
 }
 
 function closeBattle() {
@@ -4356,7 +4399,14 @@ renderAll();
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 if (modeParam && ['ladder', 'tournament', 'bo3', 'quick', 'ghost', 'daily', 'sandbox'].includes(modeParam)) {
-  setMode(modeParam);
+  if (modeParam === 'ghost') {
+    setMode('quick');
+    state.quickSubMode = 'ghost';
+    setupMatch();
+    renderAll();
+  } else {
+    setMode(modeParam);
+  }
 }
 const roomParam = urlParams.get('room');
 if (roomParam) {
