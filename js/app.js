@@ -4210,9 +4210,18 @@ function renderTournamentBracket(t) {
       ${leftWingCols.map(col => renderBracketColHtml(col, t, 'left')).join('')}
     </div>
 
-    <!-- 中央世界冠軍王座 (World Champion Centerpiece & Apex) -->
+    <!-- 中央世界冠軍王座 (歐冠 2024 神殿風格：上方冠亞軍 · 正中央大獎盃 · 下方季殿軍) -->
     <div class="bracket-center">
-      <div class="trophy-podium">
+      <!-- 上方：總冠軍決賽 (GOLD FINAL 冠亞軍爭霸) -->
+      <div class="final-match-box">
+        <div class="match-box-title gold-title">
+          <span>★ 巔峰總決賽 · 冠亞軍爭霸 ★</span>
+        </div>
+        ${finalMatch ? renderMatchCardHtml(finalMatch, t, true) : ''}
+      </div>
+
+      <!-- 正中央：大獎盃榮譽神壇 (World Champion Center Trophy) -->
+      <div class="trophy-podium center-trophy">
         <div class="trophy-halo"></div>
         <div class="trophy-icon-glow">🏆</div>
         <div class="trophy-title">WORLD CHAMPION</div>
@@ -4222,18 +4231,10 @@ function renderTournamentBracket(t) {
         </div>
       </div>
 
-      <!-- 總冠軍決賽 (GOLD FINAL) -->
-      <div class="final-match-box">
-        <div class="match-box-title gold-title">
-          <span>★ 巔峰總決賽 · GRAND FINAL ★</span>
-        </div>
-        ${finalMatch ? renderMatchCardHtml(finalMatch, t, true) : ''}
-      </div>
-
-      <!-- 季軍爭奪戰 (BRONZE FINAL) -->
+      <!-- 下方：季殿軍爭奪戰 (BRONZE FINAL) -->
       <div class="bronze-match-box">
         <div class="match-box-title bronze-title">
-          <span>◆ 季軍榮譽戰 · BRONZE FINAL ◆</span>
+          <span>◆ 季殿軍榮譽戰 · BRONZE FINAL ◆</span>
         </div>
         ${bronzeMatch ? renderMatchCardHtml(bronzeMatch, t, false, true) : ''}
       </div>

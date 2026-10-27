@@ -4400,118 +4400,19 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   color: rgba(100, 116, 139, 0.4);
 }
 
-/* 對抗樹主容器：向心聚攏與自適應間距 */
+/* 對抗樹主容器：向心聚攏與自適應間距 (徹底杜絕欄位重疊碰撞) */
 .bracket-container {
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   z-index: 2;
-  width: 100%;
+  width: auto;
+  min-width: min-content;
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
   margin: 0 auto;
-}
-
-/* 針對不同隊伍規模的向心聚集間距調校 (消滅死白空洞) */
-.bracket-container.bracket-size-4 {
-  max-width: 960px;
-  gap: clamp(32px, 4vw, 56px);
-}
-
-.bracket-container.bracket-size-8 {
-  max-width: 1260px;
-  gap: clamp(16px, 2.5vw, 36px);
-}
-
-.bracket-container.bracket-size-16 {
-  max-width: 100%;
-  gap: clamp(8px, 1.2vw, 18px);
-}
-
-.bracket-container.bracket-size-32 {
-  max-width: 100%;
-  gap: 6px;
-  justify-content: flex-start;
-  padding: 0 20px;
-}
-
-/* 全畫布動態 SVG 貝茲連線圖層 */
-.bracket-svg-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* 貝茲曲線外觀與光流動畫 */
-.bracket-link-bg {
-  fill: none;
-  stroke: rgba(15, 23, 42, 0.7);
-  stroke-width: 4px;
-}
-
-[data-theme="light"] .bracket-link-bg {
-  stroke: rgba(241, 245, 249, 0.85);
-}
-
-.bracket-link-core {
-  fill: none;
-  stroke-linecap: round;
-  transition: all 0.3s ease;
-}
-
-.bracket-link-pending {
-  stroke: rgba(56, 189, 248, 0.28);
-  stroke-width: 1.8px;
-}
-
-[data-theme="light"] .bracket-link-pending {
-  stroke: rgba(148, 163, 184, 0.5);
-  stroke-width: 1.8px;
-}
-
-.bracket-link-active {
-  stroke-width: 2.4px;
-  stroke-dasharray: 8 4;
-  animation: bracketLinkFlow 1.4s linear infinite;
-}
-
-.bracket-link-my-flow {
-  stroke-width: 3px;
-  stroke-dasharray: 10 4;
-  animation: bracketLinkFlowGold 1s linear infinite;
-}
-
-.bracket-link-bronze {
-  fill: none;
-  stroke-width: 1.5px;
-}
-
-@keyframes bracketLinkFlow {
-  from { stroke-dashoffset: 24; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes bracketLinkFlowGold {
-  from { stroke-dashoffset: 28; }
-  to { stroke-dashoffset: 0; }
-}
-
-.bracket-port-circle {
-  fill: #0ea5e9;
-  opacity: 0.6;
-  transition: all 0.3s ease;
-}
-
-.bracket-port-circle.active {
-  fill: #fbbf24;
-  opacity: 1;
-  filter: drop-shadow(0 0 4px #f59e0b);
 }
 
 /* 左右翼佈局 (Left & Right Wings) */
@@ -4519,11 +4420,9 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 1.8vw, 24px);
   position: relative;
   z-index: 2;
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
   height: 100%;
 }
 
@@ -4541,13 +4440,54 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  flex: 0 1 230px;
-  min-width: 200px;
-  max-width: 260px;
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
+  flex-shrink: 0; /* 永遠不被擠壓變形 */
 }
+
+/* 4 強規模專屬緊湊尺度 */
+.bracket-container.bracket-size-4 {
+  gap: 48px;
+}
+.bracket-size-4 .bracket-wing { gap: 24px; }
+.bracket-size-4 .bracket-col { flex: 0 0 230px; width: 230px; }
+.bracket-size-4 .bracket-center { flex: 0 0 230px; width: 230px; }
+
+/* 8 強規模 (參考歐冠 2024 London 決賽樹：5 欄完美大氣舒展) */
+.bracket-container.bracket-size-8 {
+  gap: 26px;
+}
+.bracket-size-8 .bracket-wing { gap: 22px; }
+.bracket-size-8 .bracket-col { flex: 0 0 210px; width: 210px; }
+.bracket-size-8 .bracket-center { flex: 0 0 220px; width: 220px; }
+
+/* 16 強規模 (7 欄極致防撞抗壓佈局，絕不覆蓋重疊) */
+.bracket-container.bracket-size-16 {
+  gap: 12px;
+}
+.bracket-size-16 .bracket-wing { gap: 10px; }
+.bracket-size-16 .bracket-col { flex: 0 0 178px; width: 178px; }
+.bracket-size-16 .bracket-center { flex: 0 0 196px; width: 196px; }
+.bracket-size-16 .b-match-card { padding: 4px 6px; gap: 3px; }
+.bracket-size-16 .b-team-row { padding: 3px 5px; font-size: 12px; gap: 4px; }
+.bracket-size-16 .b-team-name { font-size: 11.5px; }
+.bracket-size-16 .b-team-flag-pill { font-size: 13.5px; }
+.bracket-size-16 .b-score-plate { font-size: 12px; min-width: 17px; padding: 0 3px; }
+.bracket-size-16 .col-header-pill { font-size: 11px; padding: 2px 10px; }
+.bracket-size-16 .b-match-status-bar { font-size: 9.5px; padding-top: 2px; }
+
+/* 32 強規模 (9 欄極限賽事) */
+.bracket-container.bracket-size-32 {
+  gap: 8px;
+}
+.bracket-size-32 .bracket-wing { gap: 8px; }
+.bracket-size-32 .bracket-col { flex: 0 0 162px; width: 162px; }
+.bracket-size-32 .bracket-center { flex: 0 0 185px; width: 185px; }
+.bracket-size-32 .b-match-card { padding: 3px 5px; gap: 2px; }
+.bracket-size-32 .b-team-row { padding: 2px 4px; font-size: 11.5px; }
+.bracket-size-32 .b-team-name { font-size: 11px; }
+.bracket-size-32 .b-score-plate { font-size: 11px; min-width: 15px; padding: 0 2px; }
 
 .bracket-col-header {
   flex: 0 0 32px;
@@ -4903,25 +4843,34 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
-  flex: 0 0 220px;
-  min-width: 210px;
-  max-width: 240px;
-  padding: 4px 6px;
+  justify-content: space-between;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
   height: 100%;
+  min-height: 0;
+  padding: 2px 0;
+  flex-shrink: 0;
 }
 
-.trophy-podium {
+.final-match-box {
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.trophy-podium.center-trophy {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   position: relative;
   width: 100%;
-  margin-bottom: 2px;
+  margin: 4px 0;
+  padding: 6px 6px;
+  background: radial-gradient(circle at center, rgba(245, 158, 11, 0.12) 0%, transparent 80%);
+  border-radius: 12px;
+  border: 1px dashed rgba(245, 158, 11, 0.35);
+  box-sizing: border-box;
 }
 
 .trophy-halo {
