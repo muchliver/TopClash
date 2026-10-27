@@ -1370,25 +1370,36 @@ function setMode(m) {
   document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === m));
   
   const viewLadder = $('#viewLadder');
+  const viewTournament = $('#viewTournament');
   const viewBuild = $('#viewBuild');
   const missionBar = $('#missionBar');
   const commandDeck = $('#commandDeck');
 
   if (m === 'ladder') {
     if (viewLadder) viewLadder.hidden = false;
+    if (viewTournament) viewTournament.hidden = true;
     if (viewBuild) viewBuild.hidden = true;
     if (missionBar) missionBar.hidden = true;
     if (commandDeck) commandDeck.hidden = true;
     renderLadderView();
     toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪五星特級上將席位！');
-    // 若尚未自訂過呼號，首次切換進入天梯時引導登記任命狀
     const p = LadderEngine.getState().player;
     if (!p.hasCustomName) {
       setTimeout(() => openCommanderModal(), 400);
     }
     return;
+  } else if (m === 'tournament') {
+    if (viewTournament) viewTournament.hidden = false;
+    if (viewLadder) viewLadder.hidden = true;
+    if (viewBuild) viewBuild.hidden = true;
+    if (missionBar) missionBar.hidden = true;
+    if (commandDeck) commandDeck.hidden = true;
+    renderTournamentView();
+    toast('🥇 已進入世界盃淘汰錦標賽：4/8/16/32 強世足樹狀爭霸戰！');
+    return;
   } else {
     if (viewLadder) viewLadder.hidden = true;
+    if (viewTournament) viewTournament.hidden = true;
     if (viewBuild) viewBuild.hidden = false;
     if (missionBar) missionBar.hidden = false;
     if (commandDeck) commandDeck.hidden = false;
@@ -2652,8 +2663,10 @@ function finishBattle(res) {
 
   renderHud();
 
-  /* 天梯 / BO3 系列賽邏輯分流 */
-  if (state.mode === 'bo3') {
+  /* 錦標賽 / 天梯 / BO3 系列賽邏輯分流 */
+  if (state.mode === 'tournament') {
+    handleTournamentRoundEnd(res);
+  } else if (state.mode === 'bo3') {
     handleBo3RoundEnd(res);
   } else if (state.mode === 'ladder' && state.ladderEnemy) {
     handleLadderMatchEnd(res);
@@ -3715,6 +3728,561 @@ $('#btnPvpStartBattle')?.addEventListener('click', () => {
   currentActiveModal = null;
   renderAll();
   toast(`🏆 線上 BO5 系列賽正式開戰！請挑選 5 槽陣容並點擊【鎖定陣容】！`);
+});
+
+/* =====================================================
+   🥇 世界盃淘汰錦標賽 (Tournament Championship) 前端控制器
+   ===================================================== */
+let tourneySelectedSize = 16;
+let tourneySelectedFormat = 'hybrid';
+
+function renderTournamentView() {
+  let t = TournamentEngine.getState();
+  if (!t) {
+    const playerObj = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState().player : null;
+    t = TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, playerObj ? {
+      uid: playerObj.uid || 'CMD-7392',
+      name: playerObj.name || '我方聯合戰術作戰群',
+      flag: playerObj.flag || '🇹🇼',
+      isMe: true,
+      isAI: false,
+      deck: state.deck.every(Boolean) ? state.deck.slice() : null,
+      doctrine: state.doctrine || 'defense'
+    } : null);
+  }
+
+  const isLobby = (t.status === 'registration');
+  const lobbyCard = $('#tourneyLobbyCard');
+  const bracketVp = $('#tourneyBracketViewport');
+
+  if (lobbyCard) lobbyCard.hidden = !isLobby;
+  if (bracketVp) bracketVp.hidden = isLobby;
+
+  renderTourneyHeader(t);
+
+  if (isLobby) {
+    renderTourneyLobby(t);
+  } else {
+    renderTournamentBracket(t);
+  }
+}
+
+function renderTourneyHeader(t) {
+  const roundNames = {
+    1: t.size === 32 ? '32 強淘汰賽' : t.size === 16 ? '16 強世界爭霸' : t.size === 8 ? '半準決賽 (8強)' : '準決賽 (4強)',
+    2: t.size === 32 ? '16 強賽' : t.size === 16 ? '半準決賽 (8強)' : '決賽圈',
+    3: t.size === 32 ? '半準決賽 (8強)' : t.size === 16 ? '準決賽 (4強)' : '總決賽',
+    4: t.size === 32 ? '準決賽 (4強)' : '世界總決賽',
+    5: '世界總決賽 (World Final)'
+  };
+
+  const formatNames = {
+    bo1: '⚡ 全程 BO1 單淘汰',
+    hybrid: '⭐ 四強前 BO1 · 決賽圈 BO3',
+    bo3: '⚔️ 全程 BO3 征服反制'
+  };
+
+  const myMatch = TournamentEngine.getMyMatch();
+  const amIEliminated = !myMatch && t.status === 'in_progress';
+
+  $('#tourneyRoundPill').textContent = `第 ${t.currentRound}/${t.totalRounds} 輪 · ${roundNames[t.currentRound] || '淘汰賽'}`;
+  $('#tourneyFormatName').textContent = formatNames[t.matchType] || '標準賽制';
+
+  const myStateEl = $('#tourneyMyState');
+  if (myStateEl) {
+    if (t.status === 'completed') {
+      myStateEl.innerHTML = t.champion?.isMe ? '🏆 <b style="color:#fbbf24">榮登世界總冠軍！</b>' : '🏁 賽事圓滿完結';
+    } else if (amIEliminated) {
+      myStateEl.innerHTML = '👀 <span style="color:#94a3b8">特邀戰術觀摩員 (收看決賽)</span>';
+    } else if (myMatch) {
+      myStateEl.innerHTML = '🟢 <b style="color:var(--cyan)">席位在線 · 準備迎戰</b>';
+    } else {
+      myStateEl.innerHTML = '⏳ 備戰大廳';
+    }
+  }
+
+  // 計算當前輪次剩餘隊伍
+  const activeTeams = Object.values(t.matches).filter(m => m.round === t.currentRound && m.status !== 'finished').length * 2;
+  $('#tourneyRemainingCount').textContent = `${Math.max(activeTeams, 2)} 隊`;
+
+  // 操作按鈕列
+  const actBox = $('#tourneyActionBox');
+  if (actBox) {
+    if (t.status === 'registration') {
+      actBox.innerHTML = '';
+    } else if (myMatch && t.status === 'in_progress') {
+      const opp = myMatch.teamA.isMe ? myMatch.teamB : myMatch.teamA;
+      actBox.innerHTML = `
+        <button class="btn amber sm" id="btnTourneyGoFight" style="font-weight:800;animation:pulseGoldBorder 1.5s infinite">
+          ⚔️ 迎戰 ${opp.flag} ${esc(opp.name)} (出擊)
+        </button>
+        <button class="btn ghost sm" id="btnTourneyTuneDeck" title="調整當前作戰陣容">🛠️ 調配陣容</button>
+        <button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重置錦標賽 ✕</button>
+      `;
+    } else {
+      actBox.innerHTML = `
+        <span class="muted" style="font-size:12px;margin-right:6px">點選樹狀圖任一場次即可觀摩推演</span>
+        <button class="btn ghost sm" id="btnTourneyTuneDeck">🛠️ 瀏覽軍火庫</button>
+        <button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重新開賽 🔄</button>
+      `;
+    }
+  }
+}
+
+function renderTourneyLobby(t) {
+  $('#lobbyTotalCount').textContent = t.size;
+  const filled = t.participants.filter(Boolean).length;
+  $('#lobbyFilledCount').textContent = filled;
+
+  const grid = $('#lobbyParticipantsGrid');
+  if (!grid) return;
+
+  grid.innerHTML = t.participants.map((p, idx) => {
+    if (!p) {
+      return `<div class="p-slot-chip empty">
+        <span class="muted">#${idx + 1}</span>
+        <span class="p-name muted">等待加入...</span>
+      </div>`;
+    }
+    return `<div class="p-slot-chip ${p.isMe ? 'me' : 'ai'}">
+      <span>${p.flag || '🌐'}</span>
+      <span class="p-name" title="${esc(p.name)}">${esc(p.name)}</span>
+      <span class="muted" style="font-size:10px">${p.isMe ? '我方' : 'AI'}</span>
+    </div>`;
+  }).join('');
+}
+
+/* 繪製仿照世足 2026 的左右雙翼對抗樹 (FIFA World Cup Bracket) */
+function renderTournamentBracket(t) {
+  const container = $('#bracketContainer');
+  if (!container) return;
+
+  const totalRounds = t.totalRounds;
+
+  // 1. 生成左半區欄位 (Left Wing: R1 -> R2 -> Semi-Finals)
+  const leftWingCols = [];
+  for (let r = 1; r < totalRounds; r++) {
+    const matchesInRound = Object.values(t.matches).filter(m => m.round === r && m.isLeft);
+    leftWingCols.push({
+      round: r,
+      title: getRoundTitle(r, t.size),
+      matches: matchesInRound
+    });
+  }
+
+  // 2. 生成右半區欄位 (Right Wing: Semi-Finals <- R2 <- R1 反向)
+  const rightWingCols = [];
+  for (let r = totalRounds - 1; r >= 1; r--) {
+    const matchesInRound = Object.values(t.matches).filter(m => m.round === r && !m.isLeft && m.id !== t.finalMatchId && m.id !== t.bronzeMatchId);
+    rightWingCols.push({
+      round: r,
+      title: getRoundTitle(r, t.size),
+      matches: matchesInRound
+    });
+  }
+
+  // 3. 中央決賽與季軍賽
+  const finalMatch = t.matches[t.finalMatchId];
+  const bronzeMatch = t.matches[t.bronzeMatchId];
+
+  container.innerHTML = `
+    <!-- 左翼 (上半區) -->
+    <div class="bracket-wing left-wing">
+      ${leftWingCols.map(col => renderBracketColHtml(col, t)).join('')}
+    </div>
+
+    <!-- 中央世界冠軍王座 (World Champion Centerpiece) -->
+    <div class="bracket-center">
+      <div class="trophy-podium">
+        <div class="trophy-icon-glow">🏆</div>
+        <div class="trophy-title">WORLD CHAMPION</div>
+        <div class="trophy-champion-box" id="trophyChampionDisplay">
+          ${t.champion ? `${t.champion.flag} ${esc(t.champion.name)} 👑` : '待冠軍誕生...'}
+        </div>
+      </div>
+
+      <!-- 總冠軍決賽 -->
+      <div class="final-match-box">
+        <div class="match-box-title">★ 世界總決賽 (GOLD FINAL) ★</div>
+        ${finalMatch ? renderMatchCardHtml(finalMatch, t) : ''}
+      </div>
+
+      <!-- 季軍爭奪戰 -->
+      <div class="bronze-match-box">
+        <div class="match-box-title" style="color:#d97706">◆ 季軍爭奪戰 (BRONZE FINAL) ◆</div>
+        ${bronzeMatch ? renderMatchCardHtml(bronzeMatch, t) : ''}
+      </div>
+    </div>
+
+    <!-- 右翼 (下半區) -->
+    <div class="bracket-wing right-wing">
+      ${rightWingCols.map(col => renderBracketColHtml(col, t)).join('')}
+    </div>
+  `;
+}
+
+function getRoundTitle(r, size) {
+  if (size === 32) {
+    if (r === 1) return '32 強賽';
+    if (r === 2) return '16 強賽';
+    if (r === 3) return '半準決賽 (8強)';
+    if (r === 4) return '準決賽 (4強)';
+  } else if (size === 16) {
+    if (r === 1) return '16 強賽';
+    if (r === 2) return '半準決賽 (8強)';
+    if (r === 3) return '準決賽 (4強)';
+  } else if (size === 8) {
+    if (r === 1) return '半準決賽 (8強)';
+    if (r === 2) return '準決賽 (4強)';
+  } else {
+    return '準決賽 (4強)';
+  }
+  return `第 ${r} 輪`;
+}
+
+function renderBracketColHtml(col, t) {
+  return `<div class="bracket-col" data-round="${col.round}">
+    <div class="bracket-col-header">${col.title}</div>
+    ${col.matches.map(m => renderMatchCardHtml(m, t)).join('')}
+  </div>`;
+}
+
+function renderMatchCardHtml(m, t) {
+  const isMyMatch = (m.teamA?.isMe || m.teamB?.isMe);
+  const isFinished = (m.status === 'finished');
+  const reqWins = TournamentEngine.getRequiredWins(m);
+
+  return `<div class="b-match-card ${isMyMatch ? 'is-my-match' : ''}" data-match-id="${m.id}">
+    <div class="b-team-row ${isFinished && m.winner === 'A' ? 'winner' : isFinished ? 'loser' : ''}">
+      <div class="b-team-name-box">
+        <span>${m.teamA ? m.teamA.flag : '？'}</span>
+        <span class="b-team-name">${m.teamA ? esc(m.teamA.name) : '待定對手'}</span>
+      </div>
+      <span class="b-team-score">${m.scoreA}</span>
+    </div>
+    <div class="b-team-row ${isFinished && m.winner === 'B' ? 'winner' : isFinished ? 'loser' : ''}">
+      <div class="b-team-name-box">
+        <span>${m.teamB ? m.teamB.flag : '？'}</span>
+        <span class="b-team-name">${m.teamB ? esc(m.teamB.name) : '待定對手'}</span>
+      </div>
+      <span class="b-team-score">${m.scoreB}</span>
+    </div>
+    <div class="b-match-status-bar">
+      <span>${m.id} · ${reqWins > 1 ? `BO3(先${reqWins}勝)` : 'BO1'}</span>
+      ${isFinished ?
+        `<span style="color:#10b981;font-weight:700">✔ 戰報 ℹ</span>` :
+        (m.teamA && m.teamB) ?
+          `<span class="b-status-live">● 觀戰 ▶</span>` :
+          `<span class="muted">⏳ 席位就緒中</span>`}
+    </div>
+  </div>`;
+}
+
+/* 點擊錦標賽任一對抗卡片，彈出觀戰與戰報彈窗 */
+function openTournamentSpectatorModal(matchId) {
+  const snap = TournamentEngine.getMatchSnapshot(matchId);
+  if (!snap) return;
+
+  const modal = $('#tourneySpectatorModal');
+  const card = $('#tourneySpectatorCard');
+  if (!modal || !card) return;
+
+  const reqWins = snap.requiredWins;
+  const teamAName = snap.teamA ? `${snap.teamA.flag} ${snap.teamA.name}` : '待定';
+  const teamBName = snap.teamB ? `${snap.teamB.flag} ${snap.teamB.name}` : '待定';
+
+  card.innerHTML = `
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--amber)">
+        🏆 戰況情報所 · 場次 ${snap.matchId} (${reqWins > 1 ? 'BO3 三局兩勝制' : 'BO1 單淘汰'})
+      </div>
+      <button class="btn ghost sm" id="btnTourneySpecClose">關閉 ✕</button>
+    </div>
+
+    <!-- 對抗即時大比分面板 -->
+    <div class="pvp-versus-box" style="margin-bottom:16px">
+      <div class="pvp-v-player">
+        <div class="v-flag">${snap.teamA?.flag || '🌐'}</div>
+        <div class="v-name">${esc(snap.teamA?.name || '待定')}</div>
+        <span class="v-uid">${snap.teamA?.isMe ? '我方' : 'AI'}</span>
+      </div>
+      <div class="pvp-vs-badge">
+        <span style="font-size:24px;font-family:var(--mono);color:#fff">${snap.scoreA} : ${snap.scoreB}</span>
+        <div class="pvp-ping" style="color:${snap.status === 'finished' ? '#10b981' : '#f59e0b'}">
+          ${snap.status === 'finished' ? '✔ 已完賽' : '⚡ 爭霸激戰中'}
+        </div>
+      </div>
+      <div class="pvp-v-player">
+        <div class="v-flag">${snap.teamB?.flag || '🌐'}</div>
+        <div class="v-name">${esc(snap.teamB?.name || '待定')}</div>
+        <span class="v-uid">${snap.teamB?.isMe ? '我方' : 'AI'}</span>
+      </div>
+    </div>
+
+    <!-- 歷局小局快照清單 (零頻寬黑盒子重播) -->
+    <div style="margin-top:12px">
+      <div class="sheet-label" style="margin-bottom:8px">小局交火推演記錄 (${snap.history.length} 局)</div>
+      ${snap.history.length === 0 ? `<div class="muted" style="padding:16px;text-align:center">此場次正在進行戰術配置，尚未交火。</div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:10px">
+        ${snap.history.map((h, i) => {
+          const wName = h.winner === 'A' ? teamAName : teamBName;
+          return `<div class="panel" style="padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid var(--line2);display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong style="color:var(--cyan)">第 ${h.round} 局</strong> ｜
+              戰場：${h.event?.icon || '🌐'} ${esc(h.event?.name || '標準戰區')} ｜
+              獲勝：<b style="color:${h.winner === 'A' ? '#38bdf8' : '#f87171'}">${wName}</b>
+              <div class="muted" style="font-size:11px;margin-top:2px">積分 ${h.scoreA.toFixed(0)} : ${h.scoreB.toFixed(0)}</div>
+            </div>
+            <button class="btn ghost sm btnReplayRound" data-match="${snap.matchId}" data-round-idx="${i}" style="font-size:11.5px">
+              🎬 播放戰鬥推演
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+
+  modal.hidden = false;
+  currentActiveModal = modal;
+}
+
+/* 啟動錦標賽中玩家的一場戰鬥 */
+function startTournamentPlayerBattle() {
+  const myMatch = TournamentEngine.getMyMatch();
+  if (!myMatch) {
+    toast('⚠️ 目前沒有輪到你的對戰場次');
+    return;
+  }
+
+  // 驗證玩家陣容
+  if (!state.deck.every(Boolean)) {
+    toast('⚠️ 參賽陣容必須完整配置 5 個作戰槽位！請至軍火庫完成配給。');
+    setMode('quick');
+    return;
+  }
+
+  const opp = myMatch.teamA.isMe ? myMatch.teamB : myMatch.teamA;
+  state.enemy = (opp.deck || generateLegalDeck()).slice();
+  state.enemyName = `${opp.flag} ${opp.name}`;
+  state.enemyDoc = opp.doctrine || 'defense';
+
+  // 開啟戰鬥推演
+  startBattle();
+}
+
+/* 錦標賽單局結算處理 */
+function handleTournamentRoundEnd(res) {
+  const myMatch = TournamentEngine.getMyMatch();
+  if (!myMatch) {
+    showResult(res);
+    return;
+  }
+
+  const seed = (Math.random() * 4294967296) >>> 0;
+  const eventObj = state.event || pick(EVENTS);
+  const out = TournamentEngine.submitPlayerRoundResult(myMatch.id, res, seed, eventObj);
+
+  if (out.matchFinished) {
+    const iWon = out.winner.isMe;
+    showResult(res, {
+      bo3NextText: iWon ? '🏆 晉級下一輪！回到錦標賽對抗樹' : '💔 遺憾止步！回到錦標賽觀戰',
+      bo3Callback: () => {
+        closeBattle();
+        const t = TournamentEngine.getState();
+        if (t.status === 'completed' && t.champion?.isMe) {
+          showTournamentChampionModal(t.champion);
+        } else {
+          setMode('tournament');
+          if (iWon) {
+            toast(`🎉 恭喜突破重圍！已順利晉級下一輪！`);
+          } else {
+            toast(`💔 於本輪止步！你已轉為特邀戰術觀摩員，可收看後續所有決賽！`);
+          }
+        }
+      }
+    });
+  } else {
+    // BO3 還沒打完
+    showResult(res, {
+      bo3NextText: `進入第 ${myMatch.history.length + 1} 局 (比分 ${out.currentScore[0]} - ${out.currentScore[1]})`,
+      bo3Callback: () => {
+        closeBattle();
+        setMode('tournament');
+        toast(`小局戰罷！當前比分 ${out.currentScore[0]} : ${out.currentScore[1]}，請準備下一小局出擊！`);
+      }
+    });
+  }
+}
+
+/* 世界冠軍頒獎典禮 Modal */
+function showTournamentChampionModal(championTeam) {
+  const modal = $('#tourneyChampionModal');
+  const card = $('#tourneyChampionCard');
+  if (!modal || !card) return;
+
+  card.innerHTML = `
+    <div style="font-size:64px;line-height:1;animation:floatTrophy 2s ease-in-out infinite">🏆</div>
+    <h1 style="font-family:var(--head);font-size:26px;color:#fbbf24;margin:12px 0 4px;letter-spacing:0.08em">
+      WORLD CHAMPION 2026
+    </h1>
+    <h2 style="font-size:20px;color:#fff;margin:0 0 16px">
+      ${championTeam.flag} ${esc(championTeam.name)}
+    </h2>
+    <p class="muted" style="font-size:13.5px;max-width:440px;margin:0 auto 20px;line-height:1.6">
+      歷經多輪殊死淘汰與戰術推演，以不可阻擋的聯合作戰微操奪得最高榮譽！登頂世界冠軍王座！
+    </p>
+    <div class="row" style="justify-content:center;gap:12px">
+      <button class="btn amber lg" id="btnDownloadTourneyPoster" style="font-weight:900">
+        📜 下載冠軍榮譽戰報海報
+      </button>
+      <button class="btn ghost lg" id="btnTourneyChampionClose">
+        關閉 ✕
+      </button>
+    </div>
+  `;
+
+  modal.hidden = false;
+  currentActiveModal = modal;
+  SoundEngine.play('victory');
+}
+
+/* 錦標賽世界冠軍戰術海報下載 (Canvas) */
+function downloadTournamentChampionPoster(championTeam) {
+  const W = 1080, H = 1440, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#090d16'); bg.addColorStop(1, '#1e1b4b'); g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  
+  g.strokeStyle = 'rgba(245,158,11,.15)'; g.lineWidth = 1;
+  for (let x = 0; x < W; x += 54) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H); g.stroke(); }
+  for (let y = 0; y < H; y += 54) { g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke(); }
+
+  g.fillStyle = '#fbbf24'; g.font = '700 28px "JetBrains Mono",monospace'; g.fillText('TOP CLASH 15 · WORLD CHAMPIONSHIP', 80, 110);
+  g.fillStyle = '#ffffff'; g.font = '900 68px "Noto Sans TC",sans-serif'; g.fillText('世界盃淘汰大獎賽', 80, 200);
+
+  g.fillStyle = '#f59e0b'; g.font = '900 130px "Noto Sans TC",sans-serif';
+  g.fillText('世界總冠軍 🏆', 80, 380);
+
+  g.fillStyle = '#38bdf8'; g.font = '700 48px "Noto Sans TC",sans-serif';
+  g.fillText(`${championTeam.flag} ${championTeam.name}`, 80, 470);
+
+  g.fillStyle = '#94a3b8'; g.font = '500 28px "Noto Sans TC",sans-serif';
+  g.fillText(`登頂日期：${new Date().toLocaleDateString('zh-TW')} ｜ 15元聯合作戰最高殿堂`, 80, 530);
+
+  let y = 600;
+  state.deck.forEach((id, i) => {
+    const u = UNIT_MAP[id]; if (!u) return;
+    const col = CATS[u.cat].color;
+    g.fillStyle = 'rgba(255,255,255,.05)'; roundRect(g, 80, y, 920, 120, 18); g.fill();
+    g.fillStyle = col; g.fillRect(80, y, 8, 120);
+    g.fillStyle = '#94a3b8'; g.font = '600 24px "JetBrains Mono",monospace'; g.fillText(CATS[u.cat].short + ' · ' + SLOTS[i].label, 120, y + 40);
+    g.fillStyle = '#dbe7f5'; g.font = '700 42px "Noto Sans TC",sans-serif'; g.fillText(u.name, 120, y + 90);
+    g.fillStyle = '#fbbf24'; g.font = '700 54px Rajdhani,"Noto Sans TC",sans-serif'; g.textAlign = 'right'; g.fillText('$' + u.cost, 960, y + 80); g.textAlign = 'left';
+    y += 138;
+  });
+
+  const a = document.createElement('a'); a.download = 'topclash-champion.png'; a.href = c.toDataURL('image/png'); a.click();
+  toast('🏆 世界冠軍戰報海報已成功下載！');
+}
+
+/* 綁定錦標賽大廳與樹狀圖交互事件 */
+$('#tourneySizeSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#tourneySizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tourneySelectedSize = +btn.dataset.size;
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  renderTournamentView();
+});
+
+$('#tourneyFormatSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#tourneyFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  tourneySelectedFormat = btn.dataset.format;
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  renderTournamentView();
+});
+
+$('#btnTourneyFillAI')?.addEventListener('click', () => {
+  TournamentEngine.fillWithAI();
+  renderTournamentView();
+  toast('🤖 已自動調派全球各國精選特遣隊，補滿全部參賽席位！');
+});
+
+$('#btnTourneyResetLobby')?.addEventListener('click', () => {
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  renderTournamentView();
+  toast('已重置參賽席位');
+});
+
+$('#btnTourneyStart')?.addEventListener('click', () => {
+  TournamentEngine.start();
+  renderTournamentView();
+  toast('🏆 世界盃淘汰錦標賽正式開賽！世足對抗樹已生成！');
+});
+
+$('#tourneyActionBox')?.addEventListener('click', e => {
+  if (e.target.closest('#btnTourneyGoFight')) {
+    startTournamentPlayerBattle();
+    return;
+  }
+  if (e.target.closest('#btnTourneyTuneDeck')) {
+    setMode('quick');
+    toast('請在軍火庫調整你的 5 槽聯合作戰陣容，完成後切回【淘汰錦標賽】出擊！');
+    return;
+  }
+  if (e.target.closest('#btnTourneyResetAll')) {
+    TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+    renderTournamentView();
+    toast('已重置淘汰錦標賽，回到配置大廳');
+    return;
+  }
+});
+
+// 點擊樹狀圖上任何比賽節點
+$('#bracketContainer')?.addEventListener('click', e => {
+  const card = e.target.closest('.b-match-card'); if (!card) return;
+  const matchId = card.dataset.matchId;
+  openTournamentSpectatorModal(matchId);
+});
+
+// 觀戰彈窗內點擊播放推演
+$('#tourneySpectatorModal')?.addEventListener('click', e => {
+  if (e.target.id === 'tourneySpectatorModal' || e.target.id === 'btnTourneySpecClose' || e.target.closest('#btnTourneySpecClose')) {
+    $('#tourneySpectatorModal').hidden = true;
+    currentActiveModal = null;
+    return;
+  }
+  const replayBtn = e.target.closest('.btnReplayRound');
+  if (replayBtn) {
+    const matchId = replayBtn.dataset.match;
+    const rIdx = +replayBtn.dataset.roundIdx;
+    const snap = TournamentEngine.getMatchSnapshot(matchId);
+    if (!snap || !snap.history[rIdx]) return;
+    const h = snap.history[rIdx];
+    const res = resolveBattle(h.deckA, h.deckB, {
+      seed: h.seed,
+      event: h.event,
+      docA: h.docA || 'defense',
+      docB: h.docB || 'defense'
+    });
+    $('#tourneySpectatorModal').hidden = true;
+    currentActiveModal = null;
+    openBattle(res);
+  }
+});
+
+// 冠軍彈窗互動
+$('#tourneyChampionModal')?.addEventListener('click', e => {
+  if (e.target.id === 'tourneyChampionModal' || e.target.id === 'btnTourneyChampionClose') {
+    $('#tourneyChampionModal').hidden = true;
+    currentActiveModal = null;
+    return;
+  }
+  if (e.target.id === 'btnDownloadTourneyPoster' || e.target.closest('#btnDownloadTourneyPoster')) {
+    const t = TournamentEngine.getState();
+    if (t?.champion) downloadTournamentChampionPoster(t.champion);
+  }
 });
 
 /* ---------- 啟動 ---------- */

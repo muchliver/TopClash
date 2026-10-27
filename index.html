@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3.6.7">
+<link rel="stylesheet" href="style.css?v=3.6.8">
 </head>
 <body>
 <div class="bg-grid" aria-hidden="true"></div>
@@ -28,6 +28,7 @@
     <button class="mode-btn active" data-mode="quick" id="tabQuick">快速對戰</button>
     <button class="mode-btn" data-mode="ghost" id="tabGhost">幽靈對戰 🌐</button>
     <button class="mode-btn" data-mode="bo3" id="tabBo3">BO5 征服賽 🏆</button>
+    <button class="mode-btn" data-mode="tournament" id="tabTournament">🥇 淘汰錦標賽</button>
     <button class="mode-btn" data-mode="daily" id="tabDaily">精選對戰</button>
     <button class="mode-btn" data-mode="sandbox" id="tabSandbox">沙盒模擬</button>
   </nav>
@@ -263,6 +264,88 @@
   </div>
 </section>
 
+<!-- =====================================================
+     🥇 4/8/16/32 強世界盃淘汰錦標賽主介面 (Tournament Arena)
+     ===================================================== -->
+<section id="viewTournament" class="tournament-layout" hidden>
+  <!-- 錦標賽頂部抬頭 HUD (賽程進度、生存狀態、出擊操作) -->
+  <div class="tourney-header" id="tourneyHeader">
+    <div class="tourney-status-box">
+      <div class="tourney-title-row">
+        <span class="tourney-badge" id="tourneyBadge">🏆 2026 軍武世界盃淘汰錦標賽</span>
+        <span class="tourney-status-tag" id="tourneyStatusTag">🟢 激戰進行中</span>
+        <span class="tourney-round-pill" id="tourneyRoundPill">第 1 輪 · 淘汰賽</span>
+      </div>
+      <div class="tourney-meta-row">
+        <span class="muted">你的狀態：</span>
+        <strong id="tourneyMyState" style="color:var(--cyan)">🟢 晉級爭霸中</strong>
+        <span class="muted" style="margin-left:12px">賽制：</span>
+        <strong id="tourneyFormatName" style="color:var(--amber)">四強前 BO1 · 決賽圈 BO3</strong>
+        <span class="muted" style="margin-left:12px">剩餘爭冠隊伍：</span>
+        <strong id="tourneyRemainingCount" style="color:var(--text)">16 隊</strong>
+      </div>
+    </div>
+    <div class="tourney-action-box" id="tourneyActionBox">
+      <!-- 動態插入操作按鈕 -->
+    </div>
+  </div>
+
+  <!-- 錦標賽大廳 (建房/選人/AI補位，未開賽時展示) -->
+  <div class="tourney-lobby-card" id="tourneyLobbyCard" hidden>
+    <div class="lobby-head">
+      <h2>🏆 建立 4 / 8 / 16 / 32 強軍武世界盃大獎賽</h2>
+      <p class="muted">仿照世界盃樹狀對抗排版！支援單淘汰、決賽圈 BO3/BO5 升級賽制與零頻寬全場 60FPS 觀戰重播。</p>
+    </div>
+    <div class="lobby-settings-grid">
+      <div class="setting-group">
+        <label class="setting-lbl">參賽規模 (BRACKET SIZE)</label>
+        <div class="btn-group-pill" id="tourneySizeSelector">
+          <button class="pill-btn" data-size="4">4 強 (2輪)</button>
+          <button class="pill-btn" data-size="8">8 強 (3輪)</button>
+          <button class="pill-btn active" data-size="16">16 強世界爭霸 (4輪)</button>
+          <button class="pill-btn" data-size="32">32 強世界盃 (5輪)</button>
+        </div>
+      </div>
+      <div class="setting-group">
+        <label class="setting-lbl">淘汰對決賽制 (MATCH FORMAT)</label>
+        <div class="btn-group-pill" id="tourneyFormatSelector">
+          <button class="pill-btn" data-format="bo1">⚡ 極速單淘汰 (全程 BO1)</button>
+          <button class="pill-btn active" data-format="hybrid">⭐ 決賽升級制 (四強前BO1·決賽BO3)</button>
+          <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
+        </div>
+      </div>
+    </div>
+    <div class="lobby-participants-box">
+      <div class="participants-head">
+        <span>參賽席位預覽 (<span id="lobbyFilledCount">1</span> / <span id="lobbyTotalCount">16</span>)</span>
+        <div class="row" style="gap:8px">
+          <button class="btn ghost sm" id="btnTourneyFillAI">🤖 一鍵補滿 AI 影子戰隊</button>
+          <button class="btn ghost sm" id="btnTourneyResetLobby">重置席位 ✕</button>
+        </div>
+      </div>
+      <div class="participants-grid" id="lobbyParticipantsGrid"></div>
+    </div>
+    <div class="lobby-actions">
+      <button class="btn amber lg block" id="btnTourneyStart" style="font-weight:900;letter-spacing:.05em">⚔️ 正式開賽 · 產生世界盃對抗樹 (START TOURNAMENT)</button>
+    </div>
+  </div>
+
+  <!-- 世界盃 2026 左右雙翼樹狀對抗面板 (FIFA World Cup Bracket) -->
+  <div class="tourney-bracket-viewport" id="tourneyBracketViewport">
+    <div class="bracket-container" id="bracketContainer"></div>
+  </div>
+</section>
+
+<!-- 錦標賽觀戰與戰報彈窗 (Tournament Spectator Modal) -->
+<div class="modal" id="tourneySpectatorModal" hidden>
+  <div class="modal-card tourney-spectator-card" id="tourneySpectatorCard"></div>
+</div>
+
+<!-- 錦標賽世界冠軍頒獎與海報下載 Modal -->
+<div class="modal" id="tourneyChampionModal" hidden>
+  <div class="modal-card tourney-champion-card" id="tourneyChampionCard"></div>
+</div>
+
 <div class="modal" id="resultModal" hidden>
   <div class="modal-card result-card" id="resultCard"></div>
 </div>
@@ -486,7 +569,8 @@
 <script src="js/ladder-data.js"></script>
 <script src="js/ladder.js"></script>
 <script src="js/engine.js"></script>
-<script src="js/online-pvp.js?v=3.6.7"></script>
-<script src="js/app.js?v=3.6.7"></script>
+<script src="js/tournament.js?v=3.6.8"></script>
+<script src="js/online-pvp.js?v=3.6.8"></script>
+<script src="js/app.js?v=3.6.8"></script>
 </body>
 </html>
