@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=3.6.4">
 <style>
 /* =====================================================
    軍武圖鑑專屬高質感樣式 (Armory Encyclopedia Styles)
@@ -728,11 +728,88 @@
   display: block;
   margin-bottom: 4px;
 }
-.trait-codex-card p {
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.4;
-  margin: 0;
+/* 行動裝置極致 RWD 自適應 (Mobile Responsive) */
+@media(max-width:768px) {
+  .armory-container {
+    padding: 14px 12px 60px;
+  }
+  .armory-hero {
+    padding: 16px 14px;
+    gap: 14px;
+    border-radius: 14px;
+  }
+  .hero-title-group h2 {
+    font-size: 20px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hero-stats {
+    width: 100%;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .h-stat {
+    padding: 8px;
+  }
+  .h-stat .v {
+    font-size: 16px;
+  }
+  .filter-bar {
+    padding: 12px;
+    border-radius: 12px;
+    gap: 12px;
+  }
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .cat-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cost-filter {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .cost-btn {
+    flex: 1;
+    min-width: 32px;
+  }
+  .search-box {
+    width: 100%;
+    min-width: 0;
+  }
+  .view-switch {
+    display: none; /* 手機端自動鎖定為垂直卡片流 */
+  }
+  .armory-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .intel-modal-card {
+    padding: 16px;
+    max-height: 92vh;
+  }
+  .intel-hero {
+    height: 180px;
+  }
+  .intel-grid-specs {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .codex-section {
+    padding: 18px 14px;
+    margin-top: 32px;
+    border-radius: 14px;
+  }
+  .codex-traits-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
