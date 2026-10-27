@@ -4266,7 +4266,8 @@ function applyBracketFitToViewport() {
   const container = $('#bracketContainer');
   if (!viewport || !container) return 1;
 
-  // 1. 以自然設計尺寸量測（不受 transform 影響）
+  // 1. 以自然設計尺寸量測（高度先還原為 auto，不受 transform 影響）
+  container.style.height = 'auto';
   container.style.transform = 'translate(-50%, -50%)';
   const natW = container.offsetWidth;
   const natH = container.offsetHeight;
@@ -4274,8 +4275,16 @@ function applyBracketFitToViewport() {
   const vpH = viewport.clientHeight;
   if (!natW || !natH || !vpW || !vpH) return 1;
 
-  // 2. 計算等比例縮放：寬高皆完整放入（保留 12px 安全邊距），小規模最多放大 1.25 倍
-  const scale = Math.min((vpW - 12) / natW, (vpH - 12) / natH, 1.25);
+  // 2. 等比縮放：寬高皆完整放入（保留 12px 安全邊距），小規模最多放大 1.25 倍
+  const availW = vpW - 12;
+  const availH = vpH - 12;
+  const scale = Math.min(availW / natW, availH / natH, 1.25);
+
+  // 3. 若受「寬度」限制而高度有剩，將畫布高度拉長到剛好填滿可用高度，
+  //    多出的空間由各欄 space-around 平均分給卡片間距，避免上下留白
+  const targetH = availH / scale;
+  if (targetH > natH) container.style.height = `${Math.floor(targetH)}px`;
+
   container.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(4)})`;
   container.dataset.scale = String(scale);
   container.classList.add('is-fitted');
