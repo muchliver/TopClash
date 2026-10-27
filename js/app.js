@@ -18,19 +18,46 @@ const LS = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
 
-/* ---------- 純前端 Web Audio API 戰場真實合成音效引擎 ---------- */
+/* ---------- 軍規級純前端 Web Audio API 程序化物理音效合成引擎 (Procedural Military SFX) ---------- */
 const SoundEngine = {
   ctx: null,
+  masterComp: null,
+  noiseBuffer: null,
   enabled: LS.get('db15_sound', true),
+
   init() {
     if (!this.ctx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) this.ctx = new AudioCtx();
+      if (!AudioCtx) return;
+      this.ctx = new AudioCtx();
+
+      // 1. 母帶級動態壓限器：防止多武器交火頻率疊加造成數位破音與耳朵刺痛
+      this.masterComp = this.ctx.createDynamicsCompressor();
+      this.masterComp.threshold.setValueAtTime(-10, this.ctx.currentTime);
+      this.masterComp.knee.setValueAtTime(24, this.ctx.currentTime);
+      this.masterComp.ratio.setValueAtTime(8, this.ctx.currentTime);
+      this.masterComp.attack.setValueAtTime(0.003, this.ctx.currentTime);
+      this.masterComp.release.setValueAtTime(0.2, this.ctx.currentTime);
+      this.masterComp.connect(this.ctx.destination);
+
+      // 2. 生成高品質粉紅噪聲 (Pink Noise Buffer) 供氣流、噴氣尾焰、火藥與爆炸使用
+      const bufferSize = this.ctx.sampleRate * 2;
+      this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = this.noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        data[i] = (b0 + b1 + b2 + white * 0.08) * 0.4;
+      }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
     }
   },
+
   toggle() {
     this.enabled = !this.enabled;
     const ico = $('#audioIcon');
@@ -41,94 +68,272 @@ const SoundEngine = {
     if (this.enabled) this.init();
     LS.set('db15_sound', this.enabled);
   },
-  play(type) {
+
+  // 播放具備真實戰場物理衝擊的軍武音效 (side: 'A' 為我方左側, 'B' 為敵方右側)
+  play(type, side = 'A') {
     if (!this.enabled) return;
     this.init();
-    if (!this.ctx) return;
+    if (!this.ctx || !this.noiseBuffer) return;
+
     try {
       const t = this.ctx.currentTime;
-      if (type === 'missile' || type === 'torpedo') {
-        // 空對空/反艦飛彈破空音爆
+      const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+      if (panner) {
+        panner.pan.setValueAtTime(side === 'A' ? -0.22 : 0.22, t);
+        panner.connect(this.masterComp);
+      }
+      const outNode = panner || this.masterComp;
+
+      if (type === 'heavy_cannon') {
+        // 【120mm/125mm 戰車滑膛砲實彈射擊】
+        // 層次 1：0~12ms 爆燃裂帛瞬態破空音 (Transient Crack)
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(1400, t);
+        noiseFilter.frequency.exponentialRampToValueAtTime(260, t + 0.15);
+        noiseFilter.Q.setValueAtTime(3.2, t);
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.55, t);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.2);
+
+        // 層次 2：38Hz 次低音胸膛後座力重擊 (Sub-Bass Chest Thud)
+        const sub = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(160, t);
+        sub.frequency.exponentialRampToValueAtTime(36, t + 0.26);
+        subGain.gain.setValueAtTime(0.75, t);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        sub.connect(subGain);
+        subGain.connect(outNode);
+        sub.start(t);
+        sub.stop(t + 0.36);
+
+      } else if (type === 'cannon') {
+        // 【30mm 機砲 / 鏈砲點射 (高穿透金屬雙連發)】
+        for (let i = 0; i < 2; i++) {
+          const delay = i * 0.08;
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = this.noiseBuffer;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(2100, t + delay);
+          filter.frequency.exponentialRampToValueAtTime(500, t + delay + 0.07);
+          filter.Q.setValueAtTime(2.8, t + delay);
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.35, t + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.08);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(outNode);
+          noise.start(t + delay);
+          noise.stop(t + delay + 0.09);
+
+          const thud = this.ctx.createOscillator();
+          const thudGain = this.ctx.createGain();
+          thud.type = 'triangle';
+          thud.frequency.setValueAtTime(180, t + delay);
+          thud.frequency.exponentialRampToValueAtTime(55, t + delay + 0.08);
+          thudGain.gain.setValueAtTime(0.38, t + delay);
+          thudGain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.09);
+          thud.connect(thudGain);
+          thudGain.connect(outNode);
+          thud.start(t + delay);
+          thud.stop(t + delay + 0.1);
+        }
+
+      } else if (type === 'missile') {
+        // 【超音速巡弋/空空飛彈噴射尾焰 + 空氣呼嘯都卜勒破空】
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(320, t);
+        filter.frequency.exponentialRampToValueAtTime(1700, t + 0.16);
+        filter.frequency.exponentialRampToValueAtTime(420, t + 0.38);
+        filter.Q.setValueAtTime(4.2, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.04, t);
+        gain.gain.linearRampToValueAtTime(0.42, t + 0.12);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.42);
+
+      } else if (type === 'rocket_salvo') {
+        // 【海馬斯 / 多管火箭飽和齊射 (多發呼嘯)】
+        for (let i = 0; i < 3; i++) {
+          const delay = i * 0.065;
+          const noise = this.ctx.createBufferSource();
+          noise.buffer = this.noiseBuffer;
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.setValueAtTime(260 + i * 40, t + delay);
+          filter.frequency.exponentialRampToValueAtTime(1200 + i * 150, t + delay + 0.12);
+          filter.frequency.exponentialRampToValueAtTime(350, t + delay + 0.24);
+          filter.Q.setValueAtTime(3.5, t + delay);
+          const gain = this.ctx.createGain();
+          gain.gain.setValueAtTime(0.05, t + delay);
+          gain.gain.linearRampToValueAtTime(0.28, t + delay + 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.26);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(outNode);
+          noise.start(t + delay);
+          noise.stop(t + delay + 0.28);
+        }
+
+      } else if (type === 'torpedo') {
+        // 【重型反潛魚雷水下低頻推進】
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(240, t);
+        filter.frequency.exponentialRampToValueAtTime(65, t + 0.4);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.45, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.44);
+
+      } else if (type === 'swarm') {
+        // 【自殺無人機蜂群高速掠空 (高頻無刷馬達與氣流)】
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(280, t);
-        osc.frequency.exponentialRampToValueAtTime(1200, t + 0.16);
-        osc.frequency.exponentialRampToValueAtTime(140, t + 0.35);
-        gain.gain.setValueAtTime(0.09, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.frequency.setValueAtTime(820, t);
+        osc.frequency.linearRampToValueAtTime(1420, t + 0.16);
+        osc.frequency.linearRampToValueAtTime(640, t + 0.32);
+        gain.gain.setValueAtTime(0.02, t);
+        gain.gain.linearRampToValueAtTime(0.22, t + 0.15);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(outNode);
         osc.start(t);
-        osc.stop(t + 0.36);
-      } else if (type === 'heavy_cannon' || type === 'cannon') {
-        // 戰車滑膛砲/大口徑重砲低頻衝擊震波
+        osc.stop(t + 0.35);
+
+      } else if (type === 'explosion') {
+        // 【戰損毀滅大爆炸 (高空破片裂帛 + 80Hz 低通重型滾動巨響 + 40Hz 次低音)】
+        // 衝擊波裂帛與破片
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1400, t);
+        filter.frequency.exponentialRampToValueAtTime(70, t + 0.6);
+        filter.Q.setValueAtTime(2.2, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.85, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.68);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.7);
+
+        // 核心殉爆次低音震顫 (Sub-Bass Rumble)
+        const sub = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        sub.type = 'sine';
+        sub.frequency.setValueAtTime(120, t);
+        sub.frequency.exponentialRampToValueAtTime(28, t + 0.55);
+        subGain.gain.setValueAtTime(0.9, t);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        sub.connect(subGain);
+        subGain.connect(outNode);
+        sub.start(t);
+        sub.stop(t + 0.62);
+
+      } else if (type === 'hit_impact') {
+        // 【裝甲受擊金屬貫穿衝擊音】
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(2600, t);
+        filter.frequency.exponentialRampToValueAtTime(400, t + 0.12);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.45, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.15);
+
+      } else if (type === 'block') {
+        // 【主動防護系統 APS 空中金屬破片硬殺攔截】
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(type === 'heavy_cannon' ? 180 : 240, t);
-        osc.frequency.exponentialRampToValueAtTime(32, t + 0.28);
-        gain.gain.setValueAtTime(0.24, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.frequency.setValueAtTime(2600, t);
+        osc.frequency.exponentialRampToValueAtTime(750, t + 0.09);
+        gain.gain.setValueAtTime(0.42, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
         osc.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(outNode);
         osc.start(t);
-        osc.stop(t + 0.31);
-      } else if (type === 'rocket_salvo' || type === 'swarm') {
-        // 火箭彈齊射/蜂群無人機多重破空
-        for (let i = 0; i < 3; i++) {
-          const delay = i * 0.06;
+        osc.stop(t + 0.11);
+
+      } else if (type === 'emp_pulse') {
+        // 【電子戰全頻段電磁脈衝過載雜訊】
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = this.noiseBuffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(3200, t);
+        filter.frequency.exponentialRampToValueAtTime(280, t + 0.28);
+        filter.Q.setValueAtTime(6.0, t);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.28, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(outNode);
+        noise.start(t);
+        noise.stop(t + 0.32);
+
+      } else if (type === 'equip') {
+        // 【軍械卡榫上膛點擊聲 (Click-Clack)】
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1900, t);
+        osc.frequency.exponentialRampToValueAtTime(650, t + 0.04);
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        osc.connect(gain);
+        gain.connect(outNode);
+        osc.start(t);
+        osc.stop(t + 0.06);
+
+      } else if (type === 'victory') {
+        // 【軍事勝利凱旋和弦 (F4 -> A4 -> C5)】
+        [349.23, 440.0, 523.25].forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220 + i * 50, t + delay);
-          osc.frequency.exponentialRampToValueAtTime(680, t + delay + 0.12);
-          gain.gain.setValueAtTime(0.07, t + delay);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.18);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, t + idx * 0.08);
+          gain.gain.setValueAtTime(0.16, t + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.7);
           osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(t + delay);
-          osc.stop(t + delay + 0.19);
-        }
-      } else if (type === 'emp_pulse') {
-        // 電子戰全頻干擾脈衝
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(920, t);
-        osc.frequency.linearRampToValueAtTime(420, t + 0.22);
-        gain.gain.setValueAtTime(0.12, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.25);
-      } else if (type === 'explosion') {
-        // 戰損擊毀大爆炸重低音
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(110, t);
-        osc.frequency.exponentialRampToValueAtTime(18, t + 0.42);
-        gain.gain.setValueAtTime(0.22, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.44);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.45);
-      } else if (type === 'block') {
-        // 主動防護 APS 攔截反制破片音
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1300, t);
-        osc.frequency.exponentialRampToValueAtTime(450, t + 0.1);
-        gain.gain.setValueAtTime(0.14, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + 0.12);
+          gain.connect(outNode);
+          osc.start(t + idx * 0.08);
+          osc.stop(t + idx * 0.08 + 0.75);
+        });
       }
     } catch (e) {}
   }
@@ -2535,9 +2740,9 @@ function playFx(ln) {
     }
   }
 
-  // 2. 觸發開火音效
+  // 2. 觸發開火音效 (帶陣營立體聲方位)
   if (aUnit) {
-    SoundEngine.play(aUnit.sfx || 'missile');
+    SoundEngine.play(aUnit.sfx || 'missile', ln.side);
   }
 
   // 3. 卡片高亮連動
@@ -2615,16 +2820,17 @@ function playFx(ln) {
     triggerImpact();
   }
 
-  // 5. 命中受擊、爆炸衝擊波與浮動戰鬥數字
+  // 5. 命中受擊、爆炸衝擊波與浮動戰鬥數字 (受擊方聲相為對手方位)
   function triggerImpact() {
     if (skip) return;
+    const targetSide = ln.side === 'A' ? 'B' : 'A';
     if (ln.kind === 'kill') {
       tEl.classList.remove('hit-shake', 'kill-blast');
       void tEl.offsetWidth;
       tEl.classList.add('kill-blast', 'destroyed-badge');
       spawnExplosion(tx, ty);
       spawnFloater(tx, ty, '💥 擊毀!', 'kill');
-      SoundEngine.play('explosion');
+      SoundEngine.play('explosion', targetSide);
     } else if (ln.kind === 'hit') {
       tEl.classList.remove('hit-shake');
       void tEl.offsetWidth;
@@ -2632,11 +2838,11 @@ function playFx(ln) {
       spawnExplosion(tx, ty);
       const dmgText = ln.dmg ? `−${ln.dmg}` : `命中!`;
       spawnFloater(tx, ty, dmgText, 'hit');
-      SoundEngine.play('heavy_cannon');
+      SoundEngine.play('hit_impact', targetSide);
     } else if (ln.kind === 'block') {
       spawnShield(tx, ty);
       spawnFloater(tx, ty, '🛡️ APS 攔截', 'block');
-      SoundEngine.play('block');
+      SoundEngine.play('block', targetSide);
     } else if (ln.kind === 'miss') {
       spawnFloater(tx, ty, 'MISS', 'miss');
     }
