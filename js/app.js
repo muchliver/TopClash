@@ -2,7 +2,7 @@
 'use strict';
 /* =====================================================
    頂尖對戰：15元聯合作戰 — 互動介面與核心邏輯
-   含：快速對戰、真人非同步幽靈對戰、BO3 征服賽、每日殘局、沙盒模擬
+   含：快速對戰、真人非同步幽靈對戰、BO3 征服賽、精選對戰、沙盒模擬
    ===================================================== */
 const $ = s => document.querySelector(s);
 const ICON = {
@@ -184,7 +184,7 @@ const state = {
   sandEnemy: 'random', sandEvent: 'all', sandResult: null, hover: null, lastRes: null,
   /* 手機版活躍兵種分頁 */
   mobileCat: 'air',
-  /* 每日殘局題目選擇 ('today' 或 DAILY_PLANS 的 id) */
+  /* 精選對戰題目選擇 ('today' 或 DAILY_PLANS 的 id) */
   dailyPlanId: 'today',
   /* 幽靈對戰專屬 */
   ghostTarget: null,
@@ -249,7 +249,7 @@ function setupMatch() {
       // 今日官方特選：依據當日種子決定難度階梯 ($19 ~ $25 均勻隨機)
       p = DAILY_PLANS[Math.floor(rng() * DAILY_PLANS.length)];
     } else if (isRandomTier) {
-      // 隨機殘局對手：每次切換都隨機抽取 $19~$25 的題目
+      // 隨機精選對戰對手：每次切換都隨機抽取 $19~$25 的題目
       p = DAILY_PLANS[Math.floor(Math.random() * DAILY_PLANS.length)];
     } else {
       p = DAILY_PLANS.find(x => x.id === state.dailyPlanId) || DAILY_PLANS[0];
@@ -500,9 +500,9 @@ function renderMissionBar() {
       </optgroup>`;
     }).join('');
 
-    h = `<span class="mission-tag" style="background:rgba(239,68,68,.16);color:var(--red);border-color:rgba(239,68,68,.4);font-weight:800">DAILY TACTICS · 每日殘局 #${dailyNo()}</span>
+    h = `<span class="mission-tag" style="background:rgba(239,68,68,.16);color:var(--red);border-color:rgba(239,68,68,.4);font-weight:800">FEATURED MATCH · 精選對戰 #${dailyNo()}</span>
       <div class="mission-item">
-        <span class="muted">選擇殘局：</span>
+        <span class="muted">選擇關卡：</span>
         <select class="select sm" id="dailyPlanSel" style="padding:3px 8px;width:auto;font-size:12px;font-weight:700">
           <option value="today" ${state.dailyPlanId === 'today' ? 'selected' : ''}>🌟 今日官方特選 (每日隨機 $19~$25)</option>
           <option value="random_tier" ${state.dailyPlanId === 'random_tier' ? 'selected' : ''}>🎲 隨機自由對手 ($19~$25 隨機抽題)</option>
@@ -1182,7 +1182,7 @@ function handleDailyPlanChange(val) {
     const found = DAILY_PLANS.find(p => p.id === val);
     planName = found ? `【${found.name}】($${c}超標 · +$${c - 15})` : state.enemyName;
   }
-  toast(`已切換每日殘局題目：${planName}`);
+  toast(`已切換精選對戰題目：${planName}`);
 }
 
 $('#missionBar').addEventListener('change', e => {
@@ -1282,7 +1282,7 @@ function setMode(m) {
   } else if (m === 'ghost') {
     toast('🌐 已進入幽靈對戰：與全球玩家上傳之真實作戰陣容交鋒！');
   } else if (m === 'daily') {
-    toast(`🎯 已進入每日殘局 #${dailyNo()}：相同戰區、相同軍備，考驗戰略微操！`);
+    toast(`🎯 已進入精選對戰 #${dailyNo()}：挑戰超標對手，考驗戰略微操！`);
   } else if (m === 'sandbox') {
     toast('🧪 已進入沙盒模擬：推演 300 場大規模戰術大數據！');
   } else if (m === 'quick') {
@@ -2858,7 +2858,7 @@ function showResult(res, bo3Custom) {
   const pctB = 100 - pctA;
 
   let subtitle = `${esc(res.ev.icon + ' ' + res.ev.name)}`;
-  if (state.mode === 'daily') subtitle += ' · 每日殘局 #' + dailyNo();
+  if (state.mode === 'daily') subtitle += ' · 精選對戰 #' + dailyNo();
   else if (state.mode === 'ghost') subtitle += ` · 幽靈對戰 (${state.ghostTarget.callsign})`;
   else if (state.mode === 'bo3') subtitle += ` · BO5 第 ${state.bo3.round} 局 (比分 ${state.bo3.winsA} - ${state.bo3.winsB})`;
   else subtitle += ' · 快速交鋒聯合作戰';
@@ -3067,7 +3067,7 @@ function buildWhy(res) {
 function shareText(res) {
   const won = res.winner === 'A';
   const names = state.deck.map(id => UNIT_MAP[id].name).join('｜');
-  return `【頂尖對戰】${state.mode === 'daily' ? '每日殘局 #' + dailyNo() : state.mode === 'ghost' ? '幽靈對戰' : '快速對戰'} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n你能用 $15 做得更好嗎？`;
+  return `【頂尖對戰】${state.mode === 'daily' ? '精選對戰 #' + dailyNo() : state.mode === 'ghost' ? '幽靈對戰' : '快速對戰'} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n你能用 $15 做得更好嗎？`;
 }
 
 function closeBattle() {
@@ -3092,7 +3092,7 @@ function downloadPoster(res) {
   g.fillStyle = won ? '#5dffb0' : res.winner === 'draw' ? '#ffb340' : '#ff5d6e'; g.font = '900 150px "Noto Sans TC",sans-serif';
   g.fillText(won ? '勝 利' : res.winner === 'draw' ? '平 手' : '敗 北', 70, 370);
   g.fillStyle = '#7f93ab'; g.font = '500 30px "Noto Sans TC",sans-serif';
-  g.fillText(`${res.ev.name} ｜ 積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)} ｜ ${state.mode === 'daily' ? '每日殘局 #' + dailyNo() : dateKey()}`, 70, 430);
+  g.fillText(`${res.ev.name} ｜ 積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)} ｜ ${state.mode === 'daily' ? '精選對戰 #' + dailyNo() : dateKey()}`, 70, 430);
   let y = 500;
   state.deck.forEach((id, i) => {
     const u = UNIT_MAP[id]; const col = CATS[u.cat].color;
@@ -3131,7 +3131,7 @@ function showHelp() {
     <li><b>快速對戰</b>：對戰 6 種 AI 風格，每場事件與對手皆不同。</li>
     <li><b>幽靈對戰 🌐</b>：非同步挑戰其他真人玩家部署的防衛陣容，升級你的天梯軍銜（准尉 ➔ 上將），亦可部署自己的影子陣容！</li>
     <li><b>BO5 征服賽 🏆</b>：五局三勝制！敗方享有「戰術反制」特權，指定禁用敵方上一局的 1 件裝備，考驗臨場反制與更換配裝。</li>
-    <li><b>每日殘局</b>：對手擁有 <b>$19 ~ $25</b> 超標陣容，你只有 $15，全球同題挑戰極限以小博大破局！</li>
+    <li><b>精選對戰</b>：對手擁有 <b>$19 ~ $25</b> 超標陣容，你只有 $15，挑戰極限以小博大克敵制勝！</li>
     <li><b>沙盒模擬</b>：一鍵模擬 300 場，查看勝率與各事件表現。</li>
   </ul>
   <h3>三、三階段推演與勝負</h3><ul><li>階段一：電戰值比拼（壓制敵命中率），SEAD／縱深打擊先制點穴。</li><li>階段二：防空攔截戰機（×2.5 傷害）➔ 空戰 ➔ 制海互射。</li><li>階段三：地面決戰，存活戰機密接轟炸（CAS ×1.7），火砲無人機持續支援。</li><li>積分判定：殘餘戰力 ＋ 戰線控制（裝甲/空優/海權）＋ 以小博大擊殺。</li></ul>
