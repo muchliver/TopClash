@@ -2283,6 +2283,8 @@ async function showBattle(res) {
   $('#viewBuild').hidden = true;
   $('#missionBar').hidden = true;
   $('#commandDeck').hidden = true;
+  const viewLadder = $('#viewLadder'); if (viewLadder) viewLadder.hidden = true;
+  const viewTournament = $('#viewTournament'); if (viewTournament) viewTournament.hidden = true;
   hideTooltip();
   $('#viewBattle').hidden = false;
   $('#resultModal').hidden = true;
