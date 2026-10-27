@@ -147,7 +147,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   height: calc(100vh - 48px - 40px);
   max-height: calc(100vh - 48px - 40px);
   min-height: 0;
-  padding: 6px 16px 74px;
+  padding: 6px 14px 70px;
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
@@ -160,7 +160,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-template-rows: 1fr;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   height: 100%;
   min-height: 0;
@@ -1359,8 +1359,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 
 /* ---------- Responsive / 行動裝置手機版優化 ---------- */
 @media(max-width:1280px){
-  .matrix-layout{height:auto;min-height:0;padding-bottom:96px}
-  .matrix-board{grid-template-columns:repeat(5,minmax(190px,1fr));overflow-x:auto;padding-bottom:10px}
+  .matrix-layout{padding-bottom:70px}
   .command-deck{gap:10px;padding:0 14px}
   .d-slot{width:72px}
 }
