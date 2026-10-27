@@ -4152,13 +4152,17 @@ function renderTourneyLobby(t) {
 }
 
 /* 繪製仿照世足 2026 的左右雙翼對抗樹 (FIFA World Cup Bracket) */
+/* =====================================================
+   方案 A：心智圖雙向向心樹 (Bilateral Mindmap Arena)
+   具備實體動態 SVG 貝茲流光連線、自適應向心聚攏與電競 2.0 對抗節點
+   ===================================================== */
 function renderTournamentBracket(t) {
   const container = $('#bracketContainer');
   if (!container) return;
 
   const totalRounds = t.totalRounds;
 
-  // 1. 生成左半區欄位 (Left Wing: R1 -> R2 -> Semi-Finals)
+  // 1. 生成左半區欄位 (Left Wing: R1 -> R2 -> Semi-Finals 向心)
   const leftWingCols = [];
   for (let r = 1; r < totalRounds; r++) {
     const matchesInRound = Object.values(t.matches).filter(m => m.round === r && m.isLeft);
@@ -4169,7 +4173,7 @@ function renderTournamentBracket(t) {
     });
   }
 
-  // 2. 生成右半區欄位 (Right Wing: Semi-Finals <- R2 <- R1 反向)
+  // 2. 生成右半區欄位 (Right Wing: Semi-Finals <- R2 <- R1 向心)
   const rightWingCols = [];
   for (let r = totalRounds - 1; r >= 1; r--) {
     const matchesInRound = Object.values(t.matches).filter(m => m.round === r && !m.isLeft && m.id !== t.finalMatchId && m.id !== t.bronzeMatchId);
@@ -4184,40 +4188,67 @@ function renderTournamentBracket(t) {
   const finalMatch = t.matches[t.finalMatchId];
   const bronzeMatch = t.matches[t.bronzeMatchId];
 
+  // 容器尺度自適應類別 (針對 4/8/16/32 強縮放)
+  container.className = `bracket-container bracket-size-${t.size}`;
+
   container.innerHTML = `
-    <!-- 左翼 (上半區) -->
-    <div class="bracket-wing left-wing">
-      ${leftWingCols.map(col => renderBracketColHtml(col, t)).join('')}
+    <!-- 戰術極座標同心圓雷達底座 (Tactical Radar Backdrop) -->
+    <div class="bracket-tactical-backdrop" aria-hidden="true">
+      <div class="radar-crosshair-h"></div>
+      <div class="radar-crosshair-v"></div>
+      <div class="radar-ring rr-1"></div>
+      <div class="radar-ring rr-2"></div>
+      <div class="radar-ring rr-3"></div>
+      <div class="radar-label top">TACTICAL ARENA · WORLD CUP 2026</div>
     </div>
 
-    <!-- 中央世界冠軍王座 (World Champion Centerpiece) -->
+    <!-- 全畫布動態 SVG 貝茲連線圖層 (Bézier Flow Layer) -->
+    <svg class="bracket-svg-layer" id="bracketSvgLayer"></svg>
+
+    <!-- 左翼 (上半區 向心聚合) -->
+    <div class="bracket-wing left-wing">
+      ${leftWingCols.map(col => renderBracketColHtml(col, t, 'left')).join('')}
+    </div>
+
+    <!-- 中央世界冠軍王座 (World Champion Centerpiece & Apex) -->
     <div class="bracket-center">
       <div class="trophy-podium">
+        <div class="trophy-halo"></div>
         <div class="trophy-icon-glow">🏆</div>
         <div class="trophy-title">WORLD CHAMPION</div>
+        <div class="trophy-sub-tag">2026 頂尖霸主王座</div>
         <div class="trophy-champion-box" id="trophyChampionDisplay">
-          ${t.champion ? `${t.champion.flag} ${esc(t.champion.name)} 👑` : '待冠軍誕生...'}
+          ${t.champion ? `<span class="champ-flag">${t.champion.flag}</span> <strong class="champ-name">${esc(t.champion.name)}</strong> <span class="crown">👑</span>` : '<span class="champ-wait">⏳ 待世界冠軍誕生...</span>'}
         </div>
       </div>
 
-      <!-- 總冠軍決賽 -->
+      <!-- 總冠軍決賽 (GOLD FINAL) -->
       <div class="final-match-box">
-        <div class="match-box-title">★ 世界總決賽 (GOLD FINAL) ★</div>
-        ${finalMatch ? renderMatchCardHtml(finalMatch, t) : ''}
+        <div class="match-box-title gold-title">
+          <span>★ 巔峰總決賽 · GRAND FINAL ★</span>
+        </div>
+        ${finalMatch ? renderMatchCardHtml(finalMatch, t, true) : ''}
       </div>
 
-      <!-- 季軍爭奪戰 -->
+      <!-- 季軍爭奪戰 (BRONZE FINAL) -->
       <div class="bronze-match-box">
-        <div class="match-box-title" style="color:#d97706">◆ 季軍爭奪戰 (BRONZE FINAL) ◆</div>
-        ${bronzeMatch ? renderMatchCardHtml(bronzeMatch, t) : ''}
+        <div class="match-box-title bronze-title">
+          <span>◆ 季軍榮譽戰 · BRONZE FINAL ◆</span>
+        </div>
+        ${bronzeMatch ? renderMatchCardHtml(bronzeMatch, t, false, true) : ''}
       </div>
     </div>
 
-    <!-- 右翼 (下半區) -->
+    <!-- 右翼 (下半區 向心聚合) -->
     <div class="bracket-wing right-wing">
-      ${rightWingCols.map(col => renderBracketColHtml(col, t)).join('')}
+      ${rightWingCols.map(col => renderBracketColHtml(col, t, 'right')).join('')}
     </div>
   `;
+
+  // 繪製與更新 SVG 貝茲心智圖連線
+  requestAnimationFrame(() => {
+    renderBracketSvgLinks(t);
+  });
 }
 
 function getRoundTitle(r, size) {
@@ -4239,42 +4270,228 @@ function getRoundTitle(r, size) {
   return `第 ${r} 輪`;
 }
 
-function renderBracketColHtml(col, t) {
-  return `<div class="bracket-col" data-round="${col.round}">
-    <div class="bracket-col-header">${col.title}</div>
-    ${col.matches.map(m => renderMatchCardHtml(m, t)).join('')}
+function renderBracketColHtml(col, t, side) {
+  return `<div class="bracket-col ${side}-col" data-round="${col.round}">
+    <div class="bracket-col-header">
+      <span class="col-header-pill">${col.title}</span>
+    </div>
+    <div class="bracket-col-matches">
+      ${col.matches.map(m => renderMatchCardHtml(m, t)).join('')}
+    </div>
   </div>`;
 }
 
-function renderMatchCardHtml(m, t) {
+function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
   const isMyMatch = (m.teamA?.isMe || m.teamB?.isMe);
   const isFinished = (m.status === 'finished');
   const reqWins = TournamentEngine.getRequiredWins(m);
 
-  return `<div class="b-match-card ${isMyMatch ? 'is-my-match' : ''}" data-match-id="${m.id}">
+  // 局數計分圓點生成輔助 (BO3/BO5 pips)
+  const renderPips = (score, req) => {
+    if (req <= 1) return '';
+    let pips = '';
+    for (let i = 0; i < req; i++) {
+      pips += `<span class="pip ${i < score ? 'won' : ''}"></span>`;
+    }
+    return `<div class="b-pips">${pips}</div>`;
+  };
+
+  return `<div class="b-match-card ${isMyMatch ? 'is-my-match' : ''} ${isFinal ? 'is-grand-final' : ''} ${isBronze ? 'is-bronze-card' : ''}" data-match-id="${m.id}">
+    <!-- 兩側實體連接端子口 (SVG 連線錨定端子) -->
+    <div class="port-terminal port-left" aria-hidden="true"></div>
+    <div class="port-terminal port-right" aria-hidden="true"></div>
+
+    ${isMyMatch ? `<div class="my-match-strip"><span class="pulse-beacon"></span> 我方作戰線</div>` : ''}
+
     <div class="b-team-row ${isFinished && m.winner === 'A' ? 'winner' : isFinished ? 'loser' : ''}">
       <div class="b-team-name-box">
-        <span>${m.teamA ? m.teamA.flag : '？'}</span>
-        <span class="b-team-name">${m.teamA ? esc(m.teamA.name) : '待定對手'}</span>
+        <span class="b-team-flag-pill">${m.teamA ? m.teamA.flag : '？'}</span>
+        <span class="b-team-name" title="${m.teamA ? esc(m.teamA.name) : '待定對手'}">${m.teamA ? esc(m.teamA.name) : '待定對手'}</span>
       </div>
-      <span class="b-team-score">${m.scoreA}</span>
+      <div class="b-score-wrapper">
+        ${renderPips(m.scoreA, reqWins)}
+        <span class="b-score-plate ${isFinished && m.winner === 'A' ? 'is-winner' : ''}">${m.scoreA}</span>
+      </div>
     </div>
+
     <div class="b-team-row ${isFinished && m.winner === 'B' ? 'winner' : isFinished ? 'loser' : ''}">
       <div class="b-team-name-box">
-        <span>${m.teamB ? m.teamB.flag : '？'}</span>
-        <span class="b-team-name">${m.teamB ? esc(m.teamB.name) : '待定對手'}</span>
+        <span class="b-team-flag-pill">${m.teamB ? m.teamB.flag : '？'}</span>
+        <span class="b-team-name" title="${m.teamB ? esc(m.teamB.name) : '待定對手'}">${m.teamB ? esc(m.teamB.name) : '待定對手'}</span>
       </div>
-      <span class="b-team-score">${m.scoreB}</span>
+      <div class="b-score-wrapper">
+        ${renderPips(m.scoreB, reqWins)}
+        <span class="b-score-plate ${isFinished && m.winner === 'B' ? 'is-winner' : ''}">${m.scoreB}</span>
+      </div>
     </div>
+
     <div class="b-match-status-bar">
-      <span>${m.id} · ${reqWins > 1 ? `BO3(先${reqWins}勝)` : 'BO1'}</span>
+      <span class="b-match-id-tag">${m.id} · ${reqWins > 1 ? `BO3(先${reqWins}勝)` : 'BO1'}</span>
       ${isFinished ?
-        `<span style="color:#10b981;font-weight:700">✔ 戰報 ℹ</span>` :
+        `<span class="b-status-badge finished">✔ 戰報 ℹ</span>` :
         (m.teamA && m.teamB) ?
-          `<span class="b-status-live">● 觀戰 ▶</span>` :
-          `<span class="muted">⏳ 席位就緒中</span>`}
+          `<span class="b-status-badge live">● 觀戰 ▶</span>` :
+          `<span class="b-status-badge waiting">⏳ 待定</span>`}
     </div>
   </div>`;
+}
+
+/* =====================================================
+   動態 SVG 貝茲流光連線核心演算法 (SVG Bézier Connector Engine)
+   精準計算卡片幾何錨點，以心智圖平滑三次貝茲曲線銜接各輪次
+   ===================================================== */
+function renderBracketSvgLinks(t) {
+  const container = $('#bracketContainer');
+  const svg = $('#bracketSvgLayer');
+  if (!container || !svg || !t || !t.matches) return;
+
+  const cRect = container.getBoundingClientRect();
+  if (cRect.width === 0 || cRect.height === 0) return;
+
+  svg.setAttribute('width', cRect.width);
+  svg.setAttribute('height', cRect.height);
+  svg.setAttribute('viewBox', `0 0 ${cRect.width} ${cRect.height}`);
+
+  let pathsHtml = `
+    <defs>
+      <!-- 金色晉級流光漸層 -->
+      <linearGradient id="winnerFlowGold" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9" />
+        <stop offset="50%" stop-color="#fbbf24" stop-opacity="1" />
+        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.9" />
+      </linearGradient>
+      <!-- 翡翠綠晉級漸層 -->
+      <linearGradient id="winnerFlowGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#059669" stop-opacity="0.9" />
+        <stop offset="50%" stop-color="#34d399" stop-opacity="1" />
+        <stop offset="100%" stop-color="#10b981" stop-opacity="0.9" />
+      </linearGradient>
+      <!-- 季軍古銅漸層 -->
+      <linearGradient id="bronzeFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#b45309" stop-opacity="0.5" />
+        <stop offset="100%" stop-color="#d97706" stop-opacity="0.8" />
+      </linearGradient>
+      <!-- 霓虹光暈濾鏡 -->
+      <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="3.5" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+    </defs>
+  `;
+
+  // 1. 繪製標準晉級樹 (Left & Right Wings -> Final)
+  Object.values(t.matches).forEach(m => {
+    if (!m.nextMatchId || !t.matches[m.nextMatchId]) return;
+
+    const fromEl = container.querySelector(`[data-match-id="${m.id}"]`);
+    const toEl = container.querySelector(`[data-match-id="${m.nextMatchId}"]`);
+    if (!fromEl || !toEl) return;
+
+    const fromRect = fromEl.getBoundingClientRect();
+    const toRect = toEl.getBoundingClientRect();
+
+    let x1, y1, x2, y2, ctrlX1, ctrlY1, ctrlX2, ctrlY2;
+    const isLeft = m.isLeft;
+
+    if (isLeft) {
+      // 左翼：從卡片右緣中心出發 -> 進入下一輪卡片左緣
+      x1 = fromRect.right - cRect.left;
+      y1 = fromRect.top + fromRect.height * 0.5 - cRect.top;
+      x2 = toRect.left - cRect.left;
+      const slotRatio = m.nextSlot === 'A' ? 0.32 : m.nextSlot === 'B' ? 0.68 : 0.5;
+      y2 = toRect.top + toRect.height * slotRatio - cRect.top;
+
+      const dx = Math.max(25, (x2 - x1) * 0.55);
+      ctrlX1 = x1 + dx;
+      ctrlY1 = y1;
+      ctrlX2 = x2 - dx;
+      ctrlY2 = y2;
+    } else {
+      // 右翼：從卡片左緣中心出發 -> 進入下一輪卡片右緣
+      x1 = fromRect.left - cRect.left;
+      y1 = fromRect.top + fromRect.height * 0.5 - cRect.top;
+      x2 = toRect.right - cRect.left;
+      const slotRatio = m.nextSlot === 'A' ? 0.32 : m.nextSlot === 'B' ? 0.68 : 0.5;
+      y2 = toRect.top + toRect.height * slotRatio - cRect.top;
+
+      const dx = Math.max(25, (x1 - x2) * 0.55);
+      ctrlX1 = x1 - dx;
+      ctrlY1 = y1;
+      ctrlX2 = x2 + dx;
+      ctrlY2 = y2;
+    }
+
+    const pathD = `M ${x1} ${y1} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${x2} ${y2}`;
+    const isFinished = (m.status === 'finished');
+    const isMyAdvancement = isFinished && ((m.winner === 'A' && m.teamA?.isMe) || (m.winner === 'B' && m.teamB?.isMe));
+
+    let strokeClass = 'bracket-link-pending';
+    let strokeAttr = '';
+    let filterAttr = '';
+
+    if (isFinished) {
+      if (isMyAdvancement) {
+        strokeClass = 'bracket-link-my-flow';
+        strokeAttr = 'stroke="url(#winnerFlowGold)"';
+        filterAttr = 'filter="url(#neonGlow)"';
+      } else {
+        strokeClass = 'bracket-link-active';
+        strokeAttr = 'stroke="url(#winnerFlowGreen)"';
+        filterAttr = 'filter="url(#neonGlow)"';
+      }
+    }
+
+    pathsHtml += `
+      <g class="bracket-link-group">
+        <!-- 底層深色軌道 -->
+        <path d="${pathD}" class="bracket-link-bg" />
+        <!-- 核心貝茲導軌 (流光動畫) -->
+        <path d="${pathD}" class="bracket-link-core ${strokeClass}" ${strokeAttr} ${filterAttr} />
+        <!-- 起始端點與接入端點微型科技圓點 -->
+        <circle cx="${x1}" cy="${y1}" r="3" class="bracket-port-circle ${isFinished ? 'active' : ''}" />
+        <circle cx="${x2}" cy="${y2}" r="3" class="bracket-port-circle ${isFinished ? 'active' : ''}" />
+      </g>
+    `;
+  });
+
+  // 2. 準決賽敗者引導至季軍賽 (Bronze Final) 的虛線導引
+  if (t.bronzeMatchId && t.matches[t.bronzeMatchId]) {
+    const bronzeEl = container.querySelector(`[data-match-id="${t.bronzeMatchId}"]`);
+    if (bronzeEl) {
+      const bRect = bronzeEl.getBoundingClientRect();
+      const semiMatches = Object.values(t.matches).filter(m => m.round === t.totalRounds - 1);
+      semiMatches.forEach(sm => {
+        const smEl = container.querySelector(`[data-match-id="${sm.id}"]`);
+        if (!smEl) return;
+        const smRect = smEl.getBoundingClientRect();
+        let x1, y1, x2, y2, ctrlX1, ctrlY1, ctrlX2, ctrlY2;
+        if (sm.isLeft) {
+          x1 = smRect.right - cRect.left;
+          y1 = smRect.top + smRect.height * 0.7 - cRect.top;
+          x2 = bRect.left - cRect.left;
+          y2 = bRect.top + bRect.height * 0.4 - cRect.top;
+          const dx = Math.max(20, (x2 - x1) * 0.5);
+          ctrlX1 = x1 + dx; ctrlY1 = y1; ctrlX2 = x2 - dx; ctrlY2 = y2;
+        } else {
+          x1 = smRect.left - cRect.left;
+          y1 = smRect.top + smRect.height * 0.7 - cRect.top;
+          x2 = bRect.right - cRect.left;
+          y2 = bRect.top + bRect.height * 0.6 - cRect.top;
+          const dx = Math.max(20, (x1 - x2) * 0.5);
+          ctrlX1 = x1 - dx; ctrlY1 = y1; ctrlX2 = x2 + dx; ctrlY2 = y2;
+        }
+        const bPathD = `M ${x1} ${y1} C ${ctrlX1} ${ctrlY1}, ${ctrlX2} ${ctrlY2}, ${x2} ${y2}`;
+        pathsHtml += `
+          <g class="bracket-link-bronze-group">
+            <path d="${bPathD}" class="bracket-link-bg" />
+            <path d="${bPathD}" class="bracket-link-bronze" stroke="url(#bronzeFlow)" stroke-dasharray="4 3" />
+          </g>
+        `;
+      });
+    }
+  }
+
+  svg.innerHTML = pathsHtml;
 }
 
 /* 點擊錦標賽任一對抗卡片，彈出觀戰與戰報彈窗 */
@@ -4581,6 +4798,15 @@ $('#tourneyChampionModal')?.addEventListener('click', e => {
   if (e.target.id === 'btnDownloadTourneyPoster' || e.target.closest('#btnDownloadTourneyPoster')) {
     const t = TournamentEngine.getState();
     if (t?.champion) downloadTournamentChampionPoster(t.champion);
+  }
+});
+
+window.addEventListener('resize', () => {
+  if (state.currentMode === 'tournament' && typeof TournamentEngine !== 'undefined') {
+    const t = TournamentEngine.getState();
+    if (t && t.status !== 'registration') {
+      renderBracketSvgLinks(t);
+    }
   }
 });
 

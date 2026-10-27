@@ -4308,169 +4308,442 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 /* =====================================================
    世足 2026 樹狀對抗面板 (自適應滿版無橫向捲軸)
    ===================================================== */
+/* =====================================================
+   方案 A：心智圖雙向向心樹 (Bilateral Mindmap Arena Styles)
+   消除死白負空間、向心聚攏自適應排版、動態 SVG 貝茲流光連線、電競 2.0 對抗卡片
+   ===================================================== */
 .tourney-bracket-viewport {
   width: 100%;
   max-width: 100%;
   flex: 1;
   min-height: 0;
-  overflow: hidden; /* 徹底消除水平與垂直捲軸 */
-  box-sizing: border-box;
-  padding: 2px 0 4px;
+  position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  background: radial-gradient(circle at center, rgba(14, 165, 233, 0.05) 0%, transparent 70%);
 }
 
+[data-theme="light"] .tourney-bracket-viewport {
+  background: radial-gradient(circle at center, rgba(2, 132, 199, 0.04) 0%, transparent 75%);
+}
+
+/* 戰術極座標同心圓雷達底座 (Tactical Radar Backdrop) */
+.bracket-tactical-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.radar-crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 5%;
+  width: 90%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.12), transparent);
+}
+
+.radar-crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  height: 90%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(56, 189, 248, 0.12), transparent);
+}
+
+.radar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(56, 189, 248, 0.08);
+  pointer-events: none;
+}
+
+.radar-ring.rr-1 { width: 340px; height: 340px; }
+.radar-ring.rr-2 { width: 620px; height: 620px; border-style: solid; border-color: rgba(56, 189, 248, 0.04); }
+.radar-ring.rr-3 { width: 920px; height: 920px; }
+
+.radar-label.top {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(56, 189, 248, 0.3);
+  font-weight: 700;
+}
+
+[data-theme="light"] .radar-crosshair-h,
+[data-theme="light"] .radar-crosshair-v {
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.25), transparent);
+}
+[data-theme="light"] .radar-ring {
+  border-color: rgba(148, 163, 184, 0.15);
+}
+[data-theme="light"] .radar-label.top {
+  color: rgba(100, 116, 139, 0.4);
+}
+
+/* 對抗樹主容器：向心聚攏與自適應間距 */
 .bracket-container {
   display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 2;
   width: 100%;
-  max-width: 100%;
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  margin: 0;
+  margin: 0 auto;
 }
 
+/* 針對不同隊伍規模的向心聚集間距調校 (消滅死白空洞) */
+.bracket-container.bracket-size-4 {
+  max-width: 960px;
+  gap: clamp(32px, 4vw, 56px);
+}
+
+.bracket-container.bracket-size-8 {
+  max-width: 1260px;
+  gap: clamp(16px, 2.5vw, 36px);
+}
+
+.bracket-container.bracket-size-16 {
+  max-width: 100%;
+  gap: clamp(8px, 1.2vw, 18px);
+}
+
+.bracket-container.bracket-size-32 {
+  max-width: 100%;
+  gap: 6px;
+  justify-content: flex-start;
+  padding: 0 20px;
+}
+
+/* 全畫布動態 SVG 貝茲連線圖層 */
+.bracket-svg-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 貝茲曲線外觀與光流動畫 */
+.bracket-link-bg {
+  fill: none;
+  stroke: rgba(15, 23, 42, 0.7);
+  stroke-width: 4px;
+}
+
+[data-theme="light"] .bracket-link-bg {
+  stroke: rgba(241, 245, 249, 0.85);
+}
+
+.bracket-link-core {
+  fill: none;
+  stroke-linecap: round;
+  transition: all 0.3s ease;
+}
+
+.bracket-link-pending {
+  stroke: rgba(56, 189, 248, 0.28);
+  stroke-width: 1.8px;
+}
+
+[data-theme="light"] .bracket-link-pending {
+  stroke: rgba(148, 163, 184, 0.5);
+  stroke-width: 1.8px;
+}
+
+.bracket-link-active {
+  stroke-width: 2.4px;
+  stroke-dasharray: 8 4;
+  animation: bracketLinkFlow 1.4s linear infinite;
+}
+
+.bracket-link-my-flow {
+  stroke-width: 3px;
+  stroke-dasharray: 10 4;
+  animation: bracketLinkFlowGold 1s linear infinite;
+}
+
+.bracket-link-bronze {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+@keyframes bracketLinkFlow {
+  from { stroke-dashoffset: 24; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes bracketLinkFlowGold {
+  from { stroke-dashoffset: 28; }
+  to { stroke-dashoffset: 0; }
+}
+
+.bracket-port-circle {
+  fill: #0ea5e9;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.bracket-port-circle.active {
+  fill: #fbbf24;
+  opacity: 1;
+  filter: drop-shadow(0 0 4px #f59e0b);
+}
+
+/* 左右翼佈局 (Left & Right Wings) */
 .bracket-wing {
   display: flex;
-  gap: 8px;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.8vw, 24px);
+  position: relative;
+  z-index: 2;
   flex: 1;
   min-width: 0;
   height: 100%;
-  min-height: 0;
-  justify-content: center;
 }
 
 .bracket-wing.left-wing {
   flex-direction: row;
 }
 
-/* 核心修正：右翼順序改為 row，由內側向外側排布 (準決賽 4強 ➔ 半準決賽 8強)，兩翼向心鏡像對稱 */
 .bracket-wing.right-wing {
   flex-direction: row;
 }
 
+/* 欄位容器 (Bracket Column) - 消除頂部 200px 斷層，標題與卡片緊密居中同軸 */
 .bracket-col {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 230px;
+  min-width: 200px;
+  max-width: 260px;
   height: 100%;
-  min-height: 0;
-  max-width: 440px; /* 防止 4 強少欄位時被暴拉成極寬怪異長條 */
 }
 
 .bracket-col-header {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.col-header-pill {
   font-family: var(--head);
-  font-size: 13.5px; /* 欄位抬頭放大 */
+  font-size: 12px;
   font-weight: 800;
-  color: var(--muted);
-  letter-spacing: 0.04em;
-  padding: 3px 0;
-  border-bottom: 1.5px solid var(--line2);
-  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+  padding: 3px 14px;
+  border-radius: 20px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: var(--cyan);
   white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="light"] .bracket-col-header {
-  color: #0f172a;
-  border-bottom-color: rgba(15, 23, 42, 0.15);
+[data-theme="light"] .col-header-pill {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
-/* 單個對抗卡片節點 (Match Node) - 淺色深色雙色適配 + 字體放大 */
-.b-match-card {
-  background: rgba(15, 23, 42, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 5px 6px;
+.bracket-col-matches {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  position: relative;
-  min-width: 0;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 18px);
+  width: 100%;
 }
 
-/* 淺色模式下的卡片外觀：高質感純白底、深色立體邊框、絕不全黑 */
+/* =====================================================
+   電競 2.0 對抗卡片 (Match Card 2.0)
+   ===================================================== */
+.b-match-card {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(11, 19, 35, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 [data-theme="light"] .b-match-card {
   background: #ffffff;
   border: 1.5px solid #cbd5e1;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .b-match-card:hover {
   border-color: var(--cyan);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(61, 224, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(61, 224, 255, 0.22);
 }
 
 [data-theme="light"] .b-match-card:hover {
   border-color: #0284c7;
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.18);
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.16);
 }
 
+/* 實體連接端子 (SVG 錨定口) */
+.port-terminal {
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cyan);
+  transform: translateY(-50%);
+  opacity: 0.6;
+  pointer-events: none;
+}
+.port-terminal.port-left { left: -4px; }
+.port-terminal.port-right { right: -4px; }
+
+[data-theme="light"] .port-terminal {
+  background: #0284c7;
+}
+
+/* 我方戰線專屬呼吸標記 */
 .b-match-card.is-my-match {
   border-color: #f59e0b !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.45) !important;
-  animation: pulseGoldBorder 2s infinite;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.35) !important;
 }
 
 [data-theme="light"] .b-match-card.is-my-match {
-  border-color: #f59e0b !important;
   background: #fffdf5;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35) !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 2px 14px rgba(245, 158, 11, 0.25) !important;
 }
 
-/* 隊伍列：字體放大至 14px，深淺色高對比 */
+.my-match-strip {
+  position: absolute;
+  top: -9px;
+  left: 10px;
+  background: #f59e0b;
+  color: #000;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  padding: 1px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.pulse-beacon {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulseBeacon 1s infinite;
+}
+
+@keyframes pulseBeacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+/* 總決賽專屬金箔外觀 */
+.b-match-card.is-grand-final {
+  border-color: rgba(245, 158, 11, 0.6);
+  background: linear-gradient(145deg, rgba(30, 27, 75, 0.9), rgba(15, 23, 42, 0.95));
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="light"] .b-match-card.is-grand-final {
+  background: #ffffff;
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+}
+
+/* 季軍賽古銅外觀 */
+.b-match-card.is-bronze-card {
+  border-color: rgba(217, 119, 6, 0.4);
+  opacity: 0.95;
+}
+
+/* 隊伍資料行 (Team Row) */
 .b-team-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 4px;
-  font-size: 14px; /* 字體顯著放大 */
+  gap: 6px;
+  font-size: 13.5px;
   padding: 4px 6px;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text);
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 [data-theme="light"] .b-team-row {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0f172a;
   border: 1px solid #e2e8f0;
 }
 
 .b-team-row.winner {
-  background: rgba(16, 185, 129, 0.18);
-  border-left: 3.5px solid #10b981;
+  background: rgba(16, 185, 129, 0.16);
+  border-left: 3px solid #10b981;
   font-weight: 700;
   color: #34d399;
 }
 
 [data-theme="light"] .b-team-row.winner {
-  background: rgba(22, 163, 74, 0.15);
-  border-left: 3.5px solid #16a34a;
+  background: rgba(22, 163, 74, 0.12);
+  border-left: 3px solid #16a34a;
   color: #15803d;
   font-weight: 800;
 }
 
 .b-team-row.loser {
   opacity: 0.45;
-  filter: grayscale(0.5);
+  filter: grayscale(0.6);
   text-decoration: line-through;
 }
 
 [data-theme="light"] .b-team-row.loser {
-  opacity: 0.45;
+  opacity: 0.42;
   color: #64748b;
   text-decoration: line-through;
 }
@@ -4478,19 +4751,20 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .b-team-name-box {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
 
-.b-team-name-box span:first-child {
-  font-size: 16px; /* 國旗圖示放大 */
+.b-team-flag-pill {
+  font-size: 15px;
   flex-shrink: 0;
+  line-height: 1;
 }
 
 .b-team-name {
-  font-weight: 800;
-  font-size: 13.5px; /* 隊伍名稱清晰大顆加粗 */
+  font-weight: 700;
+  font-size: 12.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4501,58 +4775,135 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   color: #0f172a;
 }
 
-.b-team-score {
-  font-family: var(--mono);
-  font-size: 15px; /* 比分字體放大 */
-  font-weight: 900;
-  color: #38bdf8;
-  padding: 0 4px;
+/* 獨立切角計分槽 (Score Box) */
+.b-score-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   flex-shrink: 0;
 }
 
-[data-theme="light"] .b-team-score {
+.b-pips {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.b-pips .pip {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.b-pips .pip.won {
+  background: #10b981;
+  box-shadow: 0 0 4px #10b981;
+}
+
+[data-theme="light"] .b-pips .pip {
+  background: #cbd5e1;
+}
+[data-theme="light"] .b-pips .pip.won {
+  background: #16a34a;
+}
+
+.b-score-plate {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #38bdf8;
+  background: rgba(2, 6, 23, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  min-width: 20px;
+  text-align: center;
+  padding: 1px 4px;
+}
+
+[data-theme="light"] .b-score-plate {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
   color: #0369a1;
 }
 
+.b-score-plate.is-winner {
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="light"] .b-score-plate.is-winner {
+  color: #15803d;
+  border-color: #86efac;
+  background: #dcfce7;
+}
+
+/* 卡片底端狀態條 (Status Bar) */
 .b-match-status-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 11px; /* 狀態文字放大 */
+  font-size: 10.5px;
   font-family: var(--mono);
   color: var(--muted);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 2px;
+  padding-top: 3px;
   margin-top: 1px;
 }
 
 [data-theme="light"] .b-match-status-bar {
   border-top-color: rgba(15, 23, 42, 0.08);
-  color: #475569;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.b-match-id-tag {
+  letter-spacing: 0.02em;
+}
+
+.b-status-badge {
+  border-radius: 3px;
+  padding: 1px 5px;
   font-weight: 700;
 }
 
-.b-status-live {
-  color: #ef4444;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 2px;
+.b-status-badge.finished {
+  color: #10b981;
 }
 
-/* 中央世界冠軍王座 (World Champion Centerpiece) */
+.b-status-badge.live {
+  color: #ef4444;
+  font-weight: 800;
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.b-status-badge.waiting {
+  color: var(--muted);
+}
+
+/* =====================================================
+   中央世界冠軍王座 (World Champion Centerpiece & Apex)
+   ===================================================== */
 .bracket-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  flex: 0 0 190px; /* 緊湊寬度，不擠壓左右欄位 */
-  min-width: 0;
-  padding: 2px 6px;
+  flex: 0 0 220px;
+  min-width: 210px;
+  max-width: 240px;
+  padding: 4px 6px;
   box-sizing: border-box;
+  position: relative;
+  z-index: 2;
   height: 100%;
-  min-height: 0;
 }
 
 .trophy-podium {
@@ -4560,22 +4911,37 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  position: relative;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.trophy-halo {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 .trophy-icon-glow {
-  font-size: 34px;
+  font-size: 36px;
   line-height: 1;
-  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6));
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.7));
   animation: floatTrophy 3s ease-in-out infinite;
 }
 
 .trophy-title {
   font-family: var(--head);
-  font-size: 14.5px;
+  font-size: 15px;
   font-weight: 900;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: #fbbf24;
-  text-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  text-shadow: 0 2px 10px rgba(245, 158, 11, 0.5);
   margin-top: 2px;
 }
 
@@ -4584,22 +4950,35 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   text-shadow: none;
 }
 
+.trophy-sub-tag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .trophy-sub-tag {
+  color: #64748b;
+}
+
 .trophy-champion-box {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.95));
-  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(15, 23, 42, 0.95));
+  border: 1.5px solid #f59e0b;
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: 5px 10px;
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
   color: #fff;
   width: 100%;
   box-shadow: 0 0 16px rgba(245, 158, 11, 0.25) inset;
   text-align: center;
+  box-sizing: border-box;
 }
 
 [data-theme="light"] .trophy-champion-box {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), #ffffff);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), #ffffff);
   color: #92400e;
   border-color: #f59e0b;
   box-shadow: 0 2px 10px rgba(245, 158, 11, 0.15);
@@ -4613,14 +4992,27 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   font-family: var(--head);
   font-size: 11px;
   font-weight: 800;
-  color: var(--amber);
   text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   margin-bottom: 3px;
 }
 
-[data-theme="light"] .match-box-title {
+.match-box-title.gold-title {
+  color: #fbbf24;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+}
+
+[data-theme="light"] .match-box-title.gold-title {
   color: #b45309;
+  text-shadow: none;
+}
+
+.match-box-title.bronze-title {
+  color: #d97706;
+}
+
+[data-theme="light"] .match-box-title.bronze-title {
+  color: #92400e;
 }
 
 /* 觀戰彈窗 (Spectator Modal) - 雙色模式適配 */
