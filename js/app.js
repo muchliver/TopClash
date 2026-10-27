@@ -193,7 +193,13 @@ const state = {
     active: false, round: 1, winsA: 0, winsB: 0, history: [],
     rivalName: '', rivalBaseDeck: null, enemyDeck: null, enemyDoc: 'defense',
     bannedByA: null, bannedByB: null, candidateBan: null, nextEvent: null
-  }
+  },
+  /* 線上真人雙人對戰狀態 (WebRTC Online PvP) */
+  isOnlinePvp: false,
+  pvpMyReady: false,
+  pvpOpponentReady: false,
+  pvpOpponentDeck: null,
+  pvpOpponentDoc: 'defense'
 };
 let playToken = 0, speed = 1, skip = false, currentActiveModal = null;
 
@@ -503,16 +509,33 @@ function renderMissionBar() {
       </div>`;
   } else if (mode === 'bo3') {
     const b = state.bo3;
-    h = `<span class="mission-tag" style="background:rgba(255,179,64,.18);color:var(--amber);border-color:rgba(255,179,64,.4);font-weight:800">🏆 BO5 征服賽 · 第 ${b.round}/5 局 (五局三勝制)</span>
-      <div class="mission-item" style="background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px;border:1px solid var(--line2)">
-        <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">當前比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
-        <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(b.rivalName)}</b></span>
-        ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
-        ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
-      <div class="mission-actions">
-        <button class="btn amber sm" id="btnOnlinePvp" title="建立或加入線上雙人 P2P 即時對戰房間">⚔️ 線上雙人房 (Online)</button>
-        <button class="btn ghost sm" id="btnResetBo3" title="重置比分並配對新對手">重置系列賽 🔄</button>
-      </div>`;
+    if (state.isOnlinePvp) {
+      const opp = OnlinePvPEngine.getOpponent();
+      const oppDisplay = opp ? `${opp.flag} ${opp.name}` : b.rivalName;
+      h = `<span class="mission-tag" style="background:rgba(56,189,248,.18);color:#38bdf8;border-color:rgba(56,189,248,.4);font-weight:800">🌐 線上真人 BO5 · 第 ${b.round}/5 局</span>
+        <div class="mission-item" style="background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px;border:1px solid var(--line2)">
+          <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">即時比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
+          <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(oppDisplay)}</b></span>
+          <span class="badge ${state.pvpOpponentReady ? 'badge-ok' : 'badge-no'}" style="margin-left:8px;font-size:11px">${state.pvpOpponentReady ? '✔ 對手已就緒' : '⏳ 對手配置中'}</span>
+          ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
+          ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
+        </div>
+        <div class="mission-actions">
+          <button class="btn ghost sm" id="btnExitPvp" style="color:var(--red);border-color:rgba(255,93,110,.3)" title="退出當前線上對戰房間">退出連線 ✕</button>
+        </div>`;
+    } else {
+      h = `<span class="mission-tag" style="background:rgba(255,179,64,.18);color:var(--amber);border-color:rgba(255,179,64,.4);font-weight:800">🏆 BO5 征服賽 · 第 ${b.round}/5 局 (五局三勝制)</span>
+        <div class="mission-item" style="background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px;border:1px solid var(--line2)">
+          <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">當前比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
+          <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(b.rivalName)}</b></span>
+          ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
+          ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
+        </div>
+        <div class="mission-actions">
+          <button class="btn amber sm" id="btnOnlinePvp" title="建立或加入線上雙人 P2P 即時對戰房間">⚔️ 線上雙人房 (Online)</button>
+          <button class="btn ghost sm" id="btnResetBo3" title="重置比分並配對新對手">重置系列賽 🔄</button>
+        </div>`;
+    }
   } else if (mode === 'daily') {
     const k = state.dailyPlanId === 'today' ? ('db15_daily_' + dateKey()) : ('db15_daily_' + dateKey() + '_' + state.dailyPlanId);
     const rec = LS.get(k, null);
@@ -807,28 +830,51 @@ function renderCommandDeck() {
   const btnGo = $('#btnGo');
   const isReady = full && errs.length === 0;
 
-  btnGo.disabled = !isReady;
-  btnGo.classList.toggle('status-ready', isReady);
-  btnGo.classList.toggle('status-missing', !isReady && missing > 0);
-  btnGo.classList.toggle('status-error', !isReady && missing === 0 && errs.length > 0);
+  if (state.isOnlinePvp) {
+    if (state.pvpMyReady) {
+      btnGo.disabled = true;
+      btnGo.classList.remove('status-ready', 'status-missing', 'status-error');
+      btnGo.classList.add('status-locked');
+    } else {
+      btnGo.disabled = !isReady;
+      btnGo.classList.toggle('status-ready', isReady);
+      btnGo.classList.toggle('status-missing', !isReady && missing > 0);
+      btnGo.classList.toggle('status-error', !isReady && missing === 0 && errs.length > 0);
+    }
+  } else {
+    btnGo.disabled = !isReady;
+    btnGo.classList.toggle('status-ready', isReady);
+    btnGo.classList.toggle('status-missing', !isReady && missing > 0);
+    btnGo.classList.toggle('status-error', !isReady && missing === 0 && errs.length > 0);
+  }
 
   const launchTitle = $('#launchTitle');
   const launchSub = $('#launchSub');
   const launchIcon = $('#launchIcon');
 
   if (launchTitle && launchSub) {
-    if (isReady) {
-      if (state.mode === 'sandbox') {
+    if (state.isOnlinePvp && state.pvpMyReady) {
+      if (launchIcon) launchIcon.textContent = '⏳';
+      launchTitle.textContent = state.pvpOpponentReady ? '雙方就緒，即將開打...' : '陣容已鎖定 · 等待對手';
+      launchSub.textContent = state.pvpOpponentReady ? '同步戰場數據中...' : '對手指揮官配置中，請稍候...';
+    } else if (isReady) {
+      if (state.isOnlinePvp) {
+        if (launchIcon) launchIcon.textContent = state.pvpOpponentReady ? '⚡' : '🔒';
+        launchTitle.textContent = state.pvpOpponentReady ? '對手已就緒！點擊鎖定出擊' : '鎖定陣容 (提交戰術)';
+        launchSub.textContent = state.pvpOpponentReady ? '對手已在等待你！點擊立即開戰' : '點擊鎖定 5 槽陣容並發送給對手';
+      } else if (state.mode === 'sandbox') {
         if (launchIcon) launchIcon.textContent = '⚡';
         launchTitle.textContent = '開始 300 場模擬';
+        launchSub.textContent = '陣容就緒 · SPACE / ENTER';
       } else if (state.mode === 'bo3') {
         if (launchIcon) launchIcon.textContent = '🏆';
         launchTitle.textContent = `第 ${state.bo3.round} 局開戰 (${state.bo3.winsA}-${state.bo3.winsB})`;
+        launchSub.textContent = '陣容就緒 · SPACE / ENTER';
       } else {
         if (launchIcon) launchIcon.textContent = '⚔️';
         launchTitle.textContent = '開始聯合作戰';
+        launchSub.textContent = '陣容就緒 · SPACE / ENTER';
       }
-      launchSub.textContent = '陣容就緒 · SPACE / ENTER';
     } else if (errs.length > 0 && missing === 0) {
       if (launchIcon) launchIcon.textContent = '🚫';
       launchTitle.textContent = '預算超額';
@@ -1150,7 +1196,13 @@ $('#commandDeck').addEventListener('click', e => {
     return;
   }
   if (e.target.closest('#btnGo')) {
-    state.mode === 'sandbox' ? runSandbox() : startBattle();
+    if (state.mode === 'sandbox') {
+      runSandbox();
+    } else if (state.isOnlinePvp) {
+      handleOnlinePvpSubmit();
+    } else {
+      startBattle();
+    }
     return;
   }
 });
@@ -1183,6 +1235,17 @@ $('#missionBar').addEventListener('click', e => {
   }
   if (e.target.closest('#btnOnlinePvp')) {
     openOnlinePvpModal(); return;
+  }
+  if (e.target.closest('#btnExitPvp')) {
+    OnlinePvPEngine.closeConnection();
+    state.isOnlinePvp = false;
+    state.pvpMyReady = false;
+    state.pvpOpponentReady = false;
+    state.pvpOpponentDeck = null;
+    initBo3Series();
+    renderAll();
+    toast('已安全退出線上雙人對戰房間，回到常規模式。');
+    return;
   }
 });
 $('#missionBar').addEventListener('change', e => {
@@ -2679,11 +2742,23 @@ function handleBo3RoundEnd(res) {
   bo3.nextEvent = nextEvent;
 
   if (won) {
+    if (state.isOnlinePvp) {
+      // 線上對抗：我方獲勝，由對手進行戰術反制
+      showResult(res, {
+        bo3NextText: `進入第 ${nextRound} 局（等待對手反制）`,
+        bo3Callback: () => {
+          closeBattle();
+          state.pvpMyReady = false;
+          state.pvpOpponentReady = false;
+          state.pvpOpponentDeck = null;
+          renderAll();
+          toast(`🏆 本局獲勝！正在等待對手指揮官進行戰術禁用反制...`);
+        }
+      });
+      return;
+    }
+
     // 電腦在上一局失利，觸發電腦智能戰術反制！
-    // 智慧判定條件：
-    // 條件 1：若玩家 MVP 輸出爆發 (cost >= 3 且擊殺或輸出驚人)，優先 BAN MVP
-    // 條件 2：若玩家配置了頂級 $5 明星武器，BAN 該 $5 核心
-    // 條件 3：若玩家造成關鍵電子戰優勢，BAN 玩家的電戰/防空關鍵單位
     const playerMvp = res.mvp.A;
     let banId = null;
     let banReason = '';
@@ -2784,8 +2859,20 @@ $('#bo3CounterConfirm').onclick = () => {
   const bannedId = bo3.candidateBan;
   bo3.bannedByA = bannedId;
   $('#bo3CounterModal').hidden = true;
+
+  if (state.isOnlinePvp) {
+    // 線上真人對抗：發送 BAN_COMMIT 給對手
+    OnlinePvPEngine.sendPacket('BAN_COMMIT', { bannedUnitId: bannedId });
+    bo3.round++;
+    state.pvpMyReady = false;
+    state.pvpOpponentReady = false;
+    state.pvpOpponentDeck = null;
+    renderAll();
+    toast(`🎯 戰術反制生效：已成功禁用對手的【${UNIT_MAP[bannedId].name}】！請重新調整第 ${bo3.round} 局陣容。`);
+    return;
+  }
+
   bo3.round++;
-  
   // 替換敵方被 Ban 的裝備
   const banIdx = bo3.enemyDeck.indexOf(bannedId);
   if (banIdx >= 0) {
@@ -3437,10 +3524,143 @@ OnlinePvPEngine.on('opponent_joined', ({ opponent, isHost }) => {
   toast(`⚡ 玩家【${opponent.flag} ${opponent.name}】(${opponent.uid}) 已成功連線進房！`);
 });
 
+function handleOnlinePvpSubmit() {
+  if (state.pvpMyReady) {
+    toast('⏳ 你的陣容已提交並鎖定，正在等待對手指揮官完成配置...');
+    return;
+  }
+  const full = state.deck.every(Boolean);
+  const errs = full ? validateDeck(state.deck, budgetLimit(), currentBanned()) : ['請先配置滿 5 個槽位'];
+  if (errs.length > 0) {
+    toast('⚠️ 陣容未就緒：' + errs[0]);
+    return;
+  }
+
+  // 1. 本地標記我方已準備
+  state.pvpMyReady = true;
+
+  // 2. 透過 WebRTC 發送 DECK_SUBMIT 給對手
+  OnlinePvPEngine.sendPacket('DECK_SUBMIT', {
+    deck: state.deck.slice(),
+    doctrine: state.doctrine
+  });
+
+  SoundEngine.play('equip');
+  renderCommandDeck();
+  renderMissionBar();
+
+  if (state.pvpOpponentReady) {
+    toast('🎯 雙方陣容皆已就緒！系統正在同步戰場，即將交火！');
+    checkBothReadyAndStartCombat();
+  } else {
+    toast('✅ 你的陣容已提交並鎖定！正在等待對手完成配置...');
+  }
+}
+
+function checkBothReadyAndStartCombat() {
+  if (!state.pvpMyReady || !state.pvpOpponentReady) return;
+
+  if (OnlinePvPEngine.isHostUser()) {
+    // 房主生成同一個公平隨機種子與戰場事件
+    const seed = (Math.random() * 4294967296) >>> 0;
+    const event = state.event || pick(EVENTS);
+    OnlinePvPEngine.sendPacket('COMBAT_SYNC', { seed, event });
+    startOnlinePvpBattle(seed, event);
+  }
+}
+
+function startOnlinePvpBattle(seed, event) {
+  if (!state.pvpOpponentDeck) {
+    toast('⚠️ 戰術資料同步中，請稍候...');
+    return;
+  }
+  state.event = event;
+  state.enemy = state.pvpOpponentDeck.slice();
+  state.enemyDoc = state.pvpOpponentDoc || 'defense';
+  const opp = OnlinePvPEngine.getOpponent();
+  if (opp) state.enemyName = `${opp.flag} ${opp.name}`;
+
+  const deck = state.deck.slice();
+  const res = resolveBattle(deck, state.enemy, {
+    seed,
+    event: state.event,
+    docA: state.doctrine,
+    docB: state.enemyDoc
+  });
+  state.lastRes = res;
+  openBattle(res);
+}
+
+OnlinePvPEngine.on('game_session_started', payload => {
+  const opp = OnlinePvPEngine.getOpponent();
+  state.isOnlinePvp = true;
+  state.pvpMyReady = false;
+  state.pvpOpponentReady = false;
+  state.pvpOpponentDeck = null;
+  state.bo3.active = true;
+  state.bo3.round = payload.round || 1;
+  state.bo3.winsA = payload.winsA || 0;
+  state.bo3.winsB = payload.winsB || 0;
+  state.bo3.bannedByA = null;
+  state.bo3.bannedByB = null;
+  if (opp) state.bo3.rivalName = `${opp.flag} ${opp.name} (${opp.uid})`;
+  state.mode = 'bo3';
+
+  $('#onlinePvpModal').hidden = true;
+  currentActiveModal = null;
+  renderAll();
+  toast(`⚡ 房主已發起 BO5 系列賽！請挑選 5 槽陣容並點擊【鎖定陣容】！`);
+});
+
+OnlinePvPEngine.on('opponent_deck_ready', payload => {
+  state.pvpOpponentDeck = payload.deck;
+  state.pvpOpponentDoc = payload.doctrine || 'defense';
+  state.pvpOpponentReady = true;
+
+  renderCommandDeck();
+  renderMissionBar();
+
+  if (state.pvpMyReady) {
+    toast(`⚡ 對手已完成配置！雙方就緒，即將開打！`);
+    checkBothReadyAndStartCombat();
+  } else {
+    toast(`⚡ 對手已就緒！等待你完成陣容配置並鎖定！`);
+  }
+});
+
+OnlinePvPEngine.on('combat_start_sync', payload => {
+  startOnlinePvpBattle(payload.seed, payload.event);
+});
+
+OnlinePvPEngine.on('opponent_ban_committed', payload => {
+  const bannedId = payload.bannedUnitId;
+  state.bo3.bannedByB = bannedId; // 對手禁用了我方的裝備
+  toast(`⚠️ 對手啟動戰術反制！禁用了你的【${UNIT_MAP[bannedId].name}】！`);
+  
+  // 若當前卡槽中正好有被敵方 Ban 的單位，強制卸下該單位
+  const bannedIdx = state.deck.indexOf(bannedId);
+  if (bannedIdx >= 0) {
+    state.deck[bannedIdx] = null;
+    state.active = bannedIdx;
+  }
+  
+  // 推進小局並重置就緒狀態
+  state.bo3.round++;
+  state.pvpMyReady = false;
+  state.pvpOpponentReady = false;
+  state.pvpOpponentDeck = null;
+  renderAll();
+});
+
 OnlinePvPEngine.on('opponent_left', () => {
   toast('⚠️ 對手已斷開連線！');
+  state.isOnlinePvp = false;
+  state.pvpMyReady = false;
+  state.pvpOpponentReady = false;
+  state.pvpOpponentDeck = null;
   $('#pvpVersusBox').hidden = true;
   $('#btnPvpStartBattle').hidden = true;
+  renderAll();
   switchPvpTab('host');
   initHostRoom();
 });
@@ -3453,18 +3673,31 @@ $('#btnPvpStartBattle')?.addEventListener('click', () => {
   const opp = OnlinePvPEngine.getOpponent();
   if (!opp) return;
 
-  // 將對手資訊帶入 BO5 系列賽
+  // 房主啟動連線遊戲會話
+  state.isOnlinePvp = true;
+  state.pvpMyReady = false;
+  state.pvpOpponentReady = false;
+  state.pvpOpponentDeck = null;
   state.bo3.rivalName = `${opp.flag} ${opp.name} (${opp.uid})`;
   state.bo3.active = true;
   state.bo3.winsA = 0;
   state.bo3.winsB = 0;
   state.bo3.round = 1;
+  state.bo3.bannedByA = null;
+  state.bo3.bannedByB = null;
   state.mode = 'bo3';
+
+  // 通知挑戰者同步開局
+  OnlinePvPEngine.sendPacket('GAME_START_SESSION', {
+    round: 1,
+    winsA: 0,
+    winsB: 0
+  });
 
   $('#onlinePvpModal').hidden = true;
   currentActiveModal = null;
   renderAll();
-  toast(`🏆 線上 BO5 系列賽正式開戰！對手：【${opp.name}】！`);
+  toast(`🏆 線上 BO5 系列賽正式開戰！請挑選 5 槽陣容並點擊【鎖定陣容】！`);
 });
 
 /* ---------- 啟動 ---------- */

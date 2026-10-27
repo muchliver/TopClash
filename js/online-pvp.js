@@ -191,6 +191,10 @@ const OnlinePvPEngine = (function() {
         emit('opponent_joined', { opponent: opponentInfo, isHost });
         break;
 
+      case 'GAME_START_SESSION':
+        emit('game_session_started', data.payload);
+        break;
+
       case 'DECK_SUBMIT':
         emit('opponent_deck_ready', data.payload);
         break;
