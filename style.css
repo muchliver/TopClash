@@ -4017,15 +4017,16 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .tournament-layout {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 8px 12px 30px;
+  gap: 6px;
+  padding: 6px 14px 6px;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   animation: fadeIn 0.25s ease-out;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden; /* 徹底杜絕橫向滾動條 */
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow: hidden; /* 徹底杜絕右側垂直捲軸，達成一屏流全景展示 */
 }
 
 .tourney-header {
@@ -4033,13 +4034,14 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 10px;
-  padding: 10px 16px;
+  padding: 6px 14px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 [data-theme="light"] .tourney-header {
@@ -4291,9 +4293,13 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .tourney-bracket-viewport {
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden; /* 徹底消除水平捲軸 */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden; /* 徹底消除水平與垂直捲軸 */
   box-sizing: border-box;
-  padding: 4px 0 20px;
+  padding: 2px 0 4px;
+  display: flex;
+  flex-direction: column;
 }
 
 .bracket-container {
@@ -4303,17 +4309,20 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   gap: 8px;
   width: 100%;
   max-width: 100%;
-  min-width: 0; /* 消除硬編碼寬度 */
+  height: 100%;
+  min-height: 0;
   box-sizing: border-box;
   margin: 0;
 }
 
 .bracket-wing {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
   flex: 1;
   min-width: 0;
+  height: 100%;
+  min-height: 0;
   justify-content: center;
 }
 
@@ -4321,17 +4330,20 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex-direction: row;
 }
 
+/* 核心修正：右翼順序改為 row，由內側向外側排布 (準決賽 4強 ➔ 半準決賽 8強)，兩翼向心鏡像對稱 */
 .bracket-wing.right-wing {
-  flex-direction: row-reverse;
+  flex-direction: row;
 }
 
 .bracket-col {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
+  height: 100%;
+  min-height: 0;
   max-width: 440px; /* 防止 4 強少欄位時被暴拉成極寬怪異長條 */
 }
 
@@ -4516,11 +4528,13 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   flex: 0 0 190px; /* 緊湊寬度，不擠壓左右欄位 */
   min-width: 0;
-  padding: 4px 6px;
+  padding: 2px 6px;
   box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
 }
 
 .trophy-podium {
@@ -4531,20 +4545,20 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 
 .trophy-icon-glow {
-  font-size: 42px;
+  font-size: 34px;
   line-height: 1;
-  filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.6));
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.6));
   animation: floatTrophy 3s ease-in-out infinite;
 }
 
 .trophy-title {
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 14.5px;
   font-weight: 900;
   letter-spacing: 0.08em;
   color: #fbbf24;
   text-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 [data-theme="light"] .trophy-title {
@@ -4556,9 +4570,9 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(15, 23, 42, 0.95));
   border: 2px solid #f59e0b;
   border-radius: 8px;
-  padding: 6px 10px;
-  margin-top: 6px;
-  font-size: 14px;
+  padding: 4px 8px;
+  margin-top: 4px;
+  font-size: 13px;
   font-weight: 800;
   color: #fff;
   width: 100%;
@@ -4623,5 +4637,72 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border: 2px solid #f59e0b;
   box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3);
 }
+
+/* =====================================================
+   高度自適應：針對 850px 以下常見螢幕 (1540x788, 1080p 等)
+   徹底消除垂直捲軸，達成一屏流零滾動極致體驗
+   ===================================================== */
+@media (max-height: 850px) {
+  .tournament-layout {
+    gap: 4px;
+    padding: 4px 12px 6px;
+  }
+  .tourney-header {
+    padding: 5px 12px;
+    gap: 6px;
+  }
+  .tourney-badge {
+    font-size: 15px;
+  }
+  .tourney-meta-row {
+    font-size: 11.5px;
+    margin-top: 2px;
+  }
+  .bracket-col {
+    gap: 4px;
+  }
+  .bracket-col-header {
+    font-size: 12px;
+    padding: 1px 0;
+    margin-bottom: 2px;
+  }
+  .b-match-card {
+    padding: 3px 5px;
+    gap: 2px;
+  }
+  .b-team-row {
+    font-size: 13px;
+    padding: 3px 5px;
+  }
+  .b-team-name {
+    font-size: 12.5px;
+  }
+  .b-team-score {
+    font-size: 13.5px;
+  }
+  .b-match-status-bar {
+    font-size: 10px;
+    padding-top: 1px;
+  }
+  .bracket-center {
+    gap: 6px;
+    padding: 2px 4px;
+  }
+  .trophy-icon-glow {
+    font-size: 30px;
+  }
+  .trophy-title {
+    font-size: 13.5px;
+  }
+  .trophy-champion-box {
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+  .match-box-title {
+    font-size: 10.5px;
+    margin-bottom: 2px;
+  }
+}
+
 
 
