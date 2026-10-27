@@ -3323,32 +3323,34 @@ function showResult(res, bo3Custom) {
   $('#resultCard').innerHTML = `
     <button class="modal-x" id="rCloseX" title="關閉彈窗並檢視戰場情形">✕</button>
 
-    <!-- 頂部旗艦級戰略評級戰報橫幅 -->
-    <div class="aar-header ${won ? 'win' : draw ? 'draw' : 'lose'}">
-      <div class="aar-grade-badge ${gradeClass}">
-        <span class="grade-char">${grade}</span>
-        <span class="grade-label">GRADE</span>
+    <!-- 一體化戰略評級與積分戰情列 (Unified Outcome Bar) -->
+    <div class="aar-outcome-bar ${won ? 'win' : draw ? 'draw' : 'lose'}">
+      <div class="outcome-badge-col">
+        <div class="aar-grade-badge-sm ${gradeClass}">
+          <span class="grade-char">${grade}</span>
+          <span class="grade-label">GRADE</span>
+        </div>
       </div>
-      <div class="aar-title-group">
-        <div class="aar-meta-row">
-          <span class="aar-mode-tag">${res.wipeout ? '💥 DECISIVE WIPEOUT · 全殲' : '🎯 STRATEGIC VICTORY · 戰略判定'}</span>
+      <div class="outcome-title-col">
+        <div class="outcome-headline">
+          <h2 class="outcome-main-title">${gradeTitle}</h2>
+          <span class="outcome-mode-tag">${res.wipeout ? '💥 全殲' : '🎯 戰略判定'}</span>
+          <span class="outcome-sub-desc">${gradeDesc}</span>
+        </div>
+        <div class="outcome-meta-row">
           <span class="aar-env-tag">${subtitle}</span>
         </div>
-        <h2 class="aar-main-title">${gradeTitle}</h2>
-        <div class="aar-sub-desc">${gradeDesc}</div>
       </div>
-    </div>
-
-    <!-- 雙方總戰略積分全息對比條 -->
-    <div class="aar-vp-gauge">
-      <div class="gauge-labels">
-        <span class="g-side g-a">友軍戰鬥群 <b>${f(A.total)} VP</b> <span class="g-alive">(生還 ${aliveCountA}/5)</span></span>
-        <span class="g-vs">VS</span>
-        <span class="g-side g-b">敵軍特遣隊 <b>${f(B.total)} VP</b> <span class="g-alive">(生還 ${aliveCountB}/5)</span></span>
-      </div>
-      <div class="gauge-bar-track">
-        <div class="gauge-fill-a" style="width:${pctA}%"></div>
-        <div class="gauge-fill-b" style="width:${pctB}%"></div>
+      <div class="outcome-gauge-col">
+        <div class="gauge-labels-compact">
+          <span class="g-side g-a">友軍 <b>${f(A.total)} VP</b> <span class="g-alive">(${aliveCountA}/5 存活)</span></span>
+          <span class="g-vs">VS</span>
+          <span class="g-side g-b">敵軍 <b>${f(B.total)} VP</b> <span class="g-alive">(${aliveCountB}/5 存活)</span></span>
+        </div>
+        <div class="gauge-bar-track">
+          <div class="gauge-fill-a" style="width:${pctA}%"></div>
+          <div class="gauge-fill-b" style="width:${pctB}%"></div>
+        </div>
       </div>
     </div>
 
@@ -3423,7 +3425,7 @@ function showResult(res, bo3Custom) {
       <div class="aar-intel-card">
         <div class="intel-card-title">⚡ 戰局關鍵轉折點 (KEY TURNING POINTS)</div>
         <ul class="aar-turn-list">
-          ${res.key && res.key.length ? res.key.map(k => `
+          ${res.key && res.key.length ? res.key.slice(0, 2).map(k => `
             <li class="${k.side === 'A' ? 'k-side-a' : 'k-side-b'}">
               <span class="k-marker">${k.side === 'A' ? '友軍制勝' : '敵方突破'}</span>
               <span class="k-text">${esc(k.text)}</span>
@@ -3435,7 +3437,7 @@ function showResult(res, bo3Custom) {
       <div class="aar-intel-card">
         <div class="intel-card-title">💡 參謀本部戰後復盤 (TACTICAL DEBRIEF)</div>
         <ul class="aar-debrief-list">
-          ${why.map(w => `
+          ${why.slice(0, 2).map(w => `
             <li class="${w.t === 'good' ? 'd-good' : w.t === 'bad' ? 'd-bad' : 'd-neutral'}">
               <span class="d-bullet">${w.t === 'good' ? '✔' : w.t === 'bad' ? '⚠' : 'ℹ'}</span>
               <span>${esc(w.s)}</span>
@@ -4246,7 +4248,9 @@ function renderTournamentBracket(t) {
     </div>
   `;
 
-  // 一屏流自適應縮放並繪製 SVG 貝茲心智圖連線
+  // 一屏流自適應縮放並繪製 SVG 貝茲心智圖連線（同步一次 + 下一幀字型/排版穩定後再校正一次）
+  applyBracketFitToViewport();
+  renderBracketSvgLinks(t);
   requestAnimationFrame(() => {
     applyBracketFitToViewport();
     renderBracketSvgLinks(t);
@@ -4260,29 +4264,22 @@ function renderTournamentBracket(t) {
 function applyBracketFitToViewport() {
   const viewport = $('#tourneyBracketViewport');
   const container = $('#bracketContainer');
-  if (!viewport || !container) return;
+  if (!viewport || !container) return 1;
 
-  container.style.transform = 'none';
-
+  // 1. 以自然設計尺寸量測（不受 transform 影響）
+  container.style.transform = 'translate(-50%, -50%)';
+  const natW = container.offsetWidth;
+  const natH = container.offsetHeight;
   const vpW = viewport.clientWidth;
   const vpH = viewport.clientHeight;
-  const cW = container.scrollWidth;
-  const cH = container.scrollHeight;
+  if (!natW || !natH || !vpW || !vpH) return 1;
 
-  if (vpW <= 0 || vpH <= 0 || cW <= 0 || cH <= 0) return;
-
-  const safeW = vpW - 12;
-  const safeH = vpH - 8;
-
-  const scaleX = safeW / cW;
-  const scaleY = safeH / cH;
-  const scale = Math.min(1, scaleX, scaleY);
-
-  if (scale < 0.985) {
-    container.style.transform = `scale(${scale.toFixed(3)})`;
-  } else {
-    container.style.transform = 'none';
-  }
+  // 2. 計算等比例縮放：寬高皆完整放入（保留 12px 安全邊距），小規模最多放大 1.25 倍
+  const scale = Math.min((vpW - 12) / natW, (vpH - 12) / natH, 1.25);
+  container.style.transform = `translate(-50%, -50%) scale(${scale.toFixed(4)})`;
+  container.dataset.scale = String(scale);
+  container.classList.add('is-fitted');
+  return scale;
 }
 
 function getRoundTitle(r, size) {
@@ -4379,12 +4376,24 @@ function renderBracketSvgLinks(t) {
   const svg = $('#bracketSvgLayer');
   if (!container || !svg || !t || !t.matches) return;
 
-  const cRect = container.getBoundingClientRect();
-  if (cRect.width === 0 || cRect.height === 0) return;
+  // 畫布已被 scale 縮放：getBoundingClientRect 為縮放後尺寸，需除以 scale 還原為畫布內部座標
+  const s = parseFloat(container.dataset.scale) || 1;
+  const rawRect = container.getBoundingClientRect();
+  if (rawRect.width === 0 || rawRect.height === 0) return;
+  const W = container.offsetWidth;
+  const H = container.offsetHeight;
+  const toLocal = r => ({
+    left: (r.left - rawRect.left) / s,
+    right: (r.right - rawRect.left) / s,
+    top: (r.top - rawRect.top) / s,
+    height: r.height / s
+  });
+  const cRect = { left: 0, top: 0 };
+  const localRect = el => toLocal(el.getBoundingClientRect());
 
-  svg.setAttribute('width', cRect.width);
-  svg.setAttribute('height', cRect.height);
-  svg.setAttribute('viewBox', `0 0 ${cRect.width} ${cRect.height}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
 
   let pathsHtml = `
     <defs>
@@ -4421,8 +4430,8 @@ function renderBracketSvgLinks(t) {
     const toEl = container.querySelector(`[data-match-id="${m.nextMatchId}"]`);
     if (!fromEl || !toEl) return;
 
-    const fromRect = fromEl.getBoundingClientRect();
-    const toRect = toEl.getBoundingClientRect();
+    const fromRect = localRect(fromEl);
+    const toRect = localRect(toEl);
 
     let x1, y1, x2, y2, ctrlX1, ctrlY1, ctrlX2, ctrlY2;
     const isLeft = m.isLeft;
@@ -4492,12 +4501,12 @@ function renderBracketSvgLinks(t) {
   if (t.bronzeMatchId && t.matches[t.bronzeMatchId]) {
     const bronzeEl = container.querySelector(`[data-match-id="${t.bronzeMatchId}"]`);
     if (bronzeEl) {
-      const bRect = bronzeEl.getBoundingClientRect();
+      const bRect = localRect(bronzeEl);
       const semiMatches = Object.values(t.matches).filter(m => m.round === t.totalRounds - 1);
       semiMatches.forEach(sm => {
         const smEl = container.querySelector(`[data-match-id="${sm.id}"]`);
         if (!smEl) return;
-        const smRect = smEl.getBoundingClientRect();
+        const smRect = localRect(smEl);
         let x1, y1, x2, y2, ctrlX1, ctrlY1, ctrlX2, ctrlY2;
         if (sm.isLeft) {
           x1 = smRect.right - cRect.left;
@@ -4835,15 +4844,20 @@ $('#tourneyChampionModal')?.addEventListener('click', e => {
   }
 });
 
-window.addEventListener('resize', () => {
-  if (state.currentMode === 'tournament' && typeof TournamentEngine !== 'undefined') {
+function refitTournamentBracket() {
+  if (state.mode === 'tournament' && typeof TournamentEngine !== 'undefined') {
     const t = TournamentEngine.getState();
     if (t && t.status !== 'registration') {
       applyBracketFitToViewport();
       renderBracketSvgLinks(t);
     }
   }
-});
+}
+window.addEventListener('resize', refitTournamentBracket);
+if (typeof ResizeObserver !== 'undefined' && $('#tourneyBracketViewport')) {
+  new ResizeObserver(() => requestAnimationFrame(refitTournamentBracket)).observe($('#tourneyBracketViewport'));
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitTournamentBracket);
 
 /* ---------- 啟動 ---------- */
 state.scoutIdx = 0;
