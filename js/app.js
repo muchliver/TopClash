@@ -422,7 +422,8 @@ function canPickForSlot(u, targetSlot) {
   if (existingIdx >= 0 && existingIdx !== targetSlot) return '已裝備';
   const others = state.deck.filter((id, k) => id && k !== targetSlot);
   const cost = deckCost(others);
-  if (cost + u.cost > budgetLimit()) return '超出預算';
+  const diff = (cost + u.cost) - budgetLimit();
+  if (diff > 0) return `預算不足 (差$${diff})`;
   return '';
 }
 
@@ -517,8 +518,8 @@ function renderMissionBar() {
           <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">即時比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
           <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(oppDisplay)}</b></span>
           <span class="badge ${state.pvpOpponentReady ? 'badge-ok' : 'badge-no'}" style="margin-left:8px;font-size:11px">${state.pvpOpponentReady ? '✔ 對手已就緒' : '⏳ 對手配置中'}</span>
-          ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
-          ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
+          ${b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：$${UNIT_MAP[b.bannedByA].cost} ${UNIT_MAP[b.bannedByA].name} (${CATS[UNIT_MAP[b.bannedByA].cat].label})</span>` : ''}
+          ${b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：$${UNIT_MAP[b.bannedByB].cost} ${UNIT_MAP[b.bannedByB].name} (${CATS[UNIT_MAP[b.bannedByB].cat].label})</span>` : ''}
         </div>
         <div class="mission-actions">
           <button class="btn ghost sm" id="btnExitPvp" style="color:var(--red);border-color:rgba(255,93,110,.3)" title="退出當前線上對戰房間">退出連線 ✕</button>
@@ -528,8 +529,8 @@ function renderMissionBar() {
         <div class="mission-item" style="background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px;border:1px solid var(--line2)">
           <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">當前比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
           <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(b.rivalName)}</b></span>
-          ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
-          ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
+          ${b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：$${UNIT_MAP[b.bannedByA].cost} ${UNIT_MAP[b.bannedByA].name} (${CATS[UNIT_MAP[b.bannedByA].cat].label})</span>` : ''}
+          ${b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：$${UNIT_MAP[b.bannedByB].cost} ${UNIT_MAP[b.bannedByB].name} (${CATS[UNIT_MAP[b.bannedByB].cat].label})</span>` : ''}
         </div>
         <div class="mission-actions">
           <button class="btn amber sm" id="btnOnlinePvp" title="建立或加入線上雙人 P2P 即時對戰房間">⚔️ 線上雙人房 (Online)</button>
@@ -630,6 +631,22 @@ function renderMatrix() {
       }
     }
 
+    // 【重要修復】若該兵種有被 BAN 的單位（如大衛投石索），強制在看板該價位格位展示該單位本尊，杜絕被其他型號隱藏遮蔽！
+    const bannedIds = currentBanned();
+    if (bannedIds.length) {
+      bannedIds.forEach(bId => {
+        const bUnit = UNIT_MAP[bId];
+        if (bUnit && bUnit.cat === cat) {
+          const matchIdx = displayUnits.findIndex(u => u.cost === bUnit.cost);
+          if (matchIdx >= 0 && (!equippedInDeck || equippedInDeck.cost !== bUnit.cost)) {
+            displayUnits = displayUnits.slice();
+            displayUnits[matchIdx] = bUnit;
+            state.variants[`${cat}-${bUnit.cost}`] = bUnit.v;
+          }
+        }
+      });
+    }
+
     const cardsHtml = displayUnits.map(u => {
       const isEquipped = state.deck.includes(u.id);
       const isBanned = currentBanned().includes(u.id);
@@ -658,7 +675,7 @@ function renderMatrix() {
             <span>ATK <b>${u.atk}</b></span>
             <span>${u.ew > u.st ? 'EW' : 'STH'} <b>${Math.max(u.ew, u.st)}</b></span>
           </div>
-          ${why && !isEquipped ? `<span class="m-why">${why}</span>` : ''}
+          ${why && !isEquipped ? `<span class="m-why ${isBanned ? 'why-banned' : 'why-budget'}">${why}</span>` : ''}
         </div>
       </div>`;
     }).join('');

@@ -273,9 +273,29 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .m-card:hover:not(.dis){border-color: var(--c); transform: translateY(-1px); box-shadow: 0 4px 14px -3px var(--c);}
 .m-card.sel{border-color: var(--cyan); background: linear-gradient(145deg, rgba(61, 224, 255, .22), rgba(15, 26, 42, .95)); box-shadow: 0 0 0 1px var(--cyan) inset, 0 4px 16px -4px rgba(61, 224, 255, .5);}
 .m-card.sel::after{content: '✔'; position: absolute; right: 5px; top: 3px; font-size: 11px; color: var(--cyan); font-weight: 900;}
-.m-card.dis{opacity: .35; cursor: not-allowed;}
-.m-card.banned{border-color: var(--red) !important; opacity: .45;}
-.m-card.banned::after{content: 'BANNED'; position: absolute; right: 5px; top: 4px; background: var(--red); color: #fff; font-size: 8.5px; font-family: var(--head); padding: 1px 4px; border-radius: 3px; font-weight: 700;}
+.m-card.dis{opacity: .45; filter: grayscale(0.6); cursor: not-allowed;}
+.m-card.banned{
+  border: 1.5px solid var(--red) !important;
+  opacity: .85 !important;
+  filter: none !important;
+  background: repeating-linear-gradient(45deg, rgba(255, 93, 110, .06), rgba(255, 93, 110, .06) 8px, rgba(255, 93, 110, .16) 8px, rgba(255, 93, 110, .16) 16px), rgba(15, 26, 42, .95) !important;
+  box-shadow: 0 0 10px rgba(255, 93, 110, .3) inset !important;
+  cursor: not-allowed;
+}
+.m-card.banned::after{
+  content: '🚫 戰術禁用';
+  position: absolute;
+  right: 5px;
+  top: 4px;
+  background: var(--red);
+  color: #fff;
+  font-size: 9px;
+  font-family: var(--head);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .4);
+}
 
 .m-top{display: flex; align-items: flex-start; justify-content: space-between; gap: 5px;}
 .m-cost{font-family: var(--head); font-size: 15.5px; font-weight: 800; color: var(--amber); background: rgba(255, 179, 64, .12); border: 1px solid rgba(255, 179, 64, .3); border-radius: 5px; padding: 0 5px; line-height: 19px; flex: none;}
@@ -293,7 +313,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .m-bot{display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 2px; font-size: 9.5px; color: var(--muted); font-family: var(--mono);}
 .m-stats{display: flex; gap: 4px;}
 .m-stats span b{color: var(--text); font-weight: 600;}
-.m-why{color: var(--red); font-size: 9.5px; font-weight: 700; margin-left: auto;}
+.m-why{font-size: 9.5px; font-weight: 700; margin-left: auto;}
+.m-why.why-budget{color: #94a3b8; background: rgba(148, 163, 184, .12); padding: 1px 4px; border-radius: 3px;}
+.m-why.why-banned{color: #ff5d6e; background: rgba(255, 93, 110, .18); padding: 1px 4px; border-radius: 3px; font-weight: 800;}
 
 /* ---------- 懸浮詳細情報 Tooltip ---------- */
 .unit-tooltip{position:fixed;z-index:90;pointer-events:none;width:290px;background:rgba(6,12,20,.96);border:1px solid var(--cyan);border-radius:12px;padding:14px;box-shadow:0 12px 36px rgba(0,0,0,.85);backdrop-filter:blur(14px);animation:tipIn .15s ease}
