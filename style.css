@@ -4535,25 +4535,28 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex-direction: row;
 }
 
-/* 欄位容器 (Bracket Column) - 消除頂部 200px 斷層，標題與卡片緊密居中同軸 */
+/* 欄位容器 (Bracket Column) - 標題高度固定，下方卡片容器佔滿 100% 並以 space-around 數學嚴格等距置中 */
 .bracket-col {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 10px;
   flex: 0 1 230px;
   min-width: 200px;
   max-width: 260px;
   height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
 .bracket-col-header {
+  flex: 0 0 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-bottom: 2px;
+  box-sizing: border-box;
 }
 
 .col-header-pill {
@@ -4577,12 +4580,18 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
+/* 核心幾何對齊：卡片容器佔據除標題外的 100% 高度，以 space-around 達成二元樹每一輪垂直正中心對齊 */
 .bracket-col-matches {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: clamp(8px, 1.5vh, 18px);
+  justify-content: space-around;
+  align-items: center;
   width: 100%;
+  flex: 1;
+  height: calc(100% - 32px);
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 4px 0;
 }
 
 /* =====================================================
@@ -4894,8 +4903,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-around;
   flex: 0 0 220px;
   min-width: 210px;
   max-width: 240px;
