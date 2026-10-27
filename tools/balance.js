@@ -1,4 +1,4 @@
-// 平衡模擬工具：node tools/balance.js
+// 頂尖對戰：15元聯合作戰 (TopClash) 數值平衡與 AI 循環賽模擬工具：node tools/balance.js
 const fs = require('fs'), path = require('path');
 const code = ['data.js', 'engine.js'].map(f => fs.readFileSync(path.join(__dirname, '..', 'js', f), 'utf8')).join('\n');
 const E = new Function(code + '\nreturn {UNITS,UNIT_MAP,ARCHETYPES,EVENTS,DOCTRINES,TEMPLATES,SLOTS,resolveBattle,buildFromPlan,randomDeck,simulate,mulberry32,validateDeck};')();
