@@ -1244,13 +1244,56 @@ $('#missionBar').addEventListener('change', e => {
   }
 });
 
+/* ---------- 離開/清理戰鬥推演與檢視戰場 ---------- */
+function exitActiveBattle() {
+  playToken++; // 中止推演循環
+  const vb = $('#viewBattle');
+  if (vb) vb.hidden = true;
+  
+  // 關閉所有戰鬥相關彈窗與主遮罩
+  const modals = [
+    $('#resultModal'),
+    $('#ladderResultModal'),
+    $('#bo3SeriesModal'),
+    $('#bo3RoundModal')
+  ];
+  modals.forEach(m => {
+    if (m) m.hidden = true;
+  });
+  if (typeof currentActiveModal !== 'undefined' && currentActiveModal) {
+    currentActiveModal.hidden = true;
+  }
+
+  // 重置右上角戰鬥控制按鈕
+  const btnSpeed = $('#btnSpeed'); if (btnSpeed) btnSpeed.hidden = false;
+  const btnSkip = $('#btnSkip'); if (btnSkip) btnSkip.hidden = false;
+  const btnReopen = $('#btnReopenResult'); if (btnReopen) btnReopen.hidden = true;
+  const btnExit = $('#btnBattleExit'); if (btnExit) btnExit.hidden = true;
+
+  // 清空戰鬥特效層
+  const fxLayer = $('#combatFxLayer');
+  if (fxLayer) fxLayer.innerHTML = '';
+}
+
 /* ---------- 模式切換與預算修剪 ---------- */
 $('#modeTabs').addEventListener('click', e => {
   const b = e.target.closest('[data-mode]'); if (!b) return;
   setMode(b.dataset.mode);
 });
 
+// 點擊品牌 Logo 亦可平滑返回快速對戰指揮所
+const brandLogo = $('.brand');
+if (brandLogo) {
+  brandLogo.addEventListener('click', () => {
+    setMode('quick');
+  });
+}
+
 function setMode(m) {
+  // 無論何時點選上方功能列（即使在戰鬥中或檢視戰場情形），立即乾淨退出戰鬥
+  exitActiveBattle();
+
+  const prevMode = state.mode;
   state.mode = m; state.sandResult = null; state.scout = false;
   document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === m));
   
@@ -1282,6 +1325,18 @@ function setMode(m) {
   prune(); setupMatch(); renderAll();
   if (m === 'bo3') {
     toast(`🏆 已進入 BO5 征服賽：五局三勝制！配對對手【${state.bo3.rivalName}】，輸掉該局之一方可啟動戰術反制，禁用對方關鍵裝備！`);
+  } else if (m === 'ghost') {
+    toast('🌐 已進入幽靈對戰：與全球玩家上傳之真實作戰陣容交鋒！');
+  } else if (m === 'daily') {
+    toast(`🎯 已進入每日殘局 #${dailyNo()}：相同戰區、相同軍備，考驗戰略微操！`);
+  } else if (m === 'sandbox') {
+    toast('🧪 已進入沙盒模擬：推演 300 場大規模戰術大數據！');
+  } else if (m === 'quick') {
+    if (prevMode !== 'quick') {
+      toast('⚡ 已切換至快速對戰模式');
+    } else {
+      toast('⚡ 已返回快速對戰陣容指揮所');
+    }
   }
 }
 
@@ -3062,16 +3117,10 @@ function shareText(res) {
 }
 
 function closeBattle() {
-  playToken++;
-  $('#resultModal').hidden = true;
-  $('#viewBattle').hidden = true;
-  $('#viewBuild').hidden = false;
-  $('#missionBar').hidden = false;
-  $('#commandDeck').hidden = false;
-  $('#btnSpeed').hidden = false;
-  $('#btnSkip').hidden = false;
-  $('#btnReopenResult').hidden = true;
-  $('#btnBattleExit').hidden = true;
+  exitActiveBattle();
+  const vb = $('#viewBuild'); if (vb) vb.hidden = false;
+  const mb = $('#missionBar'); if (mb) mb.hidden = false;
+  const cd = $('#commandDeck'); if (cd) cd.hidden = false;
 }
 
 /* ---------- 戰術海報生成 ---------- */

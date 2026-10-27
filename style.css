@@ -43,7 +43,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 
 /* ---------- Top bar (緊湊軍規頂部導航，絕對單行零折行) ---------- */
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 18px;height:48px;min-height:48px;flex:0 0 48px;border-bottom:1px solid var(--line);background:var(--topbar-bg);backdrop-filter:blur(10px);position:relative;z-index:20;flex-wrap:nowrap;box-shadow:0 1px 10px rgba(0,0,0,.04);transition:background .22s,border-color .22s}
-.brand{display:flex;align-items:center;gap:10px;flex:none}
+.brand{display:flex;align-items:center;gap:10px;flex:none;cursor:pointer;user-select:none;transition:opacity .15s}
+.brand:hover{opacity:.88}
 .brand-mark{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--cyan);background:rgba(61,224,255,.08);border:1px solid var(--line2);box-shadow:0 0 14px rgba(61,224,255,.2) inset}
 [data-theme="light"] .brand-mark{background:rgba(2,132,199,.08);box-shadow:0 2px 8px rgba(2,132,199,.15)}
 .brand-mark svg{width:18px;height:18px}
