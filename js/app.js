@@ -753,13 +753,6 @@ function renderCommandDeck() {
       <span>${d.icon}</span> <span>${esc(d.name)}</span>
     </button>`).join('');
 
-  // 經典陣容下拉選單清單
-  $('#tplMenu').innerHTML = TEMPLATES.map((t, idx) =>
-    `<button class="menu-item" data-tpl="${idx}">
-      <span>${esc(t.name)}</span>
-      <small>$${deckCost(t.ids)}</small>
-    </button>`).join('');
-
   // 預算結餘 / 滿額效率標籤
   const effEl = $('#budgetEff');
   if (effEl) {
@@ -912,13 +905,6 @@ function openDeckMoreModal() {
       <small>${esc(d.desc)}</small>
     </div>
   `).join('');
-  // 渲染推薦陣容
-  $('#tplSheetList').innerHTML = TEMPLATES.map((t, idx) => `
-    <div class="tpl-sheet-item" data-sheet-tpl="${idx}">
-      <b>${esc(t.name)}</b>
-      <span>$${deckCost(t.ids)} 預算</span>
-    </div>
-  `).join('');
   modal.hidden = false;
 }
 
@@ -1031,20 +1017,6 @@ $('#deckMoreModal')?.addEventListener('click', e => {
     toast(`已切換戰術教條：${docObj.name}`);
     return;
   }
-  const tplItem = e.target.closest('[data-sheet-tpl]');
-  if (tplItem) {
-    const t = TEMPLATES[+tplItem.dataset.sheetTpl];
-    if (deckCost(t.ids) > budgetLimit()) {
-      toast('此陣容超出目前預算限制');
-      return;
-    }
-    state.deck = t.ids.slice();
-    state.active = 0;
-    renderAll();
-    $('#deckMoreModal').hidden = true;
-    toast(`已套用推薦陣容：${t.name}`);
-    return;
-  }
   if (e.target.id === 'sheetBtnCopy') {
     if (!state.deck.every(Boolean)) { toast('請先配置滿 5 個槽位再複製代碼'); return; }
     copyText(encodeDeck(state.deck));
@@ -1127,25 +1099,8 @@ $('#commandDeck').addEventListener('click', e => {
     toast('已清空所有槽位');
     return;
   }
-  if (e.target.closest('#btnTplToggle')) {
-    $('#tplMenu').hidden = !$('#tplMenu').hidden;
-    $('#codeMenu').hidden = true;
-    return;
-  }
   if (e.target.closest('#btnCodeToggle')) {
     $('#codeMenu').hidden = !$('#codeMenu').hidden;
-    $('#tplMenu').hidden = true;
-    return;
-  }
-  const tplItem = e.target.closest('[data-tpl]');
-  if (tplItem) {
-    const ids = TEMPLATES[+tplItem.dataset.tpl].ids.slice();
-    if (deckCost(ids) > budgetLimit()) { toast('此陣容超出目前預算限制'); return; }
-    state.deck = ids;
-    state.active = 0;
-    $('#tplMenu').hidden = true;
-    renderAll();
-    toast('已載入推薦陣容：' + TEMPLATES[+tplItem.dataset.tpl].name);
     return;
   }
   if (e.target.closest('#btnCopyCode')) {
@@ -1171,7 +1126,6 @@ $('#commandDeck').addEventListener('click', e => {
 
 // 點擊空白處關閉選單
 document.addEventListener('click', e => {
-  if (!e.target.closest('#tplDropdownWrap')) { const m = $('#tplMenu'); if (m) m.hidden = true; }
   if (!e.target.closest('#codeDropdownWrap')) { const m = $('#codeMenu'); if (m) m.hidden = true; }
 });
 
