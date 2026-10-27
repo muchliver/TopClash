@@ -2292,6 +2292,28 @@ async function showBattle(res) {
   $('#btnSkip').hidden = false;
   $('#btnReopenResult').hidden = true;
   $('#btnBattleExit').hidden = true;
+
+  const btnBack = $('#btnBattleBack');
+  const btnBackTxt = $('#btnBattleBackTxt');
+  const btnExitTxt = $('#btnBattleExitTxt');
+  if (btnBack) btnBack.hidden = false;
+  if (state.mode === 'tournament') {
+    if (btnBackTxt) btnBackTxt.textContent = '🏆 返回錦標賽';
+    if (btnExitTxt) btnExitTxt.textContent = '🏆 返回錦標賽';
+    if (btnBack) { btnBack.className = 'btn amber sm'; btnBack.title = '隨時一鍵返回世界盃淘汰錦標賽對抗樹'; }
+  } else if (state.mode === 'ladder') {
+    if (btnBackTxt) btnBackTxt.textContent = '🎖️ 返回天梯';
+    if (btnExitTxt) btnExitTxt.textContent = '🎖️ 返回天梯';
+    if (btnBack) { btnBack.className = 'btn primary sm'; btnBack.title = '隨時返回天梯競技防線'; }
+  } else if (state.mode === 'bo3') {
+    if (btnBackTxt) btnBackTxt.textContent = '⚔️ 返回 BO5';
+    if (btnExitTxt) btnExitTxt.textContent = '⚔️ 返回 BO5';
+    if (btnBack) { btnBack.className = 'btn amber sm'; btnBack.title = '隨時返回 BO5 征服賽對決'; }
+  } else {
+    if (btnBackTxt) btnBackTxt.textContent = '✕ 退出推演';
+    if (btnExitTxt) btnExitTxt.textContent = '返回陣容編組';
+    if (btnBack) { btnBack.className = 'btn ghost sm'; btnBack.title = '退出當前推演'; }
+  }
   const fxLayer = $('#combatFxLayer');
   if (fxLayer) fxLayer.innerHTML = '';
   const radarEl = $('.radar');
@@ -2629,7 +2651,23 @@ $('#btnReopenResult').onclick = () => {
   if (currentActiveModal) currentActiveModal.hidden = false;
   else $('#resultModal').hidden = false;
 };
-$('#btnBattleExit').onclick = () => { closeBattle(); setupMatch(); renderAll(); };
+function handleExitBattleToCurrentMode() {
+  closeBattle();
+  if (state.mode === 'tournament') {
+    setMode('tournament');
+    toast('🏆 已一鍵返回 2026 世界盃淘汰錦標賽對抗樹');
+  } else if (state.mode === 'ladder') {
+    setMode('ladder');
+    toast('🎖️ 已返回天梯競技防線');
+  } else if (state.mode === 'bo3') {
+    setMode('bo3');
+  } else {
+    setupMatch();
+    renderAll();
+  }
+}
+$('#btnBattleBack')?.addEventListener('click', handleExitBattleToCurrentMode);
+$('#btnBattleExit')?.addEventListener('click', handleExitBattleToCurrentMode);
 
 /* ---------- 戰鬥結算與 BO3 / 幽靈處理 ---------- */
 function finishBattle(res) {
@@ -3209,7 +3247,17 @@ function showResult(res, bo3Custom) {
     };
   }
 
-  $('#rEdit').onclick = () => { closeBattle(); setupMatch(); renderAll(); };
+  const editBtn = $('#rEdit');
+  if (editBtn) {
+    if (state.mode === 'tournament') {
+      editBtn.textContent = '🏆 返回錦標賽對抗樹';
+    } else if (state.mode === 'ladder') {
+      editBtn.textContent = '🎖️ 返回天梯防線';
+    } else {
+      editBtn.textContent = '⚙️ 返回編輯陣容';
+    }
+    editBtn.onclick = handleExitBattleToCurrentMode;
+  }
 }
 
 function buildWhy(res) {
@@ -4270,7 +4318,7 @@ $('#tourneySpectatorModal')?.addEventListener('click', e => {
     });
     $('#tourneySpectatorModal').hidden = true;
     currentActiveModal = null;
-    openBattle(res);
+    showBattle(res);
   }
 });
 

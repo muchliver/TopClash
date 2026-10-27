@@ -576,6 +576,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   color: var(--cyan) !important;
 }
 
+/* 當對戰介面啟用 (未 hidden) 時，強制所有其他同層級主視圖絕對隱藏，徹底防止錦標賽等出現在下方或觸發捲軸 */
+.battle:not([hidden]) ~ .tournament-layout,
+.battle:not([hidden]) ~ .ladder-layout,
+.battle:not([hidden]) ~ .matrix-layout,
+.battle:not([hidden]) ~ #missionBar,
+.battle:not([hidden]) ~ #commandDeck {
+  display: none !important;
+}
+
 @keyframes pulseReopenGlow {
   0% { box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
   50% { box-shadow: 0 0 24px rgba(56, 189, 248, 0.8), 0 0 6px #38bdf8; transform: scale(1.02); }
