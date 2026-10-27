@@ -4302,8 +4302,12 @@ if (typeof LadderEngine !== 'undefined') LadderEngine.init();
 setupMatch();
 renderAll();
 
-// 檢查 URL 是否帶有好友邀請房間代碼
+// 檢查 URL 是否帶有模式或好友邀請房間代碼
 const urlParams = new URLSearchParams(window.location.search);
+const modeParam = urlParams.get('mode');
+if (modeParam && ['ladder', 'tournament', 'bo3', 'quick', 'ghost', 'daily', 'sandbox'].includes(modeParam)) {
+  setMode(modeParam);
+}
 const roomParam = urlParams.get('room');
 if (roomParam) {
   setTimeout(() => {
