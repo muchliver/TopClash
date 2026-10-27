@@ -141,6 +141,49 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 }
 [data-theme="light"] .btn-reroll-top .reroll-sub{color:#78350f}
 
+/* BO5 系列賽專屬軍火庫鎖定樣式 (Disabled & Locked State) */
+.btn-reroll-top:disabled,
+.btn-reroll-top.locked-bo3 {
+  cursor: not-allowed !important;
+  opacity: 0.65 !important;
+  filter: grayscale(0.65) !important;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.75)) !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.btn-reroll-top:disabled .reroll-icon,
+.btn-reroll-top.locked-bo3 .reroll-icon {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
+}
+.btn-reroll-top:disabled .reroll-title,
+.btn-reroll-top.locked-bo3 .reroll-title {
+  color: #94a3b8 !important;
+}
+.btn-reroll-top:disabled .reroll-title kbd,
+.btn-reroll-top.locked-bo3 .reroll-title kbd {
+  display: none !important;
+}
+.btn-reroll-top:disabled .reroll-sub,
+.btn-reroll-top.locked-bo3 .reroll-sub {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .btn-reroll-top:disabled,
+[data-theme="light"] .btn-reroll-top.locked-bo3 {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+}
+[data-theme="light"] .btn-reroll-top:disabled .reroll-title,
+[data-theme="light"] .btn-reroll-top.locked-bo3 .reroll-title {
+  color: #64748b !important;
+}
+[data-theme="light"] .btn-reroll-top:disabled .reroll-sub,
+[data-theme="light"] .btn-reroll-top.locked-bo3 .reroll-sub {
+  color: #94a3b8 !important;
+}
+
 /* ---------- 核心 5x5 全景矩陣看板 (Matrix View: 零滾動一屏滿版自適應) ---------- */
 .matrix-layout{
   flex: 1 1 auto;

@@ -325,7 +325,37 @@ function generateRandomMarketPool() {
   return pool;
 }
 
+function updateRerollMarketButtonState() {
+  const btn = $('#btnRerollMarket');
+  if (!btn) return;
+  if (state.mode === 'bo3') {
+    btn.disabled = true;
+    btn.classList.add('locked-bo3');
+    btn.setAttribute('title', 'BO5 征服賽期間軍火庫由戰區司令部固定配給，嚴禁臨陣更換軍火庫！請善用現有裝備調整戰術。');
+    const icon = btn.querySelector('.reroll-icon');
+    const title = btn.querySelector('.reroll-title');
+    const sub = btn.querySelector('.reroll-sub');
+    if (icon) icon.textContent = '🔒';
+    if (title) title.innerHTML = '軍火庫已鎖定';
+    if (sub) sub.textContent = 'BO5 系列賽固定配給 · 禁洗牌';
+  } else {
+    btn.disabled = false;
+    btn.classList.remove('locked-bo3');
+    btn.setAttribute('title', '隨機調撥 5 大兵種戰區軍火庫 (注意：將清空當前選取) [快捷鍵 D]');
+    const icon = btn.querySelector('.reroll-icon');
+    const title = btn.querySelector('.reroll-title');
+    const sub = btn.querySelector('.reroll-sub');
+    if (icon) icon.textContent = '🎲';
+    if (title) title.innerHTML = '調撥戰區軍火 <kbd>D</kbd>';
+    if (sub) sub.textContent = '重新洗牌 25 款軍武 · 清空當前選取';
+  }
+}
+
 function rerollMarketPool() {
+  if (state.mode === 'bo3') {
+    toast('🔒 BO5 征服賽期間軍火庫已封閉鎖定！請在現有配給裝備中調整陣容應對。');
+    return;
+  }
   // 調撥軍火等同重置當前選取，杜絕利用保留裝備反覆洗出理想軍火的不公平刷牌漏洞
   state.deck = [null, null, null, null, null];
   state.active = 0;
@@ -530,6 +560,7 @@ function renderMissionBar() {
       </div>`;
   }
   mb.innerHTML = h;
+  updateRerollMarketButtonState();
 }
 
 /* ---------- 渲染：手機專屬兵種切換分頁導覽列 ---------- */
@@ -1141,7 +1172,14 @@ $('#missionBar').addEventListener('click', e => {
     openDeployGhostModal(); return;
   }
   if (e.target.closest('#btnResetBo3')) {
-    initBo3Series(); renderAll(); toast('已重置 BO5 征服系列賽'); return;
+    initBo3Series();
+    generateRandomMarketPool();
+    state.deck = [null, null, null, null, null];
+    state.active = 0;
+    syncActiveDeck();
+    renderAll();
+    toast(`🔄 已重置 BO5 征服系列賽，重新配對新對手【${state.bo3.rivalName}】！新軍火庫已配給完畢並鎖定。`);
+    return;
   }
   if (e.target.closest('#btnOnlinePvp')) {
     openOnlinePvpModal(); return;
@@ -3265,6 +3303,10 @@ document.addEventListener('keydown', e => {
   // 6. D 鍵：調撥戰區軍火池 (隨機產生 5 兵種不同選項)
   if (e.key === 'd' || e.key === 'D') {
     e.preventDefault();
+    if (state.mode === 'bo3') {
+      toast('🔒 BO5 征服賽期間軍火庫已封閉鎖定！請在現有配給裝備中調整陣容應對。');
+      return;
+    }
     rerollMarketPool();
     return;
   }
