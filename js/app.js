@@ -2064,7 +2064,20 @@ function startBattle() {
 }
 
 function teamHtml(units, side) {
-  return `<h3><span>${side === 'A' ? '我 方 ▸ 友軍編組' : '敵 方 ▸ ' + esc(state.enemyName)}</span><span style="font-size:11px;font-family:var(--mono);color:var(--cyan)">$15 BUDGET</span></h3>` + units.map(u => {
+  const totalCost = units.reduce((sum, u) => {
+    const c = u.cost !== undefined ? u.cost : (UNIT_MAP[u.id]?.cost || 0);
+    return sum + Number(c);
+  }, 0);
+
+  const costColor = (side === 'B' && totalCost > 15)
+    ? (totalCost >= 25 ? '#ff3b30' : 'var(--amber)')
+    : (side === 'B' ? 'var(--red)' : 'var(--cyan)');
+
+  const budgetLabel = (side === 'B' && totalCost > 15)
+    ? `$${totalCost} BUDGET · 超標 +$${totalCost - 15}`
+    : `$${totalCost} BUDGET`;
+
+  return `<h3><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${side === 'A' ? '我 方 ▸ 友軍編組' : '敵 方 ▸ ' + esc(state.enemyName || '敵軍特遣部隊')}</span><span style="font-size:11px;font-family:var(--mono);color:${costColor};font-weight:700;flex:none;margin-left:6px" title="${side === 'B' && totalCost > 15 ? '精選對戰超標預算陣容' : '作戰總預算'}">${budgetLabel}</span></h3>` + units.map(u => {
     const uData = UNIT_MAP[u.id];
     const imgSrc = uData?.img || `assets/units/${u.id}.jpg`;
     return `<div class="bu" id="bu-${u.uid}" style="--c:${CATS[u.cat].color}">
