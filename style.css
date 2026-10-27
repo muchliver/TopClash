@@ -3463,5 +3463,173 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.35) !important;
 }
 
+/* ---------- 🌐 線上真人雙人對戰 (Online PvP) 樣式 ---------- */
+.pvp-modal-card {
+  max-width: 520px;
+  width: 95vw;
+}
+.pvp-tabs-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 14px;
+  background: rgba(15, 23, 42, 0.5);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+[data-theme="light"] .pvp-tabs-row {
+  background: rgba(15, 23, 42, 0.04);
+}
+.pvp-tab {
+  flex: 1;
+  padding: 8px 12px;
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.pvp-tab.active {
+  background: var(--panel2);
+  color: var(--amber);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+[data-theme="light"] .pvp-tab.active {
+  background: #ffffff;
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
 
+.pvp-room-code-box {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.7));
+  border: 1.5px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+[data-theme="light"] .pvp-room-code-box {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+.pvp-code-lbl {
+  font-family: var(--head);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.pvp-code-display {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--amber);
+  text-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+  margin: 4px 0 8px;
+}
+[data-theme="light"] .pvp-code-display {
+  color: #d97706;
+  text-shadow: none;
+}
 
+.pvp-waiting-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+.radar-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: radarPulse 1.4s infinite ease-in-out;
+}
+@keyframes radarPulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+/* 連線對峙席位 (Versus Box) */
+.pvp-versus-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+[data-theme="light"] .pvp-versus-box {
+  background: #ffffff;
+  border-color: rgba(2, 132, 199, 0.35);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+.pvp-v-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+.pvp-v-player .v-flag {
+  font-size: 26px;
+}
+.pvp-v-player .v-name {
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pvp-v-player .v-uid {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+[data-theme="light"] .pvp-v-player .v-uid {
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.08);
+}
+.pvp-vs-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px;
+}
+.pvp-vs-badge span {
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--red);
+  letter-spacing: 0.08em;
+}
+.pvp-ping {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #10b981;
+  margin-top: 2px;
+}

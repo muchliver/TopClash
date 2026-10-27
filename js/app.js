@@ -479,8 +479,8 @@ function renderMissionBar() {
         <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(b.rivalName)}</b></span>
         ${b.bannedByA ? `<span style="color:var(--green);font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：${UNIT_MAP[b.bannedByA].name}</span>` : ''}
         ${b.bannedByB ? `<span style="color:var(--red);font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：${UNIT_MAP[b.bannedByB].name}</span>` : ''}
-      </div>
       <div class="mission-actions">
+        <button class="btn amber sm" id="btnOnlinePvp" title="建立或加入線上雙人 P2P 即時對戰房間">⚔️ 線上雙人房 (Online)</button>
         <button class="btn ghost sm" id="btnResetBo3" title="重置比分並配對新對手">重置系列賽 🔄</button>
       </div>`;
   } else if (mode === 'daily') {
@@ -1188,6 +1188,9 @@ $('#missionBar').addEventListener('click', e => {
   }
   if (e.target.closest('#btnResetBo3')) {
     initBo3Series(); renderAll(); toast('已重置 BO5 征服系列賽'); return;
+  }
+  if (e.target.closest('#btnOnlinePvp')) {
+    openOnlinePvpModal(); return;
   }
 });
 $('#missionBar').addEventListener('change', e => {
@@ -3253,6 +3256,159 @@ document.addEventListener('keydown', e => {
 
 $('#btnRerollMarket')?.addEventListener('click', rerollMarketPool);
 
+/* ---------- 🌐 線上真人雙人對戰 (Online PvP) 處理 ---------- */
+function openOnlinePvpModal(forceJoinCode = null) {
+  const modal = $('#onlinePvpModal');
+  if (!modal) return;
+  currentActiveModal = modal;
+  modal.hidden = false;
+
+  const player = LadderEngine.getState().player;
+  const pUid = player.uid || LadderEngine.getPlayerUID();
+
+  $('#pvpMyFlag').textContent = player.flag || '🇹🇼';
+  $('#pvpMyName').textContent = player.name || '我方指揮官';
+  $('#pvpMyUid').textContent = pUid;
+
+  if (forceJoinCode) {
+    switchPvpTab('join');
+    $('#pvpJoinCodeInput').value = forceJoinCode;
+  } else {
+    switchPvpTab('host');
+    initHostRoom();
+  }
+}
+
+function switchPvpTab(tab) {
+  document.querySelectorAll('.pvp-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  $('#pvpPanelHost').hidden = (tab !== 'host');
+  $('#pvpPanelJoin').hidden = (tab !== 'join');
+  $('#pvpVersusBox').hidden = true;
+  $('#btnPvpStartBattle').hidden = true;
+}
+
+async function initHostRoom() {
+  const codeDisplay = $('#pvpRoomCodeDisplay');
+  const waitingStatus = $('#pvpWaitingStatus');
+  if (!codeDisplay) return;
+
+  codeDisplay.textContent = '連線配對中...';
+  waitingStatus.innerHTML = '<span class="radar-dot"></span><span>正在向 WebRTC 訊令伺服器註冊房間...</span>';
+
+  const player = LadderEngine.getState().player;
+  const profile = { name: player.name, uid: player.uid || LadderEngine.getPlayerUID(), flag: player.flag };
+
+  try {
+    const res = await OnlinePvPEngine.createRoom(profile);
+    codeDisplay.textContent = res.roomCode;
+    waitingStatus.innerHTML = `<span class="radar-dot"></span><span>房間已就緒！請分享代碼 <b>${res.roomCode}</b> 給好友加入...</span>`;
+  } catch (err) {
+    codeDisplay.textContent = '連線失敗';
+    waitingStatus.innerHTML = `<span style="color:var(--red)">⚠️ 連線失敗：${err.message || '請檢查網路連線'}</span>`;
+  }
+}
+
+async function joinTargetRoom() {
+  const code = ($('#pvpJoinCodeInput')?.value || '').trim();
+  if (!code) {
+    toast('⚠️ 請輸入 6 位房間代碼！');
+    return;
+  }
+  const player = LadderEngine.getState().player;
+  const profile = { name: player.name, uid: player.uid || LadderEngine.getPlayerUID(), flag: player.flag };
+
+  toast(`正在連線進入房間 [${code.toUpperCase()}]...`);
+  try {
+    await OnlinePvPEngine.joinRoom(code, profile);
+  } catch (err) {
+    toast(`⚠️ 加入失敗：${err.message}`);
+  }
+}
+
+// 綁定 onlinePvpModal 互動
+$('#pvpTabsRow')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pvp-tab');
+  if (!btn) return;
+  const tab = btn.dataset.tab;
+  switchPvpTab(tab);
+  if (tab === 'host') initHostRoom();
+});
+
+$('#btnCopyRoomCode')?.addEventListener('click', () => {
+  const code = OnlinePvPEngine.getCurrentRoomCode();
+  if (!code) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => toast(`📋 房間代碼 [${code}] 已複製！`));
+  } else {
+    toast(`📋 房間代碼: ${code}`);
+  }
+});
+
+$('#btnCopyShareUrl')?.addEventListener('click', () => {
+  const code = OnlinePvPEngine.getCurrentRoomCode();
+  if (!code) return;
+  const loc = window.location;
+  const base = loc.protocol + '//' + loc.host + loc.pathname;
+  const shareUrl = `${base}?room=${code}`;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(shareUrl).then(() => toast(`🔗 邀請網址已複製！好友開啟即可直連加入！`));
+  } else {
+    toast(`🔗 邀請網址: ${shareUrl}`);
+  }
+});
+
+$('#btnSubmitJoinRoom')?.addEventListener('click', joinTargetRoom);
+
+$('#btnPvpCancel')?.addEventListener('click', () => {
+  OnlinePvPEngine.closeConnection();
+  $('#onlinePvpModal').hidden = true;
+  currentActiveModal = null;
+});
+
+// 當對手連線加入時
+OnlinePvPEngine.on('opponent_joined', ({ opponent, isHost }) => {
+  $('#pvpPanelHost').hidden = true;
+  $('#pvpPanelJoin').hidden = true;
+  $('#pvpVersusBox').hidden = false;
+
+  $('#pvpEnemyFlag').textContent = opponent.flag || '🌐';
+  $('#pvpEnemyName').textContent = opponent.name || '敵方指揮官';
+  $('#pvpEnemyUid').textContent = opponent.uid || 'CMD-ONLINE';
+
+  $('#btnPvpStartBattle').hidden = false;
+  toast(`⚡ 玩家【${opponent.flag} ${opponent.name}】(${opponent.uid}) 已成功連線進房！`);
+});
+
+OnlinePvPEngine.on('opponent_left', () => {
+  toast('⚠️ 對手已斷開連線！');
+  $('#pvpVersusBox').hidden = true;
+  $('#btnPvpStartBattle').hidden = true;
+  switchPvpTab('host');
+  initHostRoom();
+});
+
+OnlinePvPEngine.on('error', msg => {
+  toast(`⚠️ 連線提示：${msg}`);
+});
+
+$('#btnPvpStartBattle')?.addEventListener('click', () => {
+  const opp = OnlinePvPEngine.getOpponent();
+  if (!opp) return;
+
+  // 將對手資訊帶入 BO5 系列賽
+  state.bo3.rivalName = `${opp.flag} ${opp.name} (${opp.uid})`;
+  state.bo3.active = true;
+  state.bo3.winsA = 0;
+  state.bo3.winsB = 0;
+  state.bo3.round = 1;
+  state.mode = 'bo3';
+
+  $('#onlinePvpModal').hidden = true;
+  currentActiveModal = null;
+  renderAll();
+  toast(`🏆 線上 BO5 系列賽正式開戰！對手：【${opp.name}】！`);
+});
+
 /* ---------- 啟動 ---------- */
 state.scoutIdx = 0;
 const savedTheme = LS.get('db15_theme', null);
@@ -3269,6 +3425,18 @@ if (typeof LadderEngine !== 'undefined') LadderEngine.init();
 
 setupMatch();
 renderAll();
+
+// 檢查 URL 是否帶有好友邀請房間代碼
+const urlParams = new URLSearchParams(window.location.search);
+const roomParam = urlParams.get('room');
+if (roomParam) {
+  setTimeout(() => {
+    setMode('bo3');
+    openOnlinePvpModal(roomParam.trim());
+    toast(`🎯 偵測到好友 BO5 房間邀請 [${roomParam.toUpperCase()}]！點擊立即加入即可連線對決！`);
+  }, 500);
+}
+
 if (!LS.get('db15_seen', 0)) showHelp();
-window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView };
+window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine };
 })();

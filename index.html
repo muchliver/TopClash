@@ -401,6 +401,73 @@
   <div class="modal-card bo3-series-card" id="bo3SeriesCard"></div>
 </div>
 
+<!-- 線上真人雙人對戰 (Online PvP Room) Modal -->
+<div class="modal" id="onlinePvpModal" hidden>
+  <div class="modal-card pvp-modal-card">
+    <div class="pvp-modal-header">
+      <div class="badge-tag" style="display:inline-block;margin-bottom:6px;font-size:11px;font-family:var(--mono);color:#f59e0b;background:rgba(245,158,11,0.15);padding:2px 8px;border-radius:4px;border:1px solid rgba(245,158,11,0.4);">⚔️ P2P 零伺服器極速連線</div>
+      <h2 style="font-size:18px;margin:4px 0 6px;">BO5 征服賽 · 線上真人雙人房</h2>
+      <p class="muted" style="font-size:12.5px;line-height:1.4;">透過 WebRTC 即時直連好友，進行五局三勝雙盲 Ban & Pick 頂尖對戰！</p>
+    </div>
+
+    <!-- 模式分頁開關：建立房間 / 加入房間 -->
+    <div class="pvp-tabs-row" id="pvpTabsRow">
+      <button class="pvp-tab active" data-tab="host" id="tabPvpHost">👑 建立房間 (HOST)</button>
+      <button class="pvp-tab" data-tab="join" id="tabPvpJoin">🎯 輸入代碼加入 (JOIN)</button>
+    </div>
+
+    <!-- 房主面板 -->
+    <div class="pvp-panel" id="pvpPanelHost">
+      <div class="pvp-room-code-box">
+        <span class="pvp-code-lbl">軍事連線房間代碼 (ROOM CODE)</span>
+        <div class="pvp-code-display" id="pvpRoomCodeDisplay">連線初始化中...</div>
+        <div class="row" style="margin-top:8px;gap:8px;">
+          <button class="btn ghost sm" id="btnCopyRoomCode">📋 複製代碼</button>
+          <button class="btn ghost sm" id="btnCopyShareUrl">🔗 複製邀請網址</button>
+        </div>
+      </div>
+      <div class="pvp-waiting-status" id="pvpWaitingStatus">
+        <span class="radar-dot"></span>
+        <span>等待對手連線加入中...（請將代碼或網址分享給好友）</span>
+      </div>
+    </div>
+
+    <!-- 挑戰者面板 -->
+    <div class="pvp-panel" id="pvpPanelJoin" hidden>
+      <div class="form-group" style="margin-top:8px;">
+        <label class="label" style="font-size:12px;margin-bottom:6px;display:block;">輸入 6 位房間代碼 (或直接開啟好友邀請網址)</label>
+        <div class="row" style="gap:8px;">
+          <input id="pvpJoinCodeInput" class="input" placeholder="例如：7X92BA" maxlength="8" style="font-family:var(--mono);font-size:16px;letter-spacing:0.1em;text-transform:uppercase;">
+          <button class="btn primary" id="btnSubmitJoinRoom" style="white-space:nowrap;">立即加入 ➔</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 連線就緒對峙席位 (Connected Matchup Box) -->
+    <div class="pvp-versus-box" id="pvpVersusBox" hidden>
+      <div class="pvp-v-player me">
+        <div class="v-flag" id="pvpMyFlag">🇹🇼</div>
+        <div class="v-name" id="pvpMyName">我方指揮官</div>
+        <span class="v-uid" id="pvpMyUid">CMD-7392</span>
+      </div>
+      <div class="pvp-vs-badge">
+        <span>VS</span>
+        <div class="pvp-ping" id="pvpPingVal">⚡ P2P 直連</div>
+      </div>
+      <div class="pvp-v-player enemy">
+        <div class="v-flag" id="pvpEnemyFlag">🌐</div>
+        <div class="v-name" id="pvpEnemyName">對手就緒中</div>
+        <span class="v-uid" id="pvpEnemyUid">CMD-????</span>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:18px;">
+      <button class="btn ghost" id="btnPvpCancel">關閉房間 ✕</button>
+      <button class="btn amber" id="btnPvpStartBattle" hidden style="font-weight:700;">⚔️ 正式開戰 (START BO5)</button>
+    </div>
+  </div>
+</div>
+
 <!-- 手機版裝備詳細情報 Bottom Sheet Modal -->
 <div class="modal mobile-sheet-modal" id="unitDetailModal" hidden>
   <div class="modal-card unit-sheet-card" id="unitSheetCard"></div>
@@ -435,6 +502,7 @@
 <script src="js/ladder-data.js"></script>
 <script src="js/ladder.js"></script>
 <script src="js/engine.js"></script>
+<script src="js/online-pvp.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
