@@ -1738,16 +1738,20 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   align-items: start;
 }
 
-/* 戰鬥欄位容器（具有電影級背景層） */
+/* 戰鬥欄位容器（具有電影級背景層，高度與中央文字視窗嚴格 100% 對齊） */
 .team-col {
   position: relative;
-  min-height: 520px;
+  height: 100%;
+  min-height: 0;
   border-radius: 14px;
   border: 1.5px solid rgba(56, 189, 248, 0.25);
   background: #030712;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 .team-col.a {
   border-color: rgba(56, 189, 248, 0.35);
@@ -1934,7 +1938,16 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex: none;
 }
 
-/* 單位卡片玻璃擬態透出後方真實軍武大圖 (卡片尺寸絕對鎖定，擊毀前後高度紋絲不動) */
+/* 單位卡片列表與單兵卡片 (卡片高度由 Flex 嚴格等分，擊毀前後高度絕對固定不變) */
+.units-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 0;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
 .bu {
   background: rgba(15, 23, 42, 0.76) !important;
   backdrop-filter: blur(10px);
@@ -1942,14 +1955,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-  padding: 5px 8px;
+  padding: 6px 10px;
   flex: 1 1 0;
-  min-height: 48px;
-  max-height: 54px;
+  min-height: 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 .bu.active-attacker {
   border-color: #38bdf8 !important;
