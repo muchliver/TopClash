@@ -4246,10 +4246,43 @@ function renderTournamentBracket(t) {
     </div>
   `;
 
-  // 繪製與更新 SVG 貝茲心智圖連線
+  // 一屏流自適應縮放並繪製 SVG 貝茲心智圖連線
   requestAnimationFrame(() => {
+    applyBracketFitToViewport();
     renderBracketSvgLinks(t);
   });
+}
+
+/* =====================================================
+   智慧一屏流自適應縮放引擎 (Scale-to-fit Engine)
+   自動量測可用視窗寬高，保證 4/8/16/32 強均在單一螢幕完全顯示，徹底消滅滾動條
+   ===================================================== */
+function applyBracketFitToViewport() {
+  const viewport = $('#tourneyBracketViewport');
+  const container = $('#bracketContainer');
+  if (!viewport || !container) return;
+
+  container.style.transform = 'none';
+
+  const vpW = viewport.clientWidth;
+  const vpH = viewport.clientHeight;
+  const cW = container.scrollWidth;
+  const cH = container.scrollHeight;
+
+  if (vpW <= 0 || vpH <= 0 || cW <= 0 || cH <= 0) return;
+
+  const safeW = vpW - 12;
+  const safeH = vpH - 8;
+
+  const scaleX = safeW / cW;
+  const scaleY = safeH / cH;
+  const scale = Math.min(1, scaleX, scaleY);
+
+  if (scale < 0.985) {
+    container.style.transform = `scale(${scale.toFixed(3)})`;
+  } else {
+    container.style.transform = 'none';
+  }
 }
 
 function getRoundTitle(r, size) {
@@ -4806,6 +4839,7 @@ window.addEventListener('resize', () => {
   if (state.currentMode === 'tournament' && typeof TournamentEngine !== 'undefined') {
     const t = TournamentEngine.getState();
     if (t && t.status !== 'registration') {
+      applyBracketFitToViewport();
       renderBracketSvgLinks(t);
     }
   }
