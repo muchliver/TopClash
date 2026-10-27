@@ -134,8 +134,14 @@
     <div class="battle-ctl" id="battleCtl">
       <button class="btn ghost sm" id="btnSpeed">速度 ×1</button>
       <button class="btn ghost sm" id="btnSkip">跳過動畫 ⏭</button>
-      <button class="btn primary sm" id="btnReopenResult" hidden>查看結算 📊</button>
-      <button class="btn ghost sm" id="btnBattleExit" hidden>返回陣容 ✕</button>
+      <button class="btn-battle-reopen" id="btnReopenResult" hidden title="重新開啟本場 C4ISR 戰略結算報告">
+        <span class="reopen-icon">📊</span>
+        <span class="reopen-txt">查看結算報告</span>
+      </button>
+      <button class="btn-battle-exit" id="btnBattleExit" hidden title="結束本場戰鬥，返回陣容指揮所編組">
+        <span class="exit-icon">✕</span>
+        <span class="exit-txt">返回陣容編組</span>
+      </button>
     </div>
   </div>
   <div class="battle-grid">
