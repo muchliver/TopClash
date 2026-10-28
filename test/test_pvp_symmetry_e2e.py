@@ -82,11 +82,11 @@ try:
         print(f"   [房主端] 左側 (Side A): {host_title_a} | 右側 (Side B): {host_title_b}", flush=True)
         print(f"   [挑戰者端] 左側 (Side A): {guest_title_a} | 右側 (Side B): {guest_title_b}", flush=True)
 
-        assert "房主" in host_title_a and "我方" in host_title_a, f"房主端左側應為房主我方，實際: {host_title_a}"
-        assert "挑戰者" in host_title_b and "敵方" in host_title_b, f"房主端右側應為挑戰者敵方，實際: {host_title_b}"
+        assert "本部特遣隊" in host_title_a and "我方" in host_title_a, f"房主端左側應為本部特遣隊我方，實際: {host_title_a}"
+        assert "挑戰突擊隊" in host_title_b and "敵方" in host_title_b, f"房主端右側應為挑戰突擊隊敵方，實際: {host_title_b}"
 
-        assert "房主" in guest_title_a and "敵方" in guest_title_a, f"挑戰者端左側應為房主敵方，實際: {guest_title_a}"
-        assert "挑戰者" in guest_title_b and "我方" in guest_title_b, f"挑戰者端右側應為挑戰者我方，實際: {guest_title_b}"
+        assert "本部特遣隊" in guest_title_a and "敵方" in guest_title_a, f"挑戰者端左側應為本部特遣隊敵方，實際: {guest_title_a}"
+        assert "挑戰突擊隊" in guest_title_b and "我方" in guest_title_b, f"挑戰者端右側應為挑戰突擊隊我方，實際: {guest_title_b}"
 
         # 檢驗兩端計算出的最終戰局數據 (res.final) 是否完全一致
         host_res_final = page_host.evaluate("() => window.__db15.state.lastRes.final")

@@ -2473,21 +2473,21 @@ function teamHtml(units, side) {
     const isHost = OnlinePvPEngine.isHostUser();
     const opp = OnlinePvPEngine.getOpponent();
     const player = LadderEngine.getState().player;
-    const myName = (player && player.name && player.name !== '我方聯合戰術作戰群') ? player.name : (isHost ? '房主特遣隊' : '挑戰者特遣隊');
+    const myName = (player && player.name && player.name !== '我方聯合戰術作戰群') ? player.name : (isHost ? '本部特遣隊' : '挑戰突擊隊');
     const myFlag = player?.flag || '🇹🇼';
-    const oppName = (opp && opp.name && opp.name !== '我方聯合戰術作戰群') ? opp.name : (isHost ? '挑戰者特遣隊' : '房主特遣隊');
+    const oppName = (opp && opp.name && opp.name !== '我方聯合戰術作戰群') ? opp.name : (isHost ? '挑戰突擊隊' : '本部特遣隊');
     const oppFlag = opp?.flag || '🌐';
 
     if (side === 'A') {
-      // 房主在左 (Side A)
+      // 本部特遣隊在左 (Side A)
       titleHtml = isHost
-        ? `👑 房主 (我方) ▸ ${myFlag} ${esc(myName)}`
-        : `👑 房主 (敵方) ▸ ${oppFlag} ${esc(oppName)}`;
+        ? `👑 本部特遣隊 (我方) ▸ ${myFlag} ${esc(myName)}`
+        : `👑 本部特遣隊 (敵方) ▸ ${oppFlag} ${esc(oppName)}`;
     } else {
-      // 挑戰者在右 (Side B)
+      // 挑戰突擊隊在右 (Side B)
       titleHtml = isHost
-        ? `🎯 挑戰者 (敵方) ▸ ${oppFlag} ${esc(oppName)}`
-        : `🎯 挑戰者 (我方) ▸ ${myFlag} ${esc(myName)}`;
+        ? `🎯 挑戰突擊隊 (敵方) ▸ ${oppFlag} ${esc(oppName)}`
+        : `🎯 挑戰突擊隊 (我方) ▸ ${myFlag} ${esc(myName)}`;
     }
   } else {
     titleHtml = side === 'A' ? '我 方 ▸ 友軍編組' : '敵 方 ▸ ' + esc(state.enemyName || '敵軍特遣部隊');
@@ -2633,8 +2633,8 @@ async function showBattle(res) {
   const dn = d => DOCTRINES.find(x => x.id === d).name;
   let metaHtml = `<span class="chip-stat">${res.ev.icon} <b>${esc(res.ev.name)}</b></span>`;
   if (state.isOnlinePvp) {
-    metaHtml = `<span class="chip-stat" style="color:var(--amber)">BO5 第 ${state.bo3.round}/5 局 (比分: 房主 ${state.bo3.winsA} - 挑戰者 ${state.bo3.winsB})</span>` + metaHtml;
-    metaHtml += `<span class="chip-stat">房主教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">挑戰者教條 <b>${dn(res.docs.B)}</b></span>`;
+    metaHtml = `<span class="chip-stat" style="color:var(--amber)">BO5 第 ${state.bo3.round}/5 局 (比分: 本部特遣隊 ${state.bo3.winsA} - 挑戰突擊隊 ${state.bo3.winsB})</span>` + metaHtml;
+    metaHtml += `<span class="chip-stat">本部特遣隊教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">挑戰突擊隊教條 <b>${dn(res.docs.B)}</b></span>`;
   } else {
     metaHtml += `<span class="chip-stat">我方教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">敵方教條 <b>${dn(res.docs.B)}</b></span>`;
     if (state.mode === 'bo3') {
@@ -3177,7 +3177,7 @@ function handleBo3RoundEnd(res) {
       bo3NextText: `啟動戰術反制 (BAN 敵方裝備)`,
       bo3Callback: () => {
         closeBattle();
-        // 線上對抗中：房主失利禁用 Side B (挑戰者)，挑戰者失利禁用 Side A (房主)
+        // 線上對抗中：本部特遣隊失利禁用 Side B (挑戰突擊隊)，挑戰突擊隊失利禁用 Side A (本部特遣隊)
         const winnerTeam = state.isOnlinePvp ? (isHost ? res.final.B : res.final.A) : res.final.B;
         openBo3CounterModal(winnerTeam, nextRound, nextEvent);
       }
@@ -3398,9 +3398,9 @@ function showResult(res, bo3Custom) {
       </div>
       <div class="outcome-gauge-col">
         <div class="gauge-labels-compact">
-          <span class="g-side g-a">${state.isOnlinePvp ? (isHost ? '👑 房主 (我方)' : '👑 房主 (敵方)') : '友軍'} <b>${f(A.total)} VP</b> <span class="g-alive">(${aliveCountA}/5 存活)</span></span>
+          <span class="g-side g-a">${state.isOnlinePvp ? (isHost ? '👑 本部特遣隊 (我方)' : '👑 本部特遣隊 (敵方)') : '友軍'} <b>${f(A.total)} VP</b> <span class="g-alive">(${aliveCountA}/5 存活)</span></span>
           <span class="g-vs">VS</span>
-          <span class="g-side g-b">${state.isOnlinePvp ? (isHost ? '🎯 挑戰者 (敵方)' : '🎯 挑戰者 (我方)') : '敵軍'} <b>${f(B.total)} VP</b> <span class="g-alive">(${aliveCountB}/5 存活)</span></span>
+          <span class="g-side g-b">${state.isOnlinePvp ? (isHost ? '🎯 挑戰突擊隊 (敵方)' : '🎯 挑戰突擊隊 (我方)') : '敵軍'} <b>${f(B.total)} VP</b> <span class="g-alive">(${aliveCountB}/5 存活)</span></span>
         </div>
         <div class="gauge-bar-track">
           <div class="gauge-fill-a" style="width:${pctA}%"></div>
@@ -3797,7 +3797,7 @@ function openOnlinePvpModal(forceJoinCode = null) {
   const player = LadderEngine.getState().player;
   const pUid = player.uid || LadderEngine.getPlayerUID();
   const isHostRole = !forceJoinCode;
-  const myName = (player && player.name && player.name !== '我方聯合戰術作戰群') ? player.name : (isHostRole ? '房主特遣隊' : '挑戰者特遣隊');
+  const myName = (player && player.name && player.name !== '我方聯合戰術作戰群') ? player.name : (isHostRole ? '本部特遣隊' : '挑戰突擊隊');
 
   $('#pvpMyFlag').textContent = player.flag || '🇹🇼';
   $('#pvpMyName').textContent = myName;
@@ -3904,7 +3904,7 @@ OnlinePvPEngine.on('opponent_joined', ({ opponent, isHost }) => {
   $('#pvpPanelJoin').hidden = true;
   $('#pvpVersusBox').hidden = false;
 
-  const oppName = (opponent && opponent.name && opponent.name !== '我方聯合戰術作戰群') ? opponent.name : (isHost ? '挑戰者特遣隊' : '房主特遣隊');
+  const oppName = (opponent && opponent.name && opponent.name !== '我方聯合戰術作戰群') ? opponent.name : (isHost ? '挑戰突擊隊' : '本部特遣隊');
   $('#pvpEnemyFlag').textContent = opponent.flag || '🌐';
   $('#pvpEnemyName').textContent = oppName;
   $('#pvpEnemyUid').textContent = opponent.uid || 'CMD-ONLINE';
@@ -3984,7 +3984,7 @@ function startOnlinePvpBattle(seed, event) {
   state.enemy = state.pvpOpponentDeck.slice();
   state.enemyDoc = state.pvpOpponentDoc || 'defense';
   if (opp) {
-    const oppCleanName = (opp.name && opp.name !== '我方聯合戰術作戰群') ? opp.name : (isHost ? '挑戰者特遣隊' : '房主特遣隊');
+    const oppCleanName = (opp.name && opp.name !== '我方聯合戰術作戰群') ? opp.name : (isHost ? '挑戰突擊隊' : '本部特遣隊');
     state.enemyName = `${opp.flag || '🌐'} ${oppCleanName}`;
   }
 
@@ -4017,7 +4017,7 @@ OnlinePvPEngine.on('game_session_started', payload => {
   $('#onlinePvpModal').hidden = true;
   currentActiveModal = null;
   renderAll();
-  toast(`⚡ 房主已發起 BO5 系列賽！請挑選 5 槽陣容並點擊【鎖定陣容】！`);
+  toast(`⚡ 本部特遣隊已發起 BO5 系列賽！請挑選 5 槽陣容並點擊【鎖定陣容】！`);
 });
 
 OnlinePvPEngine.on('opponent_deck_ready', payload => {

@@ -19,8 +19,8 @@ const OnlinePvPEngine = (function() {
   let pvpState = {
     connected: false,
     round: 1,
-    winsA: 0, // 房主比分
-    winsB: 0, // 挑戰者比分
+    winsA: 0, // 本部特遣隊比分
+    winsB: 0, // 挑戰突擊隊比分
     bannedByOpponent: null, // 對手禁用我方的裝備
     bannedByMe: null,       // 我方禁用對手的裝備
     myReady: false,
@@ -69,7 +69,7 @@ const OnlinePvPEngine = (function() {
     return code;
   }
 
-  /* 房主建立房間 */
+  /* 本部特遣隊建立房間 */
   async function createRoom(playerProfile) {
     await ensurePeerJS();
     closeConnection();
@@ -111,7 +111,7 @@ const OnlinePvPEngine = (function() {
     });
   }
 
-  /* 挑戰者加入房間 */
+  /* 挑戰突擊隊加入房間 */
   async function joinRoom(roomCode, playerProfile) {
     await ensurePeerJS();
     closeConnection();
