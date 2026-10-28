@@ -187,6 +187,16 @@ eady: true 盲鎖陣容，雙就緒後方才揭露單位陣容並推演，徹底
   - **全鏈路陣容驗證與看板聯動**：`currentBanned()` 全面以累計清單作為唯一真相來源，5×5 看板精準上鎖紅標 `🚫 戰術禁用`、卡牌點擊阻斷、出擊檢驗與強制卸載完全響應。
   - **即時禁用徽章多維展示**：戰況資訊列同步展開顯示所有已禁用敵方與被敵方禁用之軍備列表（`🚫 禁敵：[名單]`、`⚠️ 敵禁你：[名單]`），並優化 Guest 端 BO5 總冠軍結算視角對稱性。
 
+- **v3.9.3 (2026-10-29) — 修復 16 強 / 32 強備戰大廳開賽按鈕遭截斷、大廳自適應滾動與底欄黏貼置頂**
+  - **大廳佈局解耦與自適應滾動（Lobby Responsive Scrolling）**：
+    - 修復原先為對戰樹一屏流設計的 `overflow: hidden; height: calc(100vh - 48px);` 同時作用於備戰大廳，導致 16 強與 32 強席位晶片過多時頁面無法垂直捲動、最下方「⚔️ 正式開賽」按鈕被邊界截斷無法點擊的重大體驗缺陷。
+    - 引入 `.tournament-layout.is-lobby` 與 `:has(#tourneyLobbyCard:not([hidden]))` 樣式隔離，備戰大廳狀態下啟用 `overflow-y: auto !important; height: auto; min-height: calc(100vh - 48px);`。
+  - **開賽與操作底欄黏貼置頂（Sticky Action Bar）**：
+    - 將 `.lobby-actions` 設置為 `position: sticky; bottom: 0;` 並自帶深色/淺色漸層遮罩，無論視窗高度多小（如筆電 768p、縮放 125%/150% 或行動端），「正式開賽」按鈕始終置頂常駐於視線正下方，100% 可視可點。
+  - **垂直視覺留白極致緊湊化**：
+    - 優化備戰大廳各模組間距（模式標籤、出征陣容條、規模設定網格與席位預覽清單由 14~16px 縮減至 8px）。
+    - 席位晶片清單 (`.participants-grid`) 限制 `max-height: 120px` 搭配內部獨立滾動條，縱向高度直降 170px 以上，主流解析度下免滾動直接完整映入眼簾。
+
 - **v3.9.2 (2026-10-29) — 徹底修復錦標賽 BO3 第二局 (Game 2) 卡死、Firebase 陣列反序列化物件與單機/線上引擎衝突**
   - **Firebase RTDB 陣列反序列化修復 (Array-to-Object Serialization Guard)**：
     - Firebase Realtime Database 儲存 `history` 與 `deck` 等數值索引結構時，易被還原為純 JavaScript 物件 `{ "0": {...}, "1": {...} }`，導致 `curMatch.history.push(...)` 拋出 `TypeError: push is not a function` 並造成原子交易 (Transaction) 默默中斷，小局比分無法累計。

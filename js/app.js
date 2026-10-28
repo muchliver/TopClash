@@ -4436,7 +4436,9 @@ function renderTournamentView() {
 
   const lobbyCard = $('#tourneyLobbyCard');
   const bracketVp = $('#tourneyBracketViewport');
+  const tourneyLayout = $('#viewTournament');
 
+  if (tourneyLayout) tourneyLayout.classList.toggle('is-lobby', isLobby);
   if (lobbyCard) lobbyCard.hidden = !isLobby;
   if (bracketVp) bracketVp.hidden = isLobby;
 

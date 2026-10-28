@@ -4234,6 +4234,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   overflow: hidden; /* 徹底杜絕右側垂直捲軸，達成一屏流全景展示 */
 }
 
+/* 備戰大廳介面：允許自適應滾動與彈性高度，杜絕 16/32 強開賽按鈕遭截斷 */
+.tournament-layout.is-lobby,
+.tournament-layout:has(#tourneyLobbyCard:not([hidden])) {
+  overflow-y: auto !important;
+  height: auto;
+  min-height: calc(100vh - 48px);
+  max-height: none;
+}
+
 .tourney-header {
   display: flex;
   justify-content: space-between;
@@ -4326,8 +4335,11 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(11, 19, 36, 0.96));
   border: 1px solid rgba(61, 224, 255, 0.25);
   border-radius: 12px;
-  padding: 18px 22px;
+  padding: 12px 18px 14px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 [data-theme="light"] .tourney-lobby-card {
@@ -4337,9 +4349,13 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 
 .lobby-head h2 {
-  font-size: 19px;
-  margin: 0 0 4px;
+  font-size: 17px;
+  margin: 0 0 2px;
   color: #f1f5f9;
+}
+.lobby-head p {
+  font-size: 12px;
+  margin: 0 0 4px;
 }
 
 [data-theme="light"] .lobby-head h2 {
@@ -4349,9 +4365,9 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .lobby-settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
-  margin: 16px 0;
-  padding: 12px 14px;
+  gap: 8px;
+  margin: 8px 0;
+  padding: 8px 12px;
   background: rgba(0, 0, 0, 0.25);
   border-radius: 8px;
   border: 1px solid var(--line2);
@@ -4437,25 +4453,25 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 
 .lobby-participants-box {
-  margin: 14px 0;
+  margin: 8px 0;
 }
 
 .participants-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .participants-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 6px;
-  max-height: 240px;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 4px;
+  max-height: 120px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
   background: rgba(0, 0, 0, 0.35);
   border-radius: 8px;
   border: 1px solid var(--line2);
@@ -4469,12 +4485,26 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .p-slot-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 5px;
-  padding: 5px 7px;
-  font-size: 11.5px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+/* 備戰大廳開賽與操作底欄：底部黏貼置頂，確保任何螢幕解析度下永遠可見可選 */
+.lobby-actions {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.75) 0%, rgba(11, 19, 36, 0.98) 40%);
+  padding: 8px 0 2px;
+  margin-top: 8px;
+  z-index: 5;
+}
+
+[data-theme="light"] .lobby-actions {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, #ffffff 40%);
 }
 
 [data-theme="light"] .p-slot-chip {
@@ -5240,9 +5270,9 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .tourney-mode-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   background: rgba(0, 0, 0, 0.3);
-  padding: 4px;
+  padding: 3px;
   border-radius: 8px;
   border: 1px solid var(--line);
 }
@@ -5252,11 +5282,11 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 .t-mode-tab {
   flex: 1;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border: none;
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   border-radius: 6px;
   cursor: pointer;
@@ -5287,12 +5317,12 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px 14px;
+  gap: 8px;
+  padding: 6px 12px;
   background: rgba(61, 224, 255, 0.06);
   border: 1px solid rgba(61, 224, 255, 0.25);
   border-radius: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 [data-theme="light"] .tourney-my-deck-bar {
   background: rgba(2, 132, 199, 0.06);
