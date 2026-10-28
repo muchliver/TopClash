@@ -4307,6 +4307,9 @@ let tourneySelectedSize = 16;
 let tourneySelectedFormat = 'hybrid';
 let currentTourneyTab = 'solo'; // 'solo' | 'private' | 'public'
 let privateSelectedSize = 4;
+let privateSelectedFormat = 'hybrid';
+let publicSelectedSize = 4;
+let publicSelectedFormat = 'hybrid';
 let publicRoomsUnsub = null;
 
 function getTournamentPlayerProfile() {
@@ -4650,7 +4653,7 @@ function updateTourneyTabPanels() {
       badge.style.color = 'var(--amber)';
       badge.style.borderColor = 'rgba(245,158,11,.4)';
     } else {
-      badge.textContent = '🌐 公開大廳隨機匹配';
+      badge.textContent = '🌐 公開大廳開房或隨機匹配';
       badge.style.color = 'var(--green)';
       badge.style.borderColor = 'rgba(93,255,176,.4)';
     }
@@ -4691,7 +4694,7 @@ function startListeningPublicRooms() {
         <div class="r-meta">
           <span>${r.hostFlag} ${esc(r.hostName)}</span>
           <span>·</span>
-          <span><b>${r.size} 強</b></span>
+          <span><b>${r.size} 強</b> (${r.format === 'bo1' ? '⚡ BO1' : (r.format === 'bo3' ? '⚔️ BO3' : '⭐ 升級制')})</span>
           <span>·</span>
           <span style="color:var(--cyan);font-weight:700">${r.filledCount}/${r.size} 席位</span>
         </div>
@@ -5398,6 +5401,27 @@ $('#privateSizeSelector')?.addEventListener('click', e => {
   privateSelectedSize = +btn.dataset.size;
 });
 
+$('#privateFormatSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#privateFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  privateSelectedFormat = btn.dataset.format || 'hybrid';
+});
+
+$('#publicSizeSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#publicSizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  publicSelectedSize = +btn.dataset.size;
+});
+
+$('#publicFormatSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#publicFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  publicSelectedFormat = btn.dataset.format || 'hybrid';
+});
+
 $('#btnTourneyFillAI')?.addEventListener('click', () => {
   TournamentEngine.fillWithAI();
   renderTournamentView();
@@ -5427,7 +5451,7 @@ $('#btnCreatePrivateRoom')?.addEventListener('click', async () => {
     const prof = getTournamentPlayerProfile();
     const res = await FirebaseTourneyEngine.createRoom({
       size: privateSelectedSize,
-      format: 'hybrid',
+      format: privateSelectedFormat,
       isPublic: false,
       playerProfile: prof
     });
@@ -5504,16 +5528,34 @@ $('#btnPrivateStart')?.addEventListener('click', async () => {
 $('#btnQuickMatchTourney')?.addEventListener('click', async () => {
   try {
     const prof = getTournamentPlayerProfile();
-    toast('⚡ 正在搜尋雲端最快開賽之公開房間...');
-    const res = await FirebaseTourneyEngine.quickMatch(prof, 4);
+    toast(`⚡ 正在搜尋雲端最快開賽之 ${publicSelectedSize} 強公開房間...`);
+    const res = await FirebaseTourneyEngine.quickMatch(prof, publicSelectedSize, publicSelectedFormat);
     if (res.isNew) {
-      toast(`👑 已為你發起 4 強公開湊桌房【${res.roomCode}】！60 秒 (1分鐘) 自動倒數開賽！`);
+      toast(`👑 已為你發起 ${publicSelectedSize} 強公開湊桌房【${res.roomCode}】！60 秒自動倒數開賽！`);
     } else {
       toast(`🟢 已快速滑入公開房間【${res.roomCode}】！等待開賽！`);
     }
     renderTournamentView();
   } catch(err) {
     toast(`⚠️ 匹配失敗：${err.message}`);
+  }
+});
+
+// 公開大廳：主動建立公開房間
+$('#btnCreatePublicRoom')?.addEventListener('click', async () => {
+  try {
+    const prof = getTournamentPlayerProfile();
+    const res = await FirebaseTourneyEngine.createRoom({
+      name: `軍武世界盃 ${publicSelectedSize}強公開賽`,
+      size: publicSelectedSize,
+      format: publicSelectedFormat,
+      isPublic: true,
+      playerProfile: prof
+    });
+    toast(`👑 成功建立公開房間【${res.roomCode}】！已發布至大廳清單，啟動 60 秒倒數！`);
+    renderTournamentView();
+  } catch(err) {
+    toast(`⚠️ 公開建房失敗：${err.message}`);
   }
 });
 

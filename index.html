@@ -306,7 +306,7 @@
     <div class="tourney-mode-tabs" id="tourneyModeTabs">
       <button class="t-mode-tab active" data-tab="solo">👤 單人世界盃闖關</button>
       <button class="t-mode-tab" data-tab="private">👥 私人好友開房</button>
-      <button class="t-mode-tab" data-tab="public">🌐 公開大廳隨機匹配</button>
+      <button class="t-mode-tab" data-tab="public">🌐 公開大廳開房或隨機匹配</button>
     </div>
 
     <!-- 我方出征陣容整備條 (Player Deck Readiness) -->
@@ -356,12 +356,21 @@
           <div class="setting-group">
             <label class="setting-lbl">私人賽事規模 (ROOM SIZE)</label>
             <div class="btn-group-pill" id="privateSizeSelector">
-              <button class="pill-btn active" data-size="4">4 強快速盃賽 (2輪)</button>
-              <button class="pill-btn" data-size="8">8 強好友錦標賽 (3輪)</button>
-              <button class="pill-btn" data-size="16">16 強大型聯賽 (4輪)</button>
+              <button class="pill-btn active" data-size="4">4 強 (2輪)</button>
+              <button class="pill-btn" data-size="8">8 強 (3輪)</button>
+              <button class="pill-btn" data-size="16">16 強世界爭霸 (4輪)</button>
+              <button class="pill-btn" data-size="32">32 強世界盃 (5輪)</button>
             </div>
           </div>
           <div class="setting-group">
+            <label class="setting-lbl">淘汰對決賽制 (MATCH FORMAT)</label>
+            <div class="btn-group-pill" id="privateFormatSelector">
+              <button class="pill-btn" data-format="bo1">⚡ 極速單淘汰 (全程 BO1)</button>
+              <button class="pill-btn active" data-format="hybrid">⭐ 決賽升級制 (四強前BO1·決賽BO3)</button>
+              <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
+            </div>
+          </div>
+          <div class="setting-group" style="grid-column: 1 / -1; margin-top: 4px;">
             <label class="setting-lbl">加入好友房間 (ENTER ROOM CODE)</label>
             <div style="display:flex;gap:8px">
               <input type="text" id="inputJoinTourneyCode" placeholder="輸入 6 位房間碼 (如 8M2K9A)" maxlength="8" style="flex:1;padding:7px 12px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:6px;color:var(--text);font-family:var(--mono);text-transform:uppercase;font-weight:700">
@@ -369,7 +378,7 @@
             </div>
           </div>
         </div>
-        <div class="lobby-actions" style="margin-top:14px">
+        <div class="lobby-actions">
           <button class="btn primary lg block" id="btnCreatePrivateRoom" style="font-weight:900">👑 建立私人對戰房間 (取得邀請碼與分享連結)</button>
         </div>
       </div>
@@ -404,14 +413,37 @@
       </div>
     </div>
 
-    <!-- 【面板 3：公開大廳隨機匹配模式】 -->
+    <!-- 【面板 3：公開大廳開房或隨機匹配模式】 -->
     <div class="tourney-panel" id="panelTourneyPublic" hidden>
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px;background:rgba(61,224,255,.08);border:1px solid rgba(61,224,255,.3);border-radius:8px;margin-bottom:14px">
-        <div>
-          <div style="font-weight:800;font-size:15px;color:var(--cyan)">⚡ 公開隨機快速排隊 (60 秒熔斷必開賽)</div>
-          <div class="muted" style="font-size:12px;margin-top:2px">點擊後自動加入最快開賽房間，倒數結束未滿員由各國特遣隊補齊即刻開戰！</div>
+      <div class="lobby-settings-grid">
+        <div class="setting-group">
+          <label class="setting-lbl">公開賽事規模 (ROOM SIZE)</label>
+          <div class="btn-group-pill" id="publicSizeSelector">
+            <button class="pill-btn active" data-size="4">4 強 (2輪)</button>
+            <button class="pill-btn" data-size="8">8 強 (3輪)</button>
+            <button class="pill-btn" data-size="16">16 強世界爭霸 (4輪)</button>
+            <button class="pill-btn" data-size="32">32 強世界盃 (5輪)</button>
+          </div>
         </div>
-        <button class="btn primary lg" id="btnQuickMatchTourney" style="font-weight:900">⚡ 一鍵快速匹配出擊</button>
+        <div class="setting-group">
+          <label class="setting-lbl">淘汰對決賽制 (MATCH FORMAT)</label>
+          <div class="btn-group-pill" id="publicFormatSelector">
+            <button class="pill-btn" data-format="bo1">⚡ 極速單淘汰 (全程 BO1)</button>
+            <button class="pill-btn active" data-format="hybrid">⭐ 決賽升級制 (四強前BO1·決賽BO3)</button>
+            <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 14px;background:rgba(61,224,255,.08);border:1px solid rgba(61,224,255,.3);border-radius:8px;margin-bottom:12px">
+        <div>
+          <div style="font-weight:800;font-size:14px;color:var(--cyan)">⚡ 公開快速排隊或發起開房 (60 秒熔斷必開賽)</div>
+          <div class="muted" style="font-size:11.5px;margin-top:2px">依上方所選規模與賽制優先匹配進行中房間；若無相符空房則自動建立公開新房並啟動 60 秒倒數！</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn primary" id="btnQuickMatchTourney" style="font-weight:900">⚡ 一鍵快速匹配出擊</button>
+          <button class="btn amber" id="btnCreatePublicRoom" style="font-weight:900">👑 主動建立公開房間</button>
+        </div>
       </div>
 
       <div class="participants-head">

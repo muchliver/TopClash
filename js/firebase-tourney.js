@@ -182,7 +182,8 @@ const FirebaseTourneyEngine = (function() {
   /* 建立線上多人錦標賽房間 */
   async function createRoom({ name, size = 4, format = 'hybrid', isPublic = true, playerProfile }) {
     if (!init()) throw new Error('Firebase 尚未初始化');
-    if (![4, 8, 16].includes(size)) size = 4;
+    if (![4, 8, 16, 32].includes(size)) size = 4;
+    if (!['bo1', 'hybrid', 'bo3'].includes(format)) format = 'hybrid';
 
     const shortCode = generateRoomCode();
     const now = Date.now();
@@ -297,8 +298,10 @@ const FirebaseTourneyEngine = (function() {
   }
 
   /* 快速匹配：加入最快開賽的公開房，若無則自動建房 */
-  async function quickMatch(playerProfile, preferredSize = 4) {
+  async function quickMatch(playerProfile, preferredSize = 4, preferredFormat = 'hybrid') {
     if (!init()) throw new Error('Firebase 尚未初始化');
+    if (![4, 8, 16, 32].includes(preferredSize)) preferredSize = 4;
+    if (!['bo1', 'hybrid', 'bo3'].includes(preferredFormat)) preferredFormat = 'hybrid';
 
     return new Promise((resolve, reject) => {
       const roomsRef = db.ref('tournaments');
@@ -309,7 +312,7 @@ const FirebaseTourneyEngine = (function() {
 
         for (const code of Object.keys(val)) {
           const r = val[code];
-          if (r && r.status === 'waiting' && r.isPublic === true && r.size === preferredSize && r.hostOnline !== false && (now - r.createdAt < 30 * 60 * 1000)) {
+          if (r && r.status === 'waiting' && r.isPublic === true && r.size === preferredSize && (r.format || 'hybrid') === preferredFormat && r.hostOnline !== false && (now - r.createdAt < 30 * 60 * 1000)) {
             const filled = Array.isArray(r.participants) ? r.participants.filter(Boolean).length : Object.values(r.participants || {}).filter(Boolean).length;
             if (filled < r.size) {
               targetRoomCode = code;
@@ -324,12 +327,12 @@ const FirebaseTourneyEngine = (function() {
             resolve(Object.assign({ isNew: false }, res));
           } catch(e) {
             // 加入失敗則轉為建房
-            const res = await createRoom({ name: `軍武世界盃 4強極速賽`, size: preferredSize, isPublic: true, playerProfile });
+            const res = await createRoom({ name: `軍武世界盃 ${preferredSize}強公開賽`, size: preferredSize, format: preferredFormat, isPublic: true, playerProfile });
             resolve(Object.assign({ isNew: true }, res));
           }
         } else {
           // 無空房，建立新公開房並啟動 60s (1分鐘) 倒數
-          const res = await createRoom({ name: `軍武世界盃 4強極速賽`, size: preferredSize, isPublic: true, playerProfile });
+          const res = await createRoom({ name: `軍武世界盃 ${preferredSize}強公開賽`, size: preferredSize, format: preferredFormat, isPublic: true, playerProfile });
           resolve(Object.assign({ isNew: true }, res));
         }
       }).catch(reject);
