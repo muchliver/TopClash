@@ -14,7 +14,12 @@ class QuietHandler(SimpleHTTPRequestHandler):
         pass
 
 PORT = 8789
-httpd = HTTPServer(('127.0.0.1', PORT), QuietHandler)
+try:
+    httpd = HTTPServer(('127.0.0.1', PORT), QuietHandler)
+except OSError:
+    httpd = HTTPServer(('127.0.0.1', 0), QuietHandler)
+    PORT = httpd.server_address[1]
+
 server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
 server_thread.start()
 print(f"HTTP Server started at http://127.0.0.1:{PORT}", flush=True)
@@ -163,6 +168,78 @@ def run_e2e():
         bronze_team_a = bronze_names[0].strip()
         print(f"Bronze match Team A from semi-final loser: [{bronze_team_a}]", flush=True)
         assert bronze_team_a != "待定對手" and bronze_team_a != "?", f"Bronze match should have semi-final loser, got: {bronze_team_a}"
+
+        # --- ROUND 2 (Finals / Bronze Match) TEST ---
+        time.sleep(2)
+        round_info_p1 = p1.text_content("#tourneyRoundPill").strip()
+        print(f"P1 Round Info: [{round_info_p1}]", flush=True)
+
+        btn1_r2 = p1.text_content("#btnTourneyGoFight").strip() if p1.is_visible("#btnTourneyGoFight") else "NO BTN"
+        btn2_r2 = p2.text_content("#btnTourneyGoFight").strip() if p2.is_visible("#btnTourneyGoFight") else "NO BTN"
+        print(f"Round 2 Buttons: P1=[{btn1_r2}], P2=[{btn2_r2}]", flush=True)
+
+        # Check room data in Round 2
+        r_data = p1.evaluate("() => FirebaseTourneyEngine.getCurrentRoom()")
+        print(f"Room status: {r_data['status']}, curRound: {r_data['currentRound']}", flush=True)
+        for mid, m in r_data['matches'].items():
+            teamA_name = m['teamA']['name'] if m.get('teamA') else 'None'
+            teamB_name = m['teamB']['name'] if m.get('teamB') else 'None'
+            readyA = m.get('readyA', False)
+            readyB = m.get('readyB', False)
+            hist_len = len(m.get('history') or [])
+            print(f"Match {mid}: status={m['status']}, readyA={readyA}, readyB={readyB}, score={m.get('scoreA', 0)}:{m.get('scoreB', 0)}, history={hist_len}, A={teamA_name}, B={teamB_name}", flush=True)
+
+        # Whoever has the button clicks it!
+        if p1.is_visible("#btnTourneyGoFight"):
+            print(f"P1 clicking Go Fight in Round 2: [{btn1_r2}]...", flush=True)
+            p1.click("#btnTourneyGoFight")
+        if p2.is_visible("#btnTourneyGoFight"):
+            print(f"P2 clicking Go Fight in Round 2: [{btn2_r2}]...", flush=True)
+            p2.click("#btnTourneyGoFight")
+
+        time.sleep(3)
+        btn1_after = p1.text_content("#btnTourneyGoFight").strip() if p1.is_visible("#btnTourneyGoFight") else "NO BTN"
+        btn2_after = p2.text_content("#btnTourneyGoFight").strip() if p2.is_visible("#btnTourneyGoFight") else "NO BTN"
+        print(f"Round 2 After Click: P1=[{btn1_after}], P2=[{btn2_after}]", flush=True)
+        print(f"P1 in battle: {p1.is_visible('#viewBattle:not([hidden])')}, P2 in battle: {p2.is_visible('#viewBattle:not([hidden])')}", flush=True)
+
+        r_data2 = p1.evaluate("() => FirebaseTourneyEngine.getCurrentRoom()")
+        for mid, m in r_data2['matches'].items():
+            readyA = m.get('readyA', False)
+            readyB = m.get('readyB', False)
+            hist_len = len(m.get('history') or [])
+            print(f"Match {mid} after R2 Game 1: status={m['status']}, readyA={readyA}, readyB={readyB}, score={m.get('scoreA', 0)}:{m.get('scoreB', 0)}, history={hist_len}", flush=True)
+
+        # --- NOW RETURN FROM R2 GAME 1 BATTLE AND TEST GAME 2 (第二局) ---
+        print("\n=== TESTING BO3 GAME 2 (第二局) ===", flush=True)
+        p1.eval_on_selector("#btnSkip", "el => el.click()")
+        p2.eval_on_selector("#btnSkip", "el => el.click()")
+        time.sleep(1)
+
+        p1.eval_on_selector("#btnBattleBack", "el => el.click()")
+        p2.eval_on_selector("#btnBattleBack", "el => el.click()")
+
+        p1.wait_for_selector("#viewTournament:not([hidden])", timeout=10000)
+        p2.wait_for_selector("#viewTournament:not([hidden])", timeout=10000)
+        print("Both players returned to bracket after R2 Game 1!", flush=True)
+
+        time.sleep(2)
+        btn1_g2 = p1.text_content("#btnTourneyGoFight").strip() if p1.is_visible("#btnTourneyGoFight") else "NO BTN"
+        btn2_g2 = p2.text_content("#btnTourneyGoFight").strip() if p2.is_visible("#btnTourneyGoFight") else "NO BTN"
+        print(f"Buttons for Game 2: P1=[{btn1_g2}], P2=[{btn2_g2}]", flush=True)
+
+        # Now click Go Fight for Game 2 (第二局)!
+        print("Clicking Go Fight for Game 2...", flush=True)
+        if p1.is_visible("#btnTourneyGoFight"):
+            p1.click("#btnTourneyGoFight")
+        if p2.is_visible("#btnTourneyGoFight"):
+            p2.click("#btnTourneyGoFight")
+
+        time.sleep(3)
+        btn1_g2_after = p1.text_content("#btnTourneyGoFight").strip() if p1.is_visible("#btnTourneyGoFight") else "NO BTN"
+        btn2_g2_after = p2.text_content("#btnTourneyGoFight").strip() if p2.is_visible("#btnTourneyGoFight") else "NO BTN"
+        print(f"After Game 2 click: P1=[{btn1_g2_after}], P2=[{btn2_g2_after}]", flush=True)
+        print(f"P1 in battle Game 2: {p1.is_visible('#viewBattle:not([hidden])')}, P2 in battle Game 2: {p2.is_visible('#viewBattle:not([hidden])')}", flush=True)
 
         if p1_errors or p2_errors:
             print(f"Errors encountered: P1={p1_errors}, P2={p2_errors}")

@@ -1,5 +1,13 @@
 (function () {
 'use strict';
+
+function ensureArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.slice();
+  if (typeof val === 'object') return Object.values(val);
+  return [];
+}
+
 /* =====================================================
    頂尖對戰：15元聯合作戰 — 互動介面與核心邏輯
    含：快速對戰、真人非同步幽靈對戰、BO3 征服賽、精選對戰、沙盒模擬
@@ -4509,7 +4517,7 @@ function renderTourneyHeader(t, isOnline = false) {
       const reqWins = (typeof FirebaseTourneyEngine !== 'undefined' && FirebaseTourneyEngine.getRequiredWins)
         ? FirebaseTourneyEngine.getRequiredWins(myMatch, t.format, totalRounds)
         : 1;
-      const roundNum = (myMatch.history ? myMatch.history.length : 0) + 1;
+      const roundNum = ensureArray(myMatch.history).length + 1;
       const secLeft = myMatch.deadline ? Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000)) : 30;
 
       let fightBtnText = '';
@@ -5114,7 +5122,31 @@ function renderBracketSvgLinks(t) {
 
 /* 點擊錦標賽任一對抗卡片，彈出觀戰與戰報彈窗 */
 function openTournamentSpectatorModal(matchId) {
-  const snap = TournamentEngine.getMatchSnapshot(matchId);
+  const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+  let snap = null;
+  if (onlineRoom && onlineRoom.status === 'in_progress') {
+    const m = onlineRoom.matches ? onlineRoom.matches[matchId] : null;
+    if (m) {
+      const totalRounds = onlineRoom.totalRounds || Math.log2(onlineRoom.size);
+      const reqWins = (typeof FirebaseTourneyEngine !== 'undefined' && FirebaseTourneyEngine.getRequiredWins)
+        ? FirebaseTourneyEngine.getRequiredWins(m, onlineRoom.format, totalRounds)
+        : 1;
+      snap = {
+        matchId: m.id,
+        round: m.round,
+        status: m.status,
+        teamA: m.teamA,
+        teamB: m.teamB,
+        scoreA: m.scoreA || 0,
+        scoreB: m.scoreB || 0,
+        requiredWins: reqWins,
+        history: ensureArray(m.history)
+      };
+    }
+  } else {
+    snap = TournamentEngine.getMatchSnapshot(matchId);
+    if (snap) snap.history = ensureArray(snap.history);
+  }
   if (!snap) return;
 
   const modal = $('#tourneySpectatorModal');
@@ -5206,6 +5238,18 @@ function startTournamentPlayerBattle() {
 
 /* 錦標賽單局結算處理 */
 function handleTournamentRoundEnd(res) {
+  const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+  if (onlineRoom && onlineRoom.status === 'in_progress') {
+    showResult(res, {
+      bo3NextText: '🏆 返回錦標賽對抗樹',
+      bo3Callback: () => {
+        closeBattle();
+        setMode('tournament');
+      }
+    });
+    return;
+  }
+
   const myMatch = TournamentEngine.getMyMatch();
   if (!myMatch) {
     showResult(res);
