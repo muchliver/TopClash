@@ -4520,15 +4520,17 @@ function renderTourneyHeader(t, isOnline = false) {
         ? FirebaseTourneyEngine.getRequiredWins(myMatch, t.format, totalRounds)
         : 1;
       const roundNum = ensureArray(myMatch.history).length + 1;
-      const secLeft = myMatch.deadline ? Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000)) : 30;
+      const secLeft = myMatch.deadline ? Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000)) : 60;
+      const oppFlag = opp?.flag || '🌐';
+      const oppTitle = opp?.name || '待定對手';
 
       let fightBtnText = '';
       if (isIReady) {
         fightBtnText = `⏳ 陣容已鎖定 · 等對手出擊 (${secLeft}s)...`;
       } else if (reqWins > 1) {
-        fightBtnText = `⚔️ 迎戰 ${opp.flag || ''} ${esc(opp.name)} (第 ${roundNum} 局 · 目前 ${myMatch.scoreA || 0}:${myMatch.scoreB || 0})`;
+        fightBtnText = `⚔️ 迎戰 ${oppFlag} ${esc(oppTitle)} (第 ${roundNum} 局 · 目前 ${myMatch.scoreA || 0}:${myMatch.scoreB || 0})`;
       } else {
-        fightBtnText = `⚔️ 迎戰 ${opp.flag || ''} ${esc(opp.name)} (出擊)`;
+        fightBtnText = `⚔️ 迎戰 ${oppFlag} ${esc(oppTitle)} (出擊)`;
       }
 
       actBox.innerHTML = `
@@ -4671,14 +4673,14 @@ function startListeningPublicRooms() {
         <div style="grid-column:1/-1;text-align:center;padding:30px;background:rgba(255,255,255,.02);border:1px dashed var(--line);border-radius:8px">
           <div style="font-size:24px;margin-bottom:6px">🌐</div>
           <div style="font-weight:700;color:var(--text);font-size:14px">目前沒有等待中的公開房間</div>
-          <div class="muted" style="font-size:12px;margin-top:4px">點擊上方【⚡ 一鍵快速匹配出擊】立即發起湊桌，30 秒必開賽！</div>
+          <div class="muted" style="font-size:12px;margin-top:4px">點擊上方【⚡ 一鍵快速匹配出擊】立即發起湊桌，60 秒 (1分鐘) 必開賽！</div>
         </div>
       `;
       return;
     }
 
     listEl.innerHTML = rooms.map(r => {
-      const remainingSec = r.countdownEnd ? Math.max(0, Math.floor((r.countdownEnd - Date.now()) / 1000)) : 30;
+      const remainingSec = r.countdownEnd ? Math.max(0, Math.floor((r.countdownEnd - Date.now()) / 1000)) : 60;
       return `<div class="room-live-card" data-code="${esc(r.code)}">
         <div class="r-top">
           <div class="r-name">${esc(r.name)}</div>
@@ -5505,7 +5507,7 @@ $('#btnQuickMatchTourney')?.addEventListener('click', async () => {
     toast('⚡ 正在搜尋雲端最快開賽之公開房間...');
     const res = await FirebaseTourneyEngine.quickMatch(prof, 4);
     if (res.isNew) {
-      toast(`👑 已為你發起 4 強公開湊桌房【${res.roomCode}】！30 秒自動倒數開賽！`);
+      toast(`👑 已為你發起 4 強公開湊桌房【${res.roomCode}】！60 秒 (1分鐘) 自動倒數開賽！`);
     } else {
       toast(`🟢 已快速滑入公開房間【${res.roomCode}】！等待開賽！`);
     }
@@ -5590,18 +5592,26 @@ if (typeof FirebaseTourneyEngine !== 'undefined') {
   let tourneyTicker = null;
   setInterval(() => {
     const room = FirebaseTourneyEngine.getCurrentRoom();
-    if (room && room.status === 'in_progress' && state.mode === 'tournament') {
-      FirebaseTourneyEngine.checkTimeoutAndAutoResolve(room.id);
-      const btn = document.querySelector('#btnTourneyGoFight');
-      if (btn && btn.textContent.includes('等對手出擊')) {
+    if (room && state.mode === 'tournament') {
+      if (room.status === 'waiting' && room.isPublic && room.countdownEnd && Date.now() > room.countdownEnd) {
         const prof = getTournamentPlayerProfile();
-        const myMatch = Object.values(room.matches || {}).find(m => {
-          if (m.status === 'finished') return false;
-          return (m.teamA && m.teamA.uid === prof.uid) || (m.teamB && m.teamB.uid === prof.uid);
-        });
-        if (myMatch && myMatch.deadline) {
-          const sec = Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000));
-          btn.textContent = '⏳ 陣容已鎖定 · 等對手出擊 (' + sec + 's)...';
+        if (room.hostUid === prof.uid) {
+          FirebaseTourneyEngine.fillWithAI(room.id);
+        }
+      }
+      if (room.status === 'in_progress') {
+        FirebaseTourneyEngine.checkTimeoutAndAutoResolve(room.id);
+        const btn = document.querySelector('#btnTourneyGoFight');
+        if (btn && btn.textContent.includes('等對手出擊')) {
+          const prof = getTournamentPlayerProfile();
+          const myMatch = Object.values(room.matches || {}).find(m => {
+            if (m.status === 'finished') return false;
+            return (m.teamA && m.teamA.uid === prof.uid) || (m.teamB && m.teamB.uid === prof.uid);
+          });
+          if (myMatch && myMatch.deadline) {
+            const sec = Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000));
+            btn.textContent = '⏳ 陣容已鎖定 · 等對手出擊 (' + sec + 's)...';
+          }
         }
       }
     }
@@ -5628,7 +5638,7 @@ if (typeof FirebaseTourneyEngine !== 'undefined') {
       state.doctrine = isTeamA ? (h.docA || 'defense') : (h.docB || 'defense');
       state.enemy = isTeamA ? h.deckB.slice() : h.deckA.slice();
       state.enemyDoc = isTeamA ? (h.docB || 'defense') : (h.docA || 'defense');
-      state.enemyName = (opp.flag || '') + ' ' + (opp.name || '');
+      state.enemyName = ((opp?.flag || '') + ' ' + (opp?.name || '對手')).trim();
       state.event = h.event || { id: 'fair', name: '晴朗無風', icon: '☀' };
       state.seed = h.seed;
       state.lastRes = res;

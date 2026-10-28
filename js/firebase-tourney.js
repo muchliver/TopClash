@@ -4,7 +4,7 @@
    支援：
    1. 👤 單人世界盃闖關 (純本機零等待)
    2. 👥 私人好友開房 (6位軍規碼 / 邀請連結 / 未滿 AI 一鍵補位)
-   3. 🌐 公開大廳隨機匹配 (即時房間清單 / 快速入桌 / 30s 熔斷開賽)
+   3. 🌐 公開大廳隨機匹配 (即時房間清單 / 快速入桌 / 60s (1分鐘) 熔斷開賽)
    4. 🛡️ 雙階段盲提防作弊 (Two-Phase Blind Commit)
    5. ⚡ 確定性推演同步 (Deterministic Engine Sync & Live Spectator)
    6. 🤖 斷線自動判定與 AI 託管 (onDisconnect Presence & AI Takeover)
@@ -219,7 +219,7 @@ const FirebaseTourneyEngine = (function() {
       hostFlag: playerProfile.flag || '🇹🇼',
       hostOnline: true,
       createdAt: now,
-      countdownEnd: isPublic ? (now + 30000) : null, // 公開房 30 秒自動熔斷湊桌
+      countdownEnd: isPublic ? (now + 60000) : null, // 公開房 60 秒 (1分鐘) 自動熔斷湊桌
       currentRound: 1,
       totalRounds: Math.log2(size),
       participants,
@@ -328,7 +328,7 @@ const FirebaseTourneyEngine = (function() {
             resolve(Object.assign({ isNew: true }, res));
           }
         } else {
-          // 無空房，建立新公開房並啟動 30s 倒數
+          // 無空房，建立新公開房並啟動 60s (1分鐘) 倒數
           const res = await createRoom({ name: `軍武世界盃 4強極速賽`, size: preferredSize, isPublic: true, playerProfile });
           resolve(Object.assign({ isNew: true }, res));
         }
@@ -560,7 +560,7 @@ const FirebaseTourneyEngine = (function() {
       doc: doctrine || 'defense'
     };
 
-    // 2. 向 Firebase 提交（盲選 submission + ready 標記 + 30s 熔斷倒數時間戳）
+    // 2. 向 Firebase 提交（盲選 submission + ready 標記 + 60s 熔斷倒數時間戳）
     const updateObj = {};
     updateObj[`matches/${matchId}/ready${slotKey}`] = true;
     updateObj[`matches/${matchId}/submission${slotKey}`] = {
@@ -568,7 +568,7 @@ const FirebaseTourneyEngine = (function() {
       doc: doctrine || 'defense'
     };
     if (!match.deadline) {
-      updateObj[`matches/${matchId}/deadline`] = Date.now() + 30000;
+      updateObj[`matches/${matchId}/deadline`] = Date.now() + 60000;
     }
     await roomRef.update(updateObj);
 
@@ -776,7 +776,7 @@ const FirebaseTourneyEngine = (function() {
     }
   }
 
-  /* 30 秒熔斷超時自動代管推演 */
+  /* 60 秒 (1分鐘) 熔斷超時自動代管推演 */
   async function checkTimeoutAndAutoResolve(roomCode) {
     if (!db || !currentRoomData || currentRoomData.status !== 'in_progress') return;
     const now = Date.now();
