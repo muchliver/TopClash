@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3.8.14">
+<link rel="stylesheet" href="style.css?v=3.9.0">
 </head>
 <body>
 <div class="bg-grid" aria-hidden="true"></div>
@@ -295,40 +295,132 @@
   <!-- 錦標賽大廳 (建房/選人/AI補位，未開賽時展示) -->
   <div class="tourney-lobby-card" id="tourneyLobbyCard" hidden>
     <div class="lobby-head">
-      <h2>🏆 建立 4 / 8 / 16 / 32 強軍武世界盃大獎賽</h2>
-      <p class="muted">仿照世界盃樹狀對抗排版！支援單淘汰、決賽圈 BO3/BO5 升級賽制與零頻寬全場 60FPS 觀戰重播。</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+        <h2 style="margin:0">🏆 2026 軍武世界盃大獎賽 (Tournament Arena)</h2>
+        <span class="badge" id="tourneyLobbyModeBadge" style="background:rgba(61,224,255,.15);color:var(--cyan);border:1px solid rgba(61,224,255,.4);font-size:11px;font-weight:700">👤 單人世界盃闖關賽</span>
+      </div>
+      <p class="muted">支援純單機世界盃闖關、私人好友開房連線（專屬房間碼 / 邀請連結），以及公開大廳 30 秒自動湊桌隨機排隊！</p>
     </div>
-    <div class="lobby-settings-grid">
-      <div class="setting-group">
-        <label class="setting-lbl">參賽規模 (BRACKET SIZE)</label>
-        <div class="btn-group-pill" id="tourneySizeSelector">
-          <button class="pill-btn" data-size="4">4 強 (2輪)</button>
-          <button class="pill-btn" data-size="8">8 強 (3輪)</button>
-          <button class="pill-btn active" data-size="16">16 強世界爭霸 (4輪)</button>
-          <button class="pill-btn" data-size="32">32 強世界盃 (5輪)</button>
+
+    <!-- 模式選籤列 -->
+    <div class="tourney-mode-tabs" id="tourneyModeTabs">
+      <button class="t-mode-tab active" data-tab="solo">👤 單人世界盃闖關</button>
+      <button class="t-mode-tab" data-tab="private">👥 私人好友開房</button>
+      <button class="t-mode-tab" data-tab="public">🌐 公開大廳隨機匹配</button>
+    </div>
+
+    <!-- 我方出征陣容整備條 (Player Deck Readiness) -->
+    <div class="tourney-my-deck-bar" id="tourneyMyDeckBar"></div>
+
+    <!-- 【面板 1：單人闖關模式】 -->
+    <div class="tourney-panel" id="panelTourneySolo">
+      <div class="lobby-settings-grid">
+        <div class="setting-group">
+          <label class="setting-lbl">參賽規模 (BRACKET SIZE)</label>
+          <div class="btn-group-pill" id="tourneySizeSelector">
+            <button class="pill-btn" data-size="4">4 強 (2輪)</button>
+            <button class="pill-btn" data-size="8">8 強 (3輪)</button>
+            <button class="pill-btn active" data-size="16">16 強世界爭霸 (4輪)</button>
+            <button class="pill-btn" data-size="32">32 強世界盃 (5輪)</button>
+          </div>
+        </div>
+        <div class="setting-group">
+          <label class="setting-lbl">淘汰對決賽制 (MATCH FORMAT)</label>
+          <div class="btn-group-pill" id="tourneyFormatSelector">
+            <button class="pill-btn" data-format="bo1">⚡ 極速單淘汰 (全程 BO1)</button>
+            <button class="pill-btn active" data-format="hybrid">⭐ 決賽升級制 (四強前BO1·決賽BO3)</button>
+            <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
+          </div>
         </div>
       </div>
-      <div class="setting-group">
-        <label class="setting-lbl">淘汰對決賽制 (MATCH FORMAT)</label>
-        <div class="btn-group-pill" id="tourneyFormatSelector">
-          <button class="pill-btn" data-format="bo1">⚡ 極速單淘汰 (全程 BO1)</button>
-          <button class="pill-btn active" data-format="hybrid">⭐ 決賽升級制 (四強前BO1·決賽BO3)</button>
-          <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
+      <div class="lobby-participants-box">
+        <div class="participants-head">
+          <span>參賽席位預覽 (你 + 待抽籤各國代表隊：<span id="lobbyFilledCount">1</span> / <span id="lobbyTotalCount">16</span> 隊)</span>
+          <div class="row" style="gap:8px">
+            <button class="btn ghost sm" id="btnTourneyFillAI">🤖 立即抽籤補滿各國席位</button>
+            <button class="btn ghost sm" id="btnTourneyResetLobby">重置席位 ✕</button>
+          </div>
+        </div>
+        <div class="participants-grid" id="lobbyParticipantsGrid"></div>
+      </div>
+      <div class="lobby-actions">
+        <button class="btn amber lg block" id="btnTourneyStart" style="font-weight:900;letter-spacing:.05em">⚔️ 正式開賽 · 率隊出征世界盃 (START TOURNAMENT)</button>
+      </div>
+    </div>
+
+    <!-- 【面板 2：私人好友開房模式】 -->
+    <div class="tourney-panel" id="panelTourneyPrivate" hidden>
+      <!-- 未在房間內：建房或輸入代碼 -->
+      <div id="privateLobbyEntrance">
+        <div class="lobby-settings-grid">
+          <div class="setting-group">
+            <label class="setting-lbl">私人賽事規模 (ROOM SIZE)</label>
+            <div class="btn-group-pill" id="privateSizeSelector">
+              <button class="pill-btn active" data-size="4">4 強快速盃賽 (2輪)</button>
+              <button class="pill-btn" data-size="8">8 強好友錦標賽 (3輪)</button>
+              <button class="pill-btn" data-size="16">16 強大型聯賽 (4輪)</button>
+            </div>
+          </div>
+          <div class="setting-group">
+            <label class="setting-lbl">加入好友房間 (ENTER ROOM CODE)</label>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="inputJoinTourneyCode" placeholder="輸入 6 位房間碼 (如 8M2K9A)" maxlength="8" style="flex:1;padding:7px 12px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:6px;color:var(--text);font-family:var(--mono);text-transform:uppercase;font-weight:700">
+              <button class="btn primary sm" id="btnJoinTourneyRoom">加入房間 ➔</button>
+            </div>
+          </div>
+        </div>
+        <div class="lobby-actions" style="margin-top:14px">
+          <button class="btn primary lg block" id="btnCreatePrivateRoom" style="font-weight:900">👑 建立私人對戰房間 (取得邀請碼與分享連結)</button>
+        </div>
+      </div>
+
+      <!-- 已在房間內：展示席位與即時等待名單 -->
+      <div id="privateRoomActiveView" hidden>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;margin-bottom:12px">
+          <div>
+            <div style="font-size:11px;color:var(--muted)">專屬私人房間代碼</div>
+            <div class="room-code-badge" id="privateRoomCodeDisplay">------</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn sm" id="btnCopyTourneyCode">複製代碼 📋</button>
+            <button class="btn primary sm" id="btnCopyTourneyLink">複製邀請連結 🔗</button>
+            <button class="btn ghost sm" id="btnLeaveTourneyRoom" style="color:var(--red);border-color:rgba(255,93,110,.3)">退出房間 ✕</button>
+          </div>
+        </div>
+
+        <div class="lobby-participants-box">
+          <div class="participants-head">
+            <span>房間選手名冊 (<span id="privateFilledCount">1</span> / <span id="privateTotalCount">4</span> 席位)</span>
+            <div class="row" style="gap:8px">
+              <button class="btn ghost sm" id="btnPrivateFillAI">🤖 AI 補齊剩餘名額</button>
+            </div>
+          </div>
+          <div class="participants-grid" id="privateParticipantsGrid"></div>
+        </div>
+
+        <div class="lobby-actions">
+          <button class="btn amber lg block" id="btnPrivateStart" style="font-weight:900;letter-spacing:.05em">⚔️ 正式開賽 · 啟動多人錦標賽 (START TOURNAMENT)</button>
         </div>
       </div>
     </div>
-    <div class="lobby-participants-box">
+
+    <!-- 【面板 3：公開大廳隨機匹配模式】 -->
+    <div class="tourney-panel" id="panelTourneyPublic" hidden>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px;background:rgba(61,224,255,.08);border:1px solid rgba(61,224,255,.3);border-radius:8px;margin-bottom:14px">
+        <div>
+          <div style="font-weight:800;font-size:15px;color:var(--cyan)">⚡ 公開隨機快速排隊 (30 秒熔斷必開賽)</div>
+          <div class="muted" style="font-size:12px;margin-top:2px">點擊後自動加入最快開賽房間，倒數結束未滿員由各國特遣隊補齊即刻開戰！</div>
+        </div>
+        <button class="btn primary lg" id="btnQuickMatchTourney" style="font-weight:900">⚡ 一鍵快速匹配出擊</button>
+      </div>
+
       <div class="participants-head">
-        <span>參賽席位預覽 (<span id="lobbyFilledCount">1</span> / <span id="lobbyTotalCount">16</span>)</span>
-        <div class="row" style="gap:8px">
-          <button class="btn ghost sm" id="btnTourneyFillAI">🤖 一鍵補滿 AI 影子戰隊</button>
-          <button class="btn ghost sm" id="btnTourneyResetLobby">重置席位 ✕</button>
-        </div>
+        <span>🌐 即時在線公開房間列表</span>
+        <button class="btn ghost sm" id="btnRefreshPublicRooms">刷新列表 🔄</button>
       </div>
-      <div class="participants-grid" id="lobbyParticipantsGrid"></div>
-    </div>
-    <div class="lobby-actions">
-      <button class="btn amber lg block" id="btnTourneyStart" style="font-weight:900;letter-spacing:.05em">⚔️ 正式開賽 · 產生世界盃對抗樹 (START TOURNAMENT)</button>
+      <div class="public-rooms-grid" id="tourneyPublicRoomsList">
+        <div class="muted" style="grid-column:1/-1;text-align:center;padding:20px">正在連接雲端即時大廳...</div>
+      </div>
     </div>
   </div>
 
@@ -571,8 +663,12 @@
 <script src="js/ladder-data.js"></script>
 <script src="js/ladder.js"></script>
 <script src="js/engine.js"></script>
-<script src="js/tournament.js?v=3.8.14"></script>
-<script src="js/online-pvp.js?v=3.8.14"></script>
-<script src="js/app.js?v=3.8.14"></script>
+<!-- Firebase 雲端多人錦標賽模組 (Compat SDK) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="js/firebase-tourney.js?v=3.9.0"></script>
+<script src="js/tournament.js?v=3.9.0"></script>
+<script src="js/online-pvp.js?v=3.9.0"></script>
+<script src="js/app.js?v=3.9.0"></script>
 </body>
 </html>

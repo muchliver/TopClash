@@ -4258,42 +4258,133 @@ $('#btnPvpStartBattle')?.addEventListener('click', () => {
 
 /* =====================================================
    🥇 世界盃淘汰錦標賽 (Tournament Championship) 前端控制器
+   支援：👤 單人闖關 ｜ 👥 私人好友開房 ｜ 🌐 公開大廳隨機匹配
    ===================================================== */
 let tourneySelectedSize = 16;
 let tourneySelectedFormat = 'hybrid';
+let currentTourneyTab = 'solo'; // 'solo' | 'private' | 'public'
+let privateSelectedSize = 4;
+let publicRoomsUnsub = null;
 
-function renderTournamentView() {
-  let t = TournamentEngine.getState();
-  if (!t) {
-    const playerObj = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState().player : null;
-    t = TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, playerObj ? {
-      uid: playerObj.uid || 'CMD-7392',
-      name: playerObj.name || '我方聯合戰術作戰群',
-      flag: playerObj.flag || '🇹🇼',
-      isMe: true,
-      isAI: false,
-      deck: state.deck.every(Boolean) ? state.deck.slice() : null,
-      doctrine: state.doctrine || 'defense'
-    } : null);
+function getTournamentPlayerProfile() {
+  const p = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState().player : null;
+  let localUid = localStorage.getItem('topclash_user_uid');
+  if (!localUid) {
+    localUid = (typeof LadderEngine !== 'undefined' && LadderEngine.generateCommanderUID)
+      ? LadderEngine.generateCommanderUID()
+      : ('CMD-' + Math.floor(1000 + Math.random() * 9000));
+    localStorage.setItem('topclash_user_uid', localUid);
+  }
+  const myUid = (p && p.uid && p.uid !== 'CMD-7392') ? p.uid : localUid;
+  return {
+    uid: myUid,
+    name: (p && p.name && p.name !== '我方聯合戰術作戰群') ? p.name : '我方特遣隊',
+    flag: p?.flag || '🇹🇼',
+    isMe: true,
+    isAI: false,
+    deck: state.deck.every(Boolean) ? state.deck.slice() : null,
+    doctrine: state.doctrine || 'defense'
+  };
+}
+
+function renderTourneyDeckBar() {
+  const deckBar = $('#tourneyMyDeckBar');
+  if (!deckBar) return;
+
+  const isFull = state.deck.every(Boolean);
+  const errs = isFull ? validateDeck(state.deck, budgetLimit(), currentBanned()) : ['尚未選滿 5 個槽位'];
+  const cost = deckCost(state.deck.filter(Boolean));
+  const prof = getTournamentPlayerProfile();
+
+  if (errs.length === 0) {
+    const unitsHtml = state.deck.map(id => {
+      const u = UNIT_MAP[id];
+      return u ? `<span style="font-size:11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:2px 6px;border-radius:4px;color:var(--text)"><b style="color:${CATS[u.cat].color}">$${u.cost}</b> ${esc(u.name.split(' ')[0])}</span>` : '';
+    }).join(' ');
+    deckBar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-weight:800;color:var(--cyan);display:flex;align-items:center;gap:5px">
+          <span>${prof.flag}</span> 👑 我方特遣部隊：
+        </span>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">${unitsHtml}</div>
+        <span style="font-family:var(--mono);font-size:11.5px;color:var(--muted)">$${cost}/15</span>
+        <span class="badge badge-ok" style="font-size:10px">✔ 陣容整備完畢</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ghost sm" id="btnTourneyLobbyTune">🛠️ 調配陣容</button>
+      </div>
+    `;
+  } else {
+    deckBar.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-weight:800;color:var(--amber)">⚠️ 我方參賽部隊未完成整備：</span>
+        <span class="muted" style="font-size:12px">${errs[0]}</span>
+        <span style="font-family:var(--mono);font-size:11.5px;color:var(--amber)">($${cost}/15)</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn primary sm" id="btnTourneyLobbyRand">⚡ 隨機組隊 (R)</button>
+        <button class="btn ghost sm" id="btnTourneyLobbyTune">🛠️ 前往軍火庫</button>
+      </div>
+    `;
   }
 
-  const isLobby = (t.status === 'registration');
+  $('#btnTourneyLobbyTune')?.addEventListener('click', () => {
+    setMode('quick');
+    toast('請在軍火庫調整你的 5 槽聯合作戰陣容，完成後切回【淘汰錦標賽】！');
+  });
+  $('#btnTourneyLobbyRand')?.addEventListener('click', () => {
+    const d = randomDeck(Math.random, budgetLimit(), []) || randomDeck(Math.random, budgetLimit(), []);
+    if (d) {
+      state.deck = d.slice();
+      if (state.deckSlot === 'B') state.dualDecks.B = d.slice();
+      else state.dualDecks.A = d.slice();
+      renderTournamentView();
+      toast('🎲 已自動為你隨機組建一組合法 15 元聯合作戰部隊！');
+    }
+  });
+}
+
+function renderTournamentView() {
+  // 檢查是否處於 Firebase 線上多人房間中
+  const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+  const isOnlineActive = !!onlineRoom;
+
+  let t = null;
+  let isLobby = false;
+
+  if (isOnlineActive) {
+    t = onlineRoom;
+    isLobby = (t.status === 'waiting');
+  } else {
+    t = TournamentEngine.getState();
+    if (!t) {
+      t = TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
+    } else if (t.status === 'registration' && t.participants && t.participants[0]) {
+      const prof = getTournamentPlayerProfile();
+      t.participants[0].name = prof.name;
+      t.participants[0].flag = prof.flag;
+      t.participants[0].deck = prof.deck;
+      t.participants[0].doctrine = prof.doctrine;
+    }
+    isLobby = (t.status === 'registration');
+  }
+
   const lobbyCard = $('#tourneyLobbyCard');
   const bracketVp = $('#tourneyBracketViewport');
 
   if (lobbyCard) lobbyCard.hidden = !isLobby;
   if (bracketVp) bracketVp.hidden = isLobby;
 
-  renderTourneyHeader(t);
+  renderTourneyHeader(t, isOnlineActive);
 
   if (isLobby) {
-    renderTourneyLobby(t);
+    renderTourneyLobby(t, isOnlineActive);
   } else {
     renderTournamentBracket(t);
   }
 }
 
-function renderTourneyHeader(t) {
+function renderTourneyHeader(t, isOnline = false) {
   const roundNames = {
     1: t.size === 32 ? '32 強淘汰賽' : t.size === 16 ? '16 強世界爭霸' : t.size === 8 ? '半準決賽 (8強)' : '準決賽 (4強)',
     2: t.size === 32 ? '16 強賽' : t.size === 16 ? '半準決賽 (8強)' : '決賽圈',
@@ -4308,18 +4399,33 @@ function renderTourneyHeader(t) {
     bo3: '⚔️ 全程 BO3 征服反制'
   };
 
-  const myMatch = TournamentEngine.getMyMatch();
-  const amIEliminated = !myMatch && t.status === 'in_progress';
+  const prof = getTournamentPlayerProfile();
+  let myMatch = null;
+
+  if (isOnline) {
+    // 從雲端 room.matches 尋找自己參與的對戰
+    myMatch = Object.values(t.matches || {}).find(m => {
+      if (m.status === 'finished') return false;
+      const aIsMe = m.teamA && m.teamA.uid === prof.uid;
+      const bIsMe = m.teamB && m.teamB.uid === prof.uid;
+      return (aIsMe || bIsMe) && (m.teamA && m.teamB);
+    }) || null;
+  } else {
+    myMatch = TournamentEngine.getMyMatch();
+  }
+
+  const amIEliminated = !myMatch && (t.status === 'in_progress');
 
   $('#tourneyRoundPill').textContent = `第 ${t.currentRound}/${t.totalRounds} 輪 · ${roundNames[t.currentRound] || '淘汰賽'}`;
-  $('#tourneyFormatName').textContent = formatNames[t.matchType] || '標準賽制';
+  $('#tourneyFormatName').textContent = formatNames[t.format || t.matchType] || '標準賽制';
 
   const myStateEl = $('#tourneyMyState');
   if (myStateEl) {
     if (t.status === 'completed') {
-      myStateEl.innerHTML = t.champion?.isMe ? '🏆 <b style="color:#fbbf24">榮登世界總冠軍！</b>' : '🏁 賽事圓滿完結';
+      const won = t.champion && (t.champion.uid === prof.uid || t.champion.isMe);
+      myStateEl.innerHTML = won ? '🏆 <b style="color:#fbbf24">榮獲世界盃總冠軍！</b>' : '🏁 賽事圓滿完結';
     } else if (amIEliminated) {
-      myStateEl.innerHTML = '👀 <span style="color:#94a3b8">特邀戰術觀摩員 (收看決賽)</span>';
+      myStateEl.innerHTML = '👀 <span style="color:#94a3b8">特邀戰術觀摩員 (點選對抗樹即時觀戰)</span>';
     } else if (myMatch) {
       myStateEl.innerHTML = '🟢 <b style="color:var(--cyan)">席位在線 · 準備迎戰</b>';
     } else {
@@ -4328,54 +4434,188 @@ function renderTourneyHeader(t) {
   }
 
   // 計算當前輪次剩餘隊伍
-  const activeTeams = Object.values(t.matches).filter(m => m.round === t.currentRound && m.status !== 'finished').length * 2;
+  const activeTeams = Object.values(t.matches || {}).filter(m => m.round === t.currentRound && m.status !== 'finished').length * 2;
   $('#tourneyRemainingCount').textContent = `${Math.max(activeTeams, 2)} 隊`;
 
   // 操作按鈕列
   const actBox = $('#tourneyActionBox');
   if (actBox) {
-    if (t.status === 'registration') {
+    if (t.status === 'registration' || t.status === 'waiting') {
       actBox.innerHTML = '';
     } else if (myMatch && t.status === 'in_progress') {
-      const opp = myMatch.teamA.isMe ? myMatch.teamB : myMatch.teamA;
+      const isTeamA = myMatch.teamA && myMatch.teamA.uid === prof.uid;
+      const opp = isTeamA ? myMatch.teamB : myMatch.teamA;
+      const readyKey = isTeamA ? 'readyA' : 'readyB';
+      const isIReady = myMatch[readyKey] === true;
+
       actBox.innerHTML = `
         <button class="btn amber sm" id="btnTourneyGoFight" style="font-weight:800;animation:pulseGoldBorder 1.5s infinite">
-          ⚔️ 迎戰 ${opp.flag} ${esc(opp.name)} (出擊)
+          ${isIReady ? '⏳ 陣容已鎖定 · 等待對手出擊...' : `⚔️ 迎戰 ${opp.flag} ${esc(opp.name)} (出擊)`}
         </button>
         <button class="btn ghost sm" id="btnTourneyTuneDeck" title="調整當前作戰陣容">🛠️ 調配陣容</button>
-        <button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重置錦標賽 ✕</button>
+        ${isOnline ? '<button class="btn ghost sm" id="btnTourneyLeaveOnline" style="color:var(--red);border-color:rgba(255,93,110,.3)">退出房間 ✕</button>' : '<button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重置錦標賽 ✕</button>'}
       `;
     } else {
       actBox.innerHTML = `
         <span class="muted" style="font-size:12px;margin-right:6px">點選樹狀圖任一場次即可觀摩推演</span>
         <button class="btn ghost sm" id="btnTourneyTuneDeck">🛠️ 瀏覽軍火庫</button>
-        <button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重新開賽 🔄</button>
+        ${isOnline ? '<button class="btn ghost sm" id="btnTourneyLeaveOnline" style="color:var(--red);border-color:rgba(255,93,110,.3)">返回大廳 ✕</button>' : '<button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重新開賽 🔄</button>'}
       `;
     }
   }
 }
 
-function renderTourneyLobby(t) {
+function renderTourneyLobby(t, isOnline = false) {
+  renderTourneyDeckBar();
+
+  // 若處於線上多人房間
+  if (isOnline) {
+    const prof = getTournamentPlayerProfile();
+    const isHost = t.hostUid === prof.uid;
+    const roomCode = t.id;
+
+    // 切換至私人房間活躍面板
+    currentTourneyTab = 'private';
+    updateTourneyTabPanels();
+
+    $('#privateLobbyEntrance').hidden = true;
+    $('#privateRoomActiveView').hidden = false;
+    $('#privateRoomCodeDisplay').textContent = roomCode;
+    $('#privateTotalCount').textContent = t.size;
+
+    const participants = Array.isArray(t.participants) ? t.participants : Object.values(t.participants || {});
+    const filled = participants.filter(Boolean).length;
+    $('#privateFilledCount').textContent = filled;
+
+    // 只有房主能開賽或 AI 補位
+    $('#btnPrivateStart').disabled = !isHost;
+    if (!isHost) {
+      $('#btnPrivateStart').textContent = '⌛ 等待房主點擊正式開賽...';
+      $('#btnPrivateStart').className = 'btn ghost lg block';
+    } else {
+      $('#btnPrivateStart').textContent = '⚔️ 正式開賽 · 啟動多人錦標賽 (START TOURNAMENT)';
+      $('#btnPrivateStart').className = 'btn amber lg block';
+    }
+
+    const grid = $('#privateParticipantsGrid');
+    if (grid) {
+      grid.innerHTML = participants.map((p, idx) => {
+        if (!p) {
+          return `<div class="p-slot-chip empty">
+            <span class="muted">#${idx + 1}</span>
+            <span class="p-name muted" style="font-style:italic">待抽籤席位 (各國特遣隊)</span>
+            <span class="muted" style="font-size:9.5px">空席</span>
+          </div>`;
+        }
+        const isMe = (p.uid === prof.uid);
+        return `<div class="p-slot-chip ${isMe ? 'me' : (p.isAI ? 'ai' : 'online-peer')}">
+          <span>${p.flag || '🌐'}</span>
+          <span class="p-name" style="${isMe ? 'font-weight:800;color:var(--cyan)' : ''}" title="${esc(p.name)}">${esc(p.name)}</span>
+          <span class="badge ${isMe ? 'badge-ok' : (p.isAI ? '' : 'badge-ok')}" style="font-size:9px;padding:1px 4px;margin-left:auto">
+            ${isMe ? '你親率參賽' : (p.isAI ? 'AI 特遣隊' : '🟢 真人選手')}
+          </span>
+        </div>`;
+      }).join('');
+    }
+    return;
+  }
+
+  // 單人闖關大廳
   $('#lobbyTotalCount').textContent = t.size;
-  const filled = t.participants.filter(Boolean).length;
+  const participants = Array.isArray(t.participants) ? t.participants : Object.values(t.participants || {});
+  const filled = participants.filter(Boolean).length;
   $('#lobbyFilledCount').textContent = filled;
 
   const grid = $('#lobbyParticipantsGrid');
   if (!grid) return;
 
-  grid.innerHTML = t.participants.map((p, idx) => {
+  grid.innerHTML = participants.map((p, idx) => {
     if (!p) {
       return `<div class="p-slot-chip empty">
         <span class="muted">#${idx + 1}</span>
-        <span class="p-name muted">等待加入...</span>
+        <span class="p-name muted" style="font-style:italic">待抽籤席位 (各國特遣隊)</span>
+        <span class="muted" style="font-size:9.5px">AI 抽籤</span>
       </div>`;
     }
     return `<div class="p-slot-chip ${p.isMe ? 'me' : 'ai'}">
       <span>${p.flag || '🌐'}</span>
       <span class="p-name" title="${esc(p.name)}">${esc(p.name)}</span>
-      <span class="muted" style="font-size:10px">${p.isMe ? '我方' : 'AI'}</span>
+      <span class="muted" style="font-size:9.5px">${p.isMe ? '你親率參賽' : '各國特遣隊'}</span>
     </div>`;
   }).join('');
+}
+
+function updateTourneyTabPanels() {
+  document.querySelectorAll('#tourneyModeTabs .t-mode-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === currentTourneyTab);
+  });
+
+  $('#panelTourneySolo').hidden = (currentTourneyTab !== 'solo');
+  $('#panelTourneyPrivate').hidden = (currentTourneyTab !== 'private');
+  $('#panelTourneyPublic').hidden = (currentTourneyTab !== 'public');
+
+  const badge = $('#tourneyLobbyModeBadge');
+  if (badge) {
+    if (currentTourneyTab === 'solo') {
+      badge.textContent = '👤 單人世界盃闖關賽';
+      badge.style.color = 'var(--cyan)';
+      badge.style.borderColor = 'rgba(61,224,255,.4)';
+    } else if (currentTourneyTab === 'private') {
+      badge.textContent = '👥 私人好友開房模式';
+      badge.style.color = 'var(--amber)';
+      badge.style.borderColor = 'rgba(245,158,11,.4)';
+    } else {
+      badge.textContent = '🌐 公開大廳隨機匹配';
+      badge.style.color = 'var(--green)';
+      badge.style.borderColor = 'rgba(93,255,176,.4)';
+    }
+  }
+
+  if (currentTourneyTab === 'public' && typeof FirebaseTourneyEngine !== 'undefined') {
+    startListeningPublicRooms();
+  }
+}
+
+function startListeningPublicRooms() {
+  if (publicRoomsUnsub) publicRoomsUnsub();
+  const listEl = $('#tourneyPublicRoomsList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="muted" style="grid-column:1/-1;text-align:center;padding:20px">⏳ 正在同步雲端即時大廳房間清單...</div>';
+
+  publicRoomsUnsub = FirebaseTourneyEngine.listenPublicRooms(rooms => {
+    if (!rooms || rooms.length === 0) {
+      listEl.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:30px;background:rgba(255,255,255,.02);border:1px dashed var(--line);border-radius:8px">
+          <div style="font-size:24px;margin-bottom:6px">🌐</div>
+          <div style="font-weight:700;color:var(--text);font-size:14px">目前沒有等待中的公開房間</div>
+          <div class="muted" style="font-size:12px;margin-top:4px">點擊上方【⚡ 一鍵快速匹配出擊】立即發起湊桌，30 秒必開賽！</div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = rooms.map(r => {
+      const remainingSec = r.countdownEnd ? Math.max(0, Math.floor((r.countdownEnd - Date.now()) / 1000)) : 30;
+      return `<div class="room-live-card" data-code="${esc(r.code)}">
+        <div class="r-top">
+          <div class="r-name">${esc(r.name)}</div>
+          <span class="badge ${remainingSec > 0 ? 'badge-ok' : ''}" style="font-size:10px">
+            ${remainingSec > 0 ? `⏱️ 倒數 ${remainingSec}s` : '🔥 滿員即開'}
+          </span>
+        </div>
+        <div class="r-meta">
+          <span>${r.hostFlag} ${esc(r.hostName)}</span>
+          <span>·</span>
+          <span><b>${r.size} 強</b></span>
+          <span>·</span>
+          <span style="color:var(--cyan);font-weight:700">${r.filledCount}/${r.size} 席位</span>
+        </div>
+        <div style="margin-top:4px">
+          <button class="btn primary sm block btnJoinLiveRoom" data-code="${esc(r.code)}">一鍵加入房間 ➔</button>
+        </div>
+      </div>`;
+    }).join('');
+  });
 }
 
 /* 繪製仿照世足 2026 的左右雙翼對抗樹 (FIFA World Cup Bracket) */
@@ -4977,13 +5217,19 @@ function downloadTournamentChampionPoster(championTeam) {
   toast('🏆 世界冠軍戰報海報已成功下載！');
 }
 
-/* 綁定錦標賽大廳與樹狀圖交互事件 */
+/* 綁定錦標賽大廳與樹狀圖交互事件 (支援 Solo / Private / Public) */
+$('#tourneyModeTabs')?.addEventListener('click', e => {
+  const btn = e.target.closest('.t-mode-tab'); if (!btn) return;
+  currentTourneyTab = btn.dataset.tab;
+  updateTourneyTabPanels();
+});
+
 $('#tourneySizeSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
   document.querySelectorAll('#tourneySizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   tourneySelectedSize = +btn.dataset.size;
-  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
   renderTournamentView();
 });
 
@@ -4992,30 +5238,182 @@ $('#tourneyFormatSelector')?.addEventListener('click', e => {
   document.querySelectorAll('#tourneyFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   tourneySelectedFormat = btn.dataset.format;
-  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
   renderTournamentView();
+});
+
+$('#privateSizeSelector')?.addEventListener('click', e => {
+  const btn = e.target.closest('.pill-btn'); if (!btn) return;
+  document.querySelectorAll('#privateSizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  privateSelectedSize = +btn.dataset.size;
 });
 
 $('#btnTourneyFillAI')?.addEventListener('click', () => {
   TournamentEngine.fillWithAI();
   renderTournamentView();
-  toast('🤖 已自動調派全球各國精選特遣隊，補滿全部參賽席位！');
+  toast('🤖 已自動抽籤調派全球各國特遣隊，補滿全部參賽席位！');
 });
 
 $('#btnTourneyResetLobby')?.addEventListener('click', () => {
-  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+  TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
   renderTournamentView();
   toast('已重置參賽席位');
 });
 
 $('#btnTourneyStart')?.addEventListener('click', () => {
+  const errs = validateDeck(state.deck, budgetLimit(), currentBanned());
+  if (errs.length) {
+    toast(`⚠️ 參賽陣容尚未整備完畢（${errs[0]}），請先點選「隨機組隊」或前往軍火庫配置！`);
+    return;
+  }
   TournamentEngine.start();
   renderTournamentView();
   toast('🏆 世界盃淘汰錦標賽正式開賽！世足對抗樹已生成！');
 });
 
-$('#tourneyActionBox')?.addEventListener('click', e => {
+// 私人房間：建立房間
+$('#btnCreatePrivateRoom')?.addEventListener('click', async () => {
+  try {
+    const prof = getTournamentPlayerProfile();
+    const res = await FirebaseTourneyEngine.createRoom({
+      size: privateSelectedSize,
+      format: 'hybrid',
+      isPublic: false,
+      playerProfile: prof
+    });
+    toast(`👑 成功建立私人房間【${res.roomCode}】！已生成邀請連結。`);
+    renderTournamentView();
+  } catch (err) {
+    toast(`⚠️ 建房失敗：${err.message}`);
+  }
+});
+
+// 私人房間：加入房間
+$('#btnJoinTourneyRoom')?.addEventListener('click', async () => {
+  const code = $('#inputJoinTourneyCode')?.value.trim();
+  if (!code) {
+    toast('請輸入 6 位房間代碼！');
+    return;
+  }
+  try {
+    const prof = getTournamentPlayerProfile();
+    await FirebaseTourneyEngine.joinRoom(code, prof);
+    toast(`🟢 成功加入錦標賽房間【${code.toUpperCase()}】！`);
+    renderTournamentView();
+  } catch (err) {
+    toast(`⚠️ 加入失敗：${err.message}`);
+  }
+});
+
+// 複製代碼與邀請連結
+$('#btnCopyTourneyCode')?.addEventListener('click', () => {
+  const code = $('#privateRoomCodeDisplay')?.textContent;
+  if (code && code !== '------') {
+    navigator.clipboard?.writeText(code);
+    toast(`📋 已複製房間代碼：${code}`);
+  }
+});
+
+$('#btnCopyTourneyLink')?.addEventListener('click', () => {
+  const code = $('#privateRoomCodeDisplay')?.textContent;
+  if (code && code !== '------') {
+    const url = new URL(window.location.href);
+    url.searchParams.set('tourney', code);
+    navigator.clipboard?.writeText(url.toString());
+    toast(`🔗 已複製專屬邀請連結！傳送給好友即可一鍵入隊！`);
+  }
+});
+
+$('#btnLeaveTourneyRoom')?.addEventListener('click', () => {
+  if (confirm('確定要退出當前線上錦標賽房間嗎？')) {
+    FirebaseTourneyEngine.leaveRoom();
+    $('#privateRoomActiveView').hidden = true;
+    $('#privateLobbyEntrance').hidden = false;
+    toast('已安全退出房間，返回大廳。');
+    renderTournamentView();
+  }
+});
+
+$('#btnPrivateFillAI')?.addEventListener('click', async () => {
+  const code = FirebaseTourneyEngine.getCurrentRoomCode();
+  if (code) {
+    await FirebaseTourneyEngine.fillWithAI(code);
+    toast('🤖 已調派全球各國特遣隊補齊名額，並正式開賽！');
+  }
+});
+
+$('#btnPrivateStart')?.addEventListener('click', async () => {
+  const code = FirebaseTourneyEngine.getCurrentRoomCode();
+  if (code) {
+    await FirebaseTourneyEngine.startTournament(code);
+    toast('🏆 多人錦標賽正式開賽！世足對抗樹已生成！');
+  }
+});
+
+// 公開大廳：快速匹配
+$('#btnQuickMatchTourney')?.addEventListener('click', async () => {
+  try {
+    const prof = getTournamentPlayerProfile();
+    toast('⚡ 正在搜尋雲端最快開賽之公開房間...');
+    const res = await FirebaseTourneyEngine.quickMatch(prof, 4);
+    if (res.isNew) {
+      toast(`👑 已為你發起 4 強公開湊桌房【${res.roomCode}】！30 秒自動倒數開賽！`);
+    } else {
+      toast(`🟢 已快速滑入公開房間【${res.roomCode}】！等待開賽！`);
+    }
+    renderTournamentView();
+  } catch(err) {
+    toast(`⚠️ 匹配失敗：${err.message}`);
+  }
+});
+
+$('#btnRefreshPublicRooms')?.addEventListener('click', () => {
+  startListeningPublicRooms();
+  toast('🔄 已刷新公開大廳即時房間清單');
+});
+
+// 點擊公開房間卡片加入
+$('#tourneyPublicRoomsList')?.addEventListener('click', async e => {
+  const btn = e.target.closest('.btnJoinLiveRoom'); if (!btn) return;
+  const code = btn.dataset.code;
+  if (!code) return;
+  try {
+    const prof = getTournamentPlayerProfile();
+    await FirebaseTourneyEngine.joinRoom(code, prof);
+    toast(`🟢 成功加入公開房間【${code}】！`);
+    renderTournamentView();
+  } catch(err) {
+    toast(`⚠️ 加入失敗：${err.message}`);
+  }
+});
+
+$('#tourneyActionBox')?.addEventListener('click', async e => {
   if (e.target.closest('#btnTourneyGoFight')) {
+    const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+    if (onlineRoom && onlineRoom.status === 'in_progress') {
+      // 線上多人出擊：雙階段盲提
+      const prof = getTournamentPlayerProfile();
+      const errs = validateDeck(state.deck, budgetLimit(), currentBanned());
+      if (errs.length) {
+        toast(`⚠️ 參賽陣容未達標（${errs[0]}）！請調整陣容。`);
+        setMode('quick');
+        return;
+      }
+      const myMatch = Object.values(onlineRoom.matches || {}).find(m => {
+        if (m.status === 'finished') return false;
+        const aIsMe = m.teamA && m.teamA.uid === prof.uid;
+        const bIsMe = m.teamB && m.teamB.uid === prof.uid;
+        return aIsMe || bIsMe;
+      });
+      if (myMatch) {
+        await FirebaseTourneyEngine.submitMatchDeck(onlineRoom.id, myMatch.id, prof.uid, state.deck, state.doctrine);
+        toast('🎯 陣容已鎖定並提交雲端！等待對手出擊...');
+        renderTournamentView();
+      }
+      return;
+    }
+
     startTournamentPlayerBattle();
     return;
   }
@@ -5024,13 +5422,36 @@ $('#tourneyActionBox')?.addEventListener('click', e => {
     toast('請在軍火庫調整你的 5 槽聯合作戰陣容，完成後切回【淘汰錦標賽】出擊！');
     return;
   }
+  if (e.target.closest('#btnTourneyLeaveOnline')) {
+    if (confirm('確定要退出當前線上錦標賽嗎？')) {
+      FirebaseTourneyEngine.leaveRoom();
+      toast('已退出線上錦標賽');
+      renderTournamentView();
+    }
+    return;
+  }
   if (e.target.closest('#btnTourneyResetAll')) {
-    TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat);
+    TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
     renderTournamentView();
     toast('已重置淘汰錦標賽，回到配置大廳');
     return;
   }
 });
+
+// 監聽 Firebase 房間更新事件
+if (typeof FirebaseTourneyEngine !== 'undefined') {
+  FirebaseTourneyEngine.on('room_updated', room => {
+    if (state.mode === 'tournament') {
+      renderTournamentView();
+    }
+  });
+  FirebaseTourneyEngine.on('room_closed', () => {
+    toast('房間已關閉或結束');
+    if (state.mode === 'tournament') {
+      renderTournamentView();
+    }
+  });
+}
 
 // 點擊樹狀圖上任何比賽節點
 $('#bracketContainer')?.addEventListener('click', e => {
@@ -5113,6 +5534,25 @@ renderAll();
 // 檢查 URL 是否帶有模式或好友邀請房間代碼
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
+const tourneyParam = new URLSearchParams(window.location.search).get('tourney');
+if (tourneyParam && typeof FirebaseTourneyEngine !== 'undefined') {
+  setTimeout(async () => {
+    setMode('tournament');
+    currentTourneyTab = 'private';
+    updateTourneyTabPanels();
+    const input = $('#inputJoinTourneyCode');
+    if (input) input.value = tourneyParam.toUpperCase();
+    try {
+      const prof = getTournamentPlayerProfile();
+      await FirebaseTourneyEngine.joinRoom(tourneyParam.toUpperCase(), prof);
+      toast(`🟢 透過專屬連結加入錦標賽房間【${tourneyParam.toUpperCase()}】！`);
+      renderTournamentView();
+    } catch(e) {
+      toast(`⚠️ 加入房間提示：${e.message}`);
+    }
+  }, 400);
+}
+
 if (modeParam && ['ladder', 'tournament', 'bo3', 'quick', 'ghost', 'daily', 'sandbox'].includes(modeParam)) {
   if (modeParam === 'ghost') {
     setMode('quick');

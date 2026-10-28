@@ -5232,3 +5232,138 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 
 
 
+
+
+/* =====================================================
+   錦標賽多模式大廳 (Solo / Private / Public) & Firebase UI
+   ===================================================== */
+.tourney-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+[data-theme="light"] .tourney-mode-tabs {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+.t-mode-tab {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.t-mode-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.04);
+}
+.t-mode-tab.active {
+  background: var(--surface);
+  color: var(--cyan);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(61, 224, 255, 0.3);
+}
+[data-theme="light"] .t-mode-tab.active {
+  background: #ffffff;
+  color: #0284c7;
+  border-color: rgba(2, 132, 199, 0.3);
+}
+
+.tourney-my-deck-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(61, 224, 255, 0.06);
+  border: 1px solid rgba(61, 224, 255, 0.25);
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+[data-theme="light"] .tourney-my-deck-bar {
+  background: rgba(2, 132, 199, 0.06);
+  border-color: rgba(2, 132, 199, 0.25);
+}
+
+.public-rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 6px;
+  margin: 10px 0;
+}
+.room-live-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all .15s ease;
+}
+.room-live-card:hover {
+  border-color: var(--cyan);
+  background: rgba(61, 224, 255, 0.05);
+  transform: translateY(-1px);
+}
+[data-theme="light"] .room-live-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+}
+.room-live-card .r-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.room-live-card .r-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+}
+.room-live-card .r-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.room-code-badge {
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: .15em;
+  color: var(--amber);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 4px 12px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.online-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green);
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 6px var(--green);
+}
