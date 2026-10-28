@@ -398,7 +398,7 @@ const state = {
   bo3: {
     active: false, round: 1, winsA: 0, winsB: 0, history: [],
     rivalName: '', rivalBaseDeck: null, enemyDeck: null, enemyDoc: 'defense',
-    bannedByA: null, bannedByB: null, candidateBan: null, nextEvent: null
+    bannedByA: null, bannedByB: null, bannedListA: [], bannedListB: [], candidateBan: null, nextEvent: null
   },
   /* 線上真人雙人對戰狀態 (WebRTC Online PvP) */
   isOnlinePvp: false,
@@ -446,7 +446,13 @@ const spent = () => deckCost(state.deck.filter(Boolean));
 const slotCat = i => SLOTS[i].fixed || state.flexCat[i];
 const sleep = ms => new Promise(r => setTimeout(r, skip ? 0 : ms / speed));
 const pick = a => a[Math.floor(Math.random() * a.length)];
-const currentBanned = () => (state.mode === 'bo3' && state.bo3.bannedByB ? [state.bo3.bannedByB] : []);
+const currentBanned = () => {
+  if (state.mode !== 'bo3' || !state.bo3) return [];
+  if (Array.isArray(state.bo3.bannedListB) && state.bo3.bannedListB.length) {
+    return state.bo3.bannedListB;
+  }
+  return state.bo3.bannedByB ? [state.bo3.bannedByB] : [];
+};
 
 /* ---------- 對手與賽事初始化 ---------- */
 function setupMatch() {
@@ -511,7 +517,8 @@ function initBo3Series() {
     active: true, round: 1, winsA: 0, winsB: 0, history: [],
     rivalName: rival.callsign, rivalBaseDeck: rival.deck.slice(),
     enemyDeck: rival.deck.slice(), enemyDoc: rival.doctrine,
-    bannedByA: null, bannedByB: null, candidateBan: null,
+    bannedByA: null, bannedByB: null,
+    bannedListA: [], bannedListB: [], candidateBan: null,
     nextEvent: pick(EVENTS)
   };
   state.event = state.bo3.nextEvent;
@@ -754,8 +761,12 @@ function renderMissionBar() {
           <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">即時比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
           <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(oppDisplay)}</b></span>
           <span class="badge ${state.pvpOpponentReady ? 'badge-ok' : 'badge-no'}" style="margin-left:8px;font-size:11px">${state.pvpOpponentReady ? '✔ 對手已就緒' : '⏳ 對手配置中'}</span>
-          ${b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：$${UNIT_MAP[b.bannedByA].cost} ${UNIT_MAP[b.bannedByA].name} (${CATS[UNIT_MAP[b.bannedByA].cat].label})</span>` : ''}
-          ${b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：$${UNIT_MAP[b.bannedByB].cost} ${UNIT_MAP[b.bannedByB].name} (${CATS[UNIT_MAP[b.bannedByB].cat].label})</span>` : ''}
+          ${(b.bannedListA && b.bannedListA.length) 
+            ? b.bannedListA.map(id => `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700" title="全系列賽永久禁用">🚫 禁敵：${UNIT_MAP[id]?.name || id}</span>`).join('') 
+            : (b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700">🚫 禁敵：${UNIT_MAP[b.bannedByA]?.name || b.bannedByA}</span>` : '')}
+          ${(b.bannedListB && b.bannedListB.length) 
+            ? b.bannedListB.map(id => `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700" title="全系列賽永久禁用">⚠️ 敵禁你：${UNIT_MAP[id]?.name || id}</span>`).join('') 
+            : (b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700">⚠️ 敵禁你：${UNIT_MAP[b.bannedByB]?.name || b.bannedByB}</span>` : '')}
         </div>
         <div class="mission-actions">
           <button class="btn ghost sm" id="btnExitPvp" style="color:var(--red);border-color:rgba(255,93,110,.3)" title="退出當前線上對戰房間">退出連線 ✕</button>
@@ -765,8 +776,12 @@ function renderMissionBar() {
         <div class="mission-item" style="background:rgba(255,255,255,.06);padding:3px 10px;border-radius:6px;border:1px solid var(--line2)">
           <span style="font-family:var(--head);font-size:16px;font-weight:800;letter-spacing:.05em">當前比分：<b style="color:var(--cyan);font-size:18px">${b.winsA}</b> <span style="color:var(--muted)">-</span> <b style="color:var(--red);font-size:18px">${b.winsB}</b></span>
           <span class="muted" style="margin-left:10px">對手：<b style="color:var(--text)">${esc(b.rivalName)}</b></span>
-          ${b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">🚫 你已禁用敵方：$${UNIT_MAP[b.bannedByA].cost} ${UNIT_MAP[b.bannedByA].name} (${CATS[UNIT_MAP[b.bannedByA].cat].label})</span>` : ''}
-          ${b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:8px;font-weight:700">⚠️ 敵方已禁用你：$${UNIT_MAP[b.bannedByB].cost} ${UNIT_MAP[b.bannedByB].name} (${CATS[UNIT_MAP[b.bannedByB].cat].label})</span>` : ''}
+          ${(b.bannedListA && b.bannedListA.length) 
+            ? b.bannedListA.map(id => `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700" title="全系列賽永久禁用">🚫 禁敵：${UNIT_MAP[id]?.name || id}</span>`).join('') 
+            : (b.bannedByA ? `<span style="color:var(--green);background:rgba(93,255,176,.12);border:1px solid rgba(93,255,176,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700">🚫 禁敵：${UNIT_MAP[b.bannedByA]?.name || b.bannedByA}</span>` : '')}
+          ${(b.bannedListB && b.bannedListB.length) 
+            ? b.bannedListB.map(id => `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700" title="全系列賽永久禁用">⚠️ 敵禁你：${UNIT_MAP[id]?.name || id}</span>`).join('') 
+            : (b.bannedByB ? `<span style="color:var(--red);background:rgba(255,93,110,.12);border:1px solid rgba(255,93,110,.4);padding:2px 7px;border-radius:4px;font-size:11.5px;margin-left:6px;font-weight:700">⚠️ 敵禁你：${UNIT_MAP[b.bannedByB]?.name || b.bannedByB}</span>` : '')}
         </div>
         <div class="mission-actions">
           <button class="btn amber sm" id="btnOnlinePvp" title="建立或加入線上雙人 P2P 即時對戰房間">⚔️ 線上雙人房 (Online)</button>
@@ -3118,14 +3133,12 @@ function handleBo3RoundEnd(res) {
   bo3.nextEvent = nextEvent;
 
   if (state.isOnlinePvp) {
-    // 線上對抗：小局結束，立即推進局數並安全重置就緒狀態，杜絕跨局時序競爭
+    // 線上對抗：小局結束，立即推進局數並安全重置就緒狀態（全系列賽永久累計禁用，絕不清空 bannedList）
     bo3.round = nextRound;
     state.pvpMyReady = false;
     state.pvpOpponentReady = false;
     state.pvpOpponentDeck = null;
     state.pvpOpponentDoc = null;
-    bo3.bannedByA = null;
-    bo3.bannedByB = null;
   }
 
   if (draw) {
@@ -3179,8 +3192,10 @@ function handleBo3RoundEnd(res) {
     }
     
     bo3.bannedByB = banId;
+    if (!bo3.bannedListB) bo3.bannedListB = [];
+    if (!bo3.bannedListB.includes(banId)) bo3.bannedListB.push(banId);
     
-    // 電腦自身進行陣容微調
+    // 電腦自身進行陣容微調 (避開所有被累計禁用的裝備)
     bo3.enemyDeck = refitEnemyDeck(state.enemy, state.deck, nextEvent);
 
     showResult(res, {
@@ -3189,14 +3204,16 @@ function handleBo3RoundEnd(res) {
         closeBattle();
         bo3.round = nextRound;
         setupMatch();
-        // 如果玩家當前卡槽中正好有被敵方 Ban 的單位，強制卸下該單位
-        const bannedIdx = state.deck.indexOf(banId);
-        if (bannedIdx >= 0) {
-          state.deck[bannedIdx] = null;
-          state.active = bannedIdx;
-        }
+        // 檢查玩家卡槽中所有被累計禁用的裝備，強制卸下
+        const allBanned = currentBanned();
+        state.deck.forEach((id, idx) => {
+          if (id && allBanned.includes(id)) {
+            state.deck[idx] = null;
+            state.active = idx;
+          }
+        });
         renderAll();
-        toast(`⚠️ 電腦失利啟動反制！鎖定你上一局【${banReason}】，禁用了【${UNIT_MAP[banId].name}】！`);
+        toast(`⚠️ 電腦失利啟動反制！鎖定你上一局【${banReason}】，全系列賽永久禁用了【${UNIT_MAP[banId].name}】！(累計禁用 ${bo3.bannedListB.length} 件)`);
       }
     });
   } else {
@@ -3214,12 +3231,24 @@ function handleBo3RoundEnd(res) {
 }
 
 function refitEnemyDeck(currentEnemyDeck, playerDeck, nextEvent) {
-  // 電腦依據戰場事件或玩家高費單位進行微調
+  // 電腦依據戰場事件或玩家高費單位進行微調，且嚴格避開所有被玩家累計禁用的裝備
   const newDeck = currentEnemyDeck.slice();
-  const playerAir = playerDeck.some(id => UNIT_MAP[id].cat === 'air' && UNIT_MAP[id].cost >= 4);
+  const banned = (state.bo3 && state.bo3.bannedListA) || [];
+  
+  // 先替換已被玩家禁用的單位
+  newDeck.forEach((id, idx) => {
+    if (banned.includes(id)) {
+      const slotFixed = SLOTS[idx].fixed;
+      const cat = slotFixed || UNIT_MAP[id]?.cat || 'air';
+      const alts = UNITS.filter(u => u.cat === cat && !banned.includes(u.id) && !newDeck.includes(u.id));
+      if (alts.length) newDeck[idx] = pick(alts).id;
+    }
+  });
+
+  const playerAir = playerDeck.some(id => UNIT_MAP[id]?.cat === 'air' && UNIT_MAP[id]?.cost >= 4);
   if (playerAir) {
     // 強化防空槽位
-    const adUnits = UNITS.filter(u => u.cat === 'air_defense' && u.cost >= 3);
+    const adUnits = UNITS.filter(u => u.cat === 'air_defense' && u.cost >= 3 && !banned.includes(u.id));
     if (adUnits.length) newDeck[2] = pick(adUnits).id;
   }
   return newDeck;
@@ -3228,11 +3257,16 @@ function refitEnemyDeck(currentEnemyDeck, playerDeck, nextEvent) {
 /* 玩家戰術反制 Modal */
 function openBo3CounterModal(enemyFinalTeam, nextRound, nextEvent) {
   const bo3 = state.bo3;
-  $('#bo3CounterTitle').textContent = `第 ${bo3.round} 局失利：啟動緊急戰術反制`;
-  $('#bo3CounterDesc').textContent = `你擁有最高反制特權：點選並指定禁用敵方上一局的 1 件裝備，逼迫對手於第 ${nextRound} 局撤換！`;
+  if (!bo3.bannedListA) bo3.bannedListA = [];
+  const alreadyBanned = bo3.bannedListA;
+  const eligibleTeam = enemyFinalTeam.filter(u => !alreadyBanned.includes(u.id));
+  const candidateList = eligibleTeam.length ? eligibleTeam : enemyFinalTeam;
+
+  $('#bo3CounterTitle').textContent = `第 ${bo3.round} 局失利：啟動戰術反制 (BO5 全系列賽永久鎖定)`;
+  $('#bo3CounterDesc').textContent = `你擁有最高反制特權：點選並指定禁用敵方上一局的 1 件裝備，被禁用的裝備將於後續所有賽局（第 3、4、5 局）永久鎖定不可再選！`;
   
-  bo3.candidateBan = enemyFinalTeam[0].id;
-  $('#bo3BanGrid').innerHTML = enemyFinalTeam.map((u, idx) => {
+  bo3.candidateBan = candidateList[0].id;
+  $('#bo3BanGrid').innerHTML = candidateList.map((u, idx) => {
     return `<div class="bo3-ban-card ${idx === 0 ? 'selected' : ''}" data-ban="${u.id}">
       <div class="u-name">${esc(u.name)}</div>
       <div class="u-cost">$${u.cost} · ${CATS[u.cat].label}</div>
@@ -3257,32 +3291,39 @@ function openBo3CounterModal(enemyFinalTeam, nextRound, nextEvent) {
 $('#bo3CounterConfirm').onclick = () => {
   const bo3 = state.bo3;
   const bannedId = bo3.candidateBan;
+
+  if (!bo3.bannedListA) bo3.bannedListA = [];
+  if (!bo3.bannedListA.includes(bannedId)) {
+    bo3.bannedListA.push(bannedId);
+  }
   bo3.bannedByA = bannedId;
   $('#bo3CounterModal').hidden = true;
 
   if (state.isOnlinePvp) {
-    // 線上真人對抗：發送 BAN_COMMIT 給對手
-    OnlinePvPEngine.sendPacket('BAN_COMMIT', { bannedUnitId: bannedId });
-    bo3.bannedByA = bannedId;
+    // 線上真人對抗：發送 BAN_COMMIT 給對手，附帶全系列賽累計禁用清單
+    OnlinePvPEngine.sendPacket('BAN_COMMIT', { 
+      bannedUnitId: bannedId,
+      bannedList: bo3.bannedListA.slice()
+    });
     state.pvpMyReady = false;
     renderAll();
-    toast(`🎯 戰術反制生效：已成功禁用對手的【${UNIT_MAP[bannedId].name}】！請重新調整第 ${bo3.round} 局陣容。`);
+    toast(`🎯 戰術反制生效：已永久鎖定對手的【${UNIT_MAP[bannedId].name}】（累計禁用 ${bo3.bannedListA.length} 件）！請重新調整第 ${bo3.round} 局陣容。`);
     return;
   }
 
   bo3.round++;
-  // 替換敵方被 Ban 的裝備
+  // 替換敵方被 Ban 的裝備 (避開所有累計被禁用的武器)
   const banIdx = bo3.enemyDeck.indexOf(bannedId);
   if (banIdx >= 0) {
     const slotFixed = SLOTS[banIdx].fixed;
     const cat = slotFixed || UNIT_MAP[bannedId].cat;
-    const alternatives = UNITS.filter(u => u.cat === cat && u.id !== bannedId && !bo3.enemyDeck.includes(u.id));
+    const alternatives = UNITS.filter(u => u.cat === cat && !bo3.bannedListA.includes(u.id) && !bo3.enemyDeck.includes(u.id));
     if (alternatives.length) bo3.enemyDeck[banIdx] = pick(alternatives).id;
   }
 
   setupMatch();
   renderAll();
-  toast(`🎯 戰術反制生效：已成功禁用敵方的【${UNIT_MAP[bannedId].name}】！請調整陣容應戰。`);
+  toast(`🎯 戰術反制生效：已永久鎖定敵方的【${UNIT_MAP[bannedId].name}】（累計禁用 ${bo3.bannedListA.length} 件）！請調整陣容應戰。`);
 };
 
 /* BO3 系列賽冠軍結算 */
@@ -4076,6 +4117,8 @@ OnlinePvPEngine.on('game_session_started', payload => {
   state.bo3.winsB = payload.winsB || 0;
   state.bo3.bannedByA = null;
   state.bo3.bannedByB = null;
+  state.bo3.bannedListA = [];
+  state.bo3.bannedListB = [];
   if (opp) state.bo3.rivalName = `${opp.flag} ${opp.name} (${opp.uid})`;
   state.mode = 'bo3';
 
@@ -4112,14 +4155,26 @@ OnlinePvPEngine.on('combat_start_sync', payload => {
 
 OnlinePvPEngine.on('opponent_ban_committed', payload => {
   const bannedId = payload.bannedUnitId;
-  state.bo3.bannedByB = bannedId; // 對手禁用了我方的裝備
-  toast(`⚠️ 對手啟動戰術反制！禁用了你的【${UNIT_MAP[bannedId].name}】！`);
+  if (!state.bo3.bannedListB) state.bo3.bannedListB = [];
+  if (payload.bannedList && Array.isArray(payload.bannedList)) {
+    state.bo3.bannedListB = payload.bannedList.slice();
+  } else if (!state.bo3.bannedListB.includes(bannedId)) {
+    state.bo3.bannedListB.push(bannedId);
+  }
+  state.bo3.bannedByB = bannedId; // 最近一次被禁用的裝備
+  toast(`⚠️ 對手啟動戰術反制！永久禁用了你的【${UNIT_MAP[bannedId]?.name || bannedId}】（累計被禁用 ${state.bo3.bannedListB.length} 件）！`);
   
-  // 若當前卡槽中正好有被敵方 Ban 的單位，強制卸下該單位並解鎖提交
-  const bannedIdx = state.deck.indexOf(bannedId);
-  if (bannedIdx >= 0) {
-    state.deck[bannedIdx] = null;
-    state.active = bannedIdx;
+  // 檢查所有卡槽：若當前卡槽中正好有任何被累計禁用的單位，強制卸下並解鎖提交
+  const allBanned = currentBanned();
+  let unmounted = false;
+  state.deck.forEach((id, idx) => {
+    if (id && allBanned.includes(id)) {
+      state.deck[idx] = null;
+      state.active = idx;
+      unmounted = true;
+    }
+  });
+  if (unmounted) {
     state.pvpMyReady = false;
   }
   
