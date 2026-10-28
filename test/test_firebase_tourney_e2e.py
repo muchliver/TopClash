@@ -28,7 +28,7 @@ def run_tests():
         # Test 1: Page Load & Tab Switching
         print("\n=== Test 1: Page Load & Tab Switching ===", flush=True)
         context1 = browser.new_context()
-        context1.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_user_uid', 'CMD-1111');")
+        context1.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_callsign_set', '1'); localStorage.setItem('topclash_user_uid', 'CMD-1111');")
         page1 = context1.new_page()
         
         errors = []
@@ -102,7 +102,7 @@ def run_tests():
         
         # Player 2 joins
         context2 = browser.new_context()
-        context2.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_user_uid', 'CMD-2222');")
+        context2.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_callsign_set', '1'); localStorage.setItem('topclash_user_uid', 'CMD-2222');")
         page2 = context2.new_page()
         page2.on("pageerror", lambda err: errors.append(f"Page2 Error: {err}"))
         page2.goto(f"http://127.0.0.1:{PORT}/index.html", wait_until="networkidle")
@@ -144,7 +144,7 @@ def run_tests():
         # Test 4: Quick Match Test
         print("\n=== Test 4: Quick Match Test ===", flush=True)
         context3 = browser.new_context()
-        context3.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_user_uid', 'CMD-3333');")
+        context3.add_init_script("localStorage.setItem('db15_seen', '1'); localStorage.setItem('topclash_callsign_set', '1'); localStorage.setItem('topclash_user_uid', 'CMD-3333');")
         page3 = context3.new_page()
         page3.goto(f"http://127.0.0.1:{PORT}/index.html", wait_until="networkidle")
         page3.click("#tabTournament")

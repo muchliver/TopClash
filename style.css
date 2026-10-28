@@ -5367,3 +5367,26 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   display: inline-block;
   box-shadow: 0 0 6px var(--green);
 }
+
+/* 錦標賽對抗樹身分標籤與高亮 */
+.badge-me {
+  background: rgba(61, 224, 255, 0.22) !important;
+  color: var(--cyan) !important;
+  border: 1px solid rgba(61, 224, 255, 0.55) !important;
+  box-shadow: 0 0 6px rgba(61, 224, 255, 0.35) !important;
+}
+.badge-opp {
+  background: rgba(239, 68, 68, 0.22) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.55) !important;
+}
+.badge-peer {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+.badge-ai {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--muted) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}

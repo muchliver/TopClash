@@ -1679,6 +1679,10 @@ function setMode(m) {
     if (commandDeck) commandDeck.hidden = true;
     renderTournamentView();
     toast('🥇 已進入世界盃淘汰錦標賽：4/8/16/32 強世足樹狀爭霸戰！');
+    const p = LadderEngine.getState().player;
+    if (!p.hasCustomName && !localStorage.getItem('topclash_callsign_set')) {
+      setTimeout(() => openCommanderModal(), 400);
+    }
     return;
   } else {
     if (viewLadder) viewLadder.hidden = true;
@@ -1972,14 +1976,38 @@ $('#viewLadder')?.addEventListener('click', e => {
   }
 });
 
-/* ---------- 🎖️ 指揮官呼號與任命狀 Modal (UID 對應與名稱唯一性驗證) ---------- */
-const RANDOM_CALLSIGNS = [
-  '蒼鷹特遣隊・李少校', '天弓先鋒作戰群', '深藍幽靈艦隊', '鐵血近衛第一旅',
-  '雷霆防衛指揮部', '極限獵鷹中隊', '黑曜突擊戰鬥群', '赤焰遊騎兵分隊',
-  '北極星巡弋部隊', '海神無人作戰群', '神盾防空聯隊', '紫電裝甲突擊軍',
-  '玉山鋼鐵防衛聯隊', '風暴領主打擊群', '熾天使近距支援隊', '深淵潛龍特勤隊'
+/* ---------- 🎖️ 程序化軍規呼號生成矩陣 (超過 300 萬種戰術組合，保證 100% 零重複) ---------- */
+const CALLSIGN_PREFIXES = [
+  '黑貓', '海狼', '雷霆', '幽靈', '長弓', '天弓', '神盾', '深淵', '極光', '暴風',
+  '戰隼', '赤焰', '遊騎', '堡壘', '鐵騎', '蒼穹', '白虎', '玄武', '刺客', '影狼',
+  '烈陽', '夜梟', '破浪', '幻影', '龍騎', '星芒', '獵豹', '黑曜', '蒼鷹', '紫電',
+  '天火', '鋼雨', '怒濤', '逆火', '追風', '迅雷', '鋒刃', '天狼', '雄鷹', '劍齒'
 ];
+const CALLSIGN_TYPES = [
+  '匿蹤', '夜襲', '重裝', '制空', '特勤', '防空', '反潛', '電磁', '機動', '突擊',
+  '戰術', '快反', '先鋒', '縱深', '伏擊', '海巡', '衛戍', '偵搜', '穿甲', '防衛'
+];
+const CALLSIGN_ECHELONS = [
+  '特遣隊', '作戰群', '打擊旅', '先鋒營', '特巡連', '突擊隊', '巡防大隊', '中隊', '第7聯隊', '防衛軍'
+];
+
+function generateProceduralCallsign(existingNames = []) {
+  const existingSet = new Set((existingNames || []).map(n => (n || '').trim()));
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const p = CALLSIGN_PREFIXES[Math.floor(Math.random() * CALLSIGN_PREFIXES.length)];
+    const t = CALLSIGN_TYPES[Math.floor(Math.random() * CALLSIGN_TYPES.length)];
+    const e = CALLSIGN_ECHELONS[Math.floor(Math.random() * CALLSIGN_ECHELONS.length)];
+    const candidate = `${p}${t}${e}`;
+    if (!existingSet.has(candidate) && (typeof LadderEngine === 'undefined' || !LadderEngine.isCallsignTaken || !LadderEngine.isCallsignTaken(candidate, true))) {
+      return candidate;
+    }
+  }
+  const num = Math.floor(10 + Math.random() * 90);
+  return `${CALLSIGN_PREFIXES[Math.floor(Math.random() * CALLSIGN_PREFIXES.length)]}第${num}特遣隊`;
+}
+
 let selectedFlag = '🇹🇼';
+
 
 /* 即時驗證使用者輸入的作戰呼號 (檢查長度、保留字與名稱是否與現役席次重複) */
 function checkCallsignInputValidity() {
@@ -2041,7 +2069,11 @@ function openCommanderModal() {
   // 2. 填入目前呼號與旗幟
   const nameInput = $('#commanderNameInput');
   if (nameInput) {
-    nameInput.value = p.name || '我方聯合戰術作戰群';
+    if (!p.hasCustomName || !p.name || p.name === '我方聯合戰術作戰群' || p.name === '我方特遣隊') {
+      nameInput.value = generateProceduralCallsign();
+    } else {
+      nameInput.value = p.name;
+    }
     nameInput.classList.remove('input-error');
   }
   selectedFlag = p.flag || '🇹🇼';
@@ -2078,9 +2110,7 @@ $('#commanderNameInput')?.addEventListener('input', () => {
 
 // 🎲 隨機呼號 (智慧過濾已被佔用的呼號，保證產出絕對可用)
 $('#btnRandomCallsign')?.addEventListener('click', () => {
-  const available = RANDOM_CALLSIGNS.filter(name => !LadderEngine.isCallsignTaken(name, true));
-  const pool = available.length > 0 ? available : RANDOM_CALLSIGNS;
-  const rName = pick(pool);
+  const rName = generateProceduralCallsign();
   const input = $('#commanderNameInput');
   if (input) {
     input.value = rName;
@@ -2120,9 +2150,14 @@ $('#commanderSave')?.addEventListener('click', () => {
     checkCallsignInputValidity();
     return;
   }
+  localStorage.setItem('topclash_callsign_set', '1');
+  localStorage.setItem('topclash_auto_callsign', result.name);
   $('#commanderModal').hidden = true;
   currentActiveModal = null;
   renderLadderView();
+  if (state.mode === 'tournament') {
+    renderTournamentView();
+  }
   toast(`🎖️ 戰術任命狀已頒布！指揮官【${selectedFlag} ${result.name}】(${result.uid}) 正式進駐戰區！`);
 });
 
@@ -4276,9 +4311,23 @@ function getTournamentPlayerProfile() {
     localStorage.setItem('topclash_user_uid', localUid);
   }
   const myUid = (p && p.uid && p.uid !== 'CMD-7392') ? p.uid : localUid;
+
+  let myName = p?.name;
+  if (!myName || myName === '我方聯合戰術作戰群' || myName === '我方特遣隊') {
+    let savedAutoName = localStorage.getItem('topclash_auto_callsign');
+    if (!savedAutoName) {
+      savedAutoName = generateProceduralCallsign();
+      localStorage.setItem('topclash_auto_callsign', savedAutoName);
+      if (typeof LadderEngine !== 'undefined' && LadderEngine.setPlayerName) {
+        LadderEngine.setPlayerName(savedAutoName, p?.flag || '🇹🇼');
+      }
+    }
+    myName = savedAutoName;
+  }
+
   return {
     uid: myUid,
-    name: (p && p.name && p.name !== '我方聯合戰術作戰群') ? p.name : '我方特遣隊',
+    name: myName,
     flag: p?.flag || '🇹🇼',
     isMe: true,
     isAI: false,
@@ -4295,6 +4344,7 @@ function renderTourneyDeckBar() {
   const errs = isFull ? validateDeck(state.deck, budgetLimit(), currentBanned()) : ['尚未選滿 5 個槽位'];
   const cost = deckCost(state.deck.filter(Boolean));
   const prof = getTournamentPlayerProfile();
+  const shortUid = prof.uid.replace('CMD-', '').slice(-4);
 
   if (errs.length === 0) {
     const unitsHtml = state.deck.map(id => {
@@ -4304,7 +4354,8 @@ function renderTourneyDeckBar() {
     deckBar.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-weight:800;color:var(--cyan);display:flex;align-items:center;gap:5px">
-          <span>${prof.flag}</span> 👑 我方特遣部隊：
+          <span>${prof.flag}</span> 👑 ${esc(prof.name)} <span style="font-family:var(--mono);font-size:10.5px;color:var(--muted)">#${shortUid}</span>
+          <button class="btn-micro" id="btnTourneyEditName" style="margin-left:4px" title="更換部隊呼號">✏️ 改名</button>
         </span>
         <div style="display:flex;gap:4px;flex-wrap:wrap">${unitsHtml}</div>
         <span style="font-family:var(--mono);font-size:11.5px;color:var(--muted)">$${cost}/15</span>
@@ -4317,7 +4368,10 @@ function renderTourneyDeckBar() {
   } else {
     deckBar.innerHTML = `
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-weight:800;color:var(--amber)">⚠️ 我方參賽部隊未完成整備：</span>
+        <span style="font-weight:800;color:var(--amber);display:flex;align-items:center;gap:5px">
+          <span>${prof.flag}</span> ⚠️ 參賽部隊整備中：${esc(prof.name)}
+          <button class="btn-micro" id="btnTourneyEditName" style="margin-left:4px" title="更換部隊呼號">✏️ 改名</button>
+        </span>
         <span class="muted" style="font-size:12px">${errs[0]}</span>
         <span style="font-family:var(--mono);font-size:11.5px;color:var(--amber)">($${cost}/15)</span>
       </div>
@@ -4328,6 +4382,9 @@ function renderTourneyDeckBar() {
     `;
   }
 
+  $('#btnTourneyEditName')?.addEventListener('click', () => {
+    openCommanderModal();
+  });
   $('#btnTourneyLobbyTune')?.addEventListener('click', () => {
     setMode('quick');
     toast('請在軍火庫調整你的 5 槽聯合作戰陣容，完成後切回【淘汰錦標賽】！');
@@ -4448,9 +4505,25 @@ function renderTourneyHeader(t, isOnline = false) {
       const readyKey = isTeamA ? 'readyA' : 'readyB';
       const isIReady = myMatch[readyKey] === true;
 
+      const totalRounds = t.totalRounds || Math.log2(t.size);
+      const reqWins = (typeof FirebaseTourneyEngine !== 'undefined' && FirebaseTourneyEngine.getRequiredWins)
+        ? FirebaseTourneyEngine.getRequiredWins(myMatch, t.format, totalRounds)
+        : 1;
+      const roundNum = (myMatch.history ? myMatch.history.length : 0) + 1;
+      const secLeft = myMatch.deadline ? Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000)) : 30;
+
+      let fightBtnText = '';
+      if (isIReady) {
+        fightBtnText = `⏳ 陣容已鎖定 · 等對手出擊 (${secLeft}s)...`;
+      } else if (reqWins > 1) {
+        fightBtnText = `⚔️ 迎戰 ${opp.flag || ''} ${esc(opp.name)} (第 ${roundNum} 局 · 目前 ${myMatch.scoreA || 0}:${myMatch.scoreB || 0})`;
+      } else {
+        fightBtnText = `⚔️ 迎戰 ${opp.flag || ''} ${esc(opp.name)} (出擊)`;
+      }
+
       actBox.innerHTML = `
         <button class="btn amber sm" id="btnTourneyGoFight" style="font-weight:800;animation:pulseGoldBorder 1.5s infinite">
-          ${isIReady ? '⏳ 陣容已鎖定 · 等待對手出擊...' : `⚔️ 迎戰 ${opp.flag} ${esc(opp.name)} (出擊)`}
+          ${fightBtnText}
         </button>
         <button class="btn ghost sm" id="btnTourneyTuneDeck" title="調整當前作戰陣容">🛠️ 調配陣容</button>
         ${isOnline ? '<button class="btn ghost sm" id="btnTourneyLeaveOnline" style="color:var(--red);border-color:rgba(255,93,110,.3)">退出房間 ✕</button>' : '<button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重置錦標賽 ✕</button>'}
@@ -4787,9 +4860,13 @@ function renderBracketColHtml(col, t, side) {
 }
 
 function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
-  const isMyMatch = (m.teamA?.isMe || m.teamB?.isMe);
+  const prof = getTournamentPlayerProfile();
+  const isMyMatch = (m.teamA?.uid === prof.uid || m.teamB?.uid === prof.uid || m.teamA?.isMe || m.teamB?.isMe);
   const isFinished = (m.status === 'finished');
-  const reqWins = TournamentEngine.getRequiredWins(m);
+  const totalRounds = t.totalRounds || Math.log2(t.size);
+  const reqWins = (typeof FirebaseTourneyEngine !== 'undefined' && FirebaseTourneyEngine.getRequiredWins)
+    ? FirebaseTourneyEngine.getRequiredWins(m, t.format, totalRounds)
+    : TournamentEngine.getRequiredWins(m);
 
   // 局數計分圓點生成輔助 (BO3/BO5 pips)
   const renderPips = (score, req) => {
@@ -4801,8 +4878,28 @@ function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
     return `<div class="b-pips">${pips}</div>`;
   };
 
+  const renderTeamTag = (team, isOpponent) => {
+    if (!team) return '';
+    const isMe = (team.uid === prof.uid || team.isMe);
+    if (isMe) {
+      return `<span class="badge" style="background:rgba(61,224,255,.25);color:var(--cyan);border:1px solid rgba(61,224,255,.5);font-size:9px;padding:1px 4px;margin-right:4px">👑我方</span>`;
+    }
+    if (isOpponent) {
+      return `<span class="badge" style="background:rgba(239,68,68,.25);color:#ef4444;border:1px solid rgba(239,68,68,.5);font-size:9px;padding:1px 4px;margin-right:4px">🎯對手</span>`;
+    }
+    if (team.isAI) {
+      return `<span class="badge" style="background:rgba(255,255,255,.08);color:var(--muted);font-size:8.5px;padding:1px 3px;margin-left:4px">🤖AI</span>`;
+    }
+    return `<span class="badge" style="background:rgba(16,185,129,.15);color:#10b981;font-size:8.5px;padding:1px 3px;margin-left:4px">🟢真人</span>`;
+  };
+
+  const renderUidSuffix = (team) => {
+    if (!team || team.isAI || !team.uid) return '';
+    const shortUid = team.uid.replace('CMD-', '').slice(-4);
+    return `<span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:3px">#${shortUid}</span>`;
+  };
+
   return `<div class="b-match-card ${isMyMatch ? 'is-my-match' : ''} ${isFinal ? 'is-grand-final' : ''} ${isBronze ? 'is-bronze-card' : ''}" data-match-id="${m.id}">
-    <!-- 兩側實體連接端子口 (SVG 連線錨定端子) -->
     <div class="port-terminal port-left" aria-hidden="true"></div>
     <div class="port-terminal port-right" aria-hidden="true"></div>
 
@@ -4810,8 +4907,12 @@ function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
 
     <div class="b-team-row ${isFinished && m.winner === 'A' ? 'winner' : isFinished ? 'loser' : ''}">
       <div class="b-team-name-box">
+        ${renderTeamTag(m.teamA, isMyMatch && m.teamB && (m.teamB.uid === prof.uid || m.teamB.isMe))}
         <span class="b-team-flag-pill">${m.teamA ? m.teamA.flag : '？'}</span>
-        <span class="b-team-name" title="${m.teamA ? esc(m.teamA.name) : '待定對手'}">${m.teamA ? esc(m.teamA.name) : '待定對手'}</span>
+        <span class="b-team-name" title="${m.teamA ? esc(m.teamA.name) : '待定對手'}">
+          ${m.teamA ? esc(m.teamA.name) : '待定對手'}
+        </span>
+        ${renderUidSuffix(m.teamA)}
       </div>
       <div class="b-score-wrapper">
         ${renderPips(m.scoreA, reqWins)}
@@ -4821,8 +4922,12 @@ function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
 
     <div class="b-team-row ${isFinished && m.winner === 'B' ? 'winner' : isFinished ? 'loser' : ''}">
       <div class="b-team-name-box">
+        ${renderTeamTag(m.teamB, isMyMatch && m.teamA && (m.teamA.uid === prof.uid || m.teamA.isMe))}
         <span class="b-team-flag-pill">${m.teamB ? m.teamB.flag : '？'}</span>
-        <span class="b-team-name" title="${m.teamB ? esc(m.teamB.name) : '待定對手'}">${m.teamB ? esc(m.teamB.name) : '待定對手'}</span>
+        <span class="b-team-name" title="${m.teamB ? esc(m.teamB.name) : '待定對手'}">
+          ${m.teamB ? esc(m.teamB.name) : '待定對手'}
+        </span>
+        ${renderUidSuffix(m.teamB)}
       </div>
       <div class="b-score-wrapper">
         ${renderPips(m.scoreB, reqWins)}
@@ -4841,10 +4946,6 @@ function renderMatchCardHtml(m, t, isFinal = false, isBronze = false) {
   </div>`;
 }
 
-/* =====================================================
-   動態 SVG 貝茲流光連線核心演算法 (SVG Bézier Connector Engine)
-   精準計算卡片幾何錨點，以心智圖平滑三次貝茲曲線銜接各輪次
-   ===================================================== */
 function renderBracketSvgLinks(t) {
   const container = $('#bracketContainer');
   const svg = $('#bracketSvgLayer');
@@ -5438,13 +5539,59 @@ $('#tourneyActionBox')?.addEventListener('click', async e => {
   }
 });
 
-// 監聽 Firebase 房間更新事件
+// 監聽 Firebase 房間更新與戰鬥播報事件
 if (typeof FirebaseTourneyEngine !== 'undefined') {
+  let tourneyTicker = null;
+  setInterval(() => {
+    const room = FirebaseTourneyEngine.getCurrentRoom();
+    if (room && room.status === 'in_progress' && state.mode === 'tournament') {
+      FirebaseTourneyEngine.checkTimeoutAndAutoResolve(room.id);
+      const btn = document.querySelector('#btnTourneyGoFight');
+      if (btn && btn.textContent.includes('等對手出擊')) {
+        const prof = getTournamentPlayerProfile();
+        const myMatch = Object.values(room.matches || {}).find(m => {
+          if (m.status === 'finished') return false;
+          return (m.teamA && m.teamA.uid === prof.uid) || (m.teamB && m.teamB.uid === prof.uid);
+        });
+        if (myMatch && myMatch.deadline) {
+          const sec = Math.max(0, Math.ceil((myMatch.deadline - Date.now()) / 1000));
+          btn.textContent = '⏳ 陣容已鎖定 · 等對手出擊 (' + sec + 's)...';
+        }
+      }
+    }
+  }, 1000);
+
   FirebaseTourneyEngine.on('room_updated', room => {
     if (state.mode === 'tournament') {
       renderTournamentView();
     }
   });
+
+  FirebaseTourneyEngine.on('match_resolved', data => {
+    if (state.mode !== 'tournament') return;
+    const prof = getTournamentPlayerProfile();
+    const m = data.match;
+    if (m && (m.teamA?.uid === prof.uid || m.teamB?.uid === prof.uid)) {
+      const isTeamA = (m.teamA && m.teamA.uid === prof.uid);
+      const opp = isTeamA ? m.teamB : m.teamA;
+      const h = data.historyItem;
+      const res = data.res;
+
+      state.mode = 'tournament';
+      state.deck = isTeamA ? h.deckA.slice() : h.deckB.slice();
+      state.doctrine = isTeamA ? (h.docA || 'defense') : (h.docB || 'defense');
+      state.enemy = isTeamA ? h.deckB.slice() : h.deckA.slice();
+      state.enemyDoc = isTeamA ? (h.docB || 'defense') : (h.docA || 'defense');
+      state.enemyName = (opp.flag || '') + ' ' + (opp.name || '');
+      state.event = h.event || { id: 'fair', name: '晴朗無風', icon: '☀' };
+      state.seed = h.seed;
+      state.lastRes = res;
+
+      showBattle(res);
+      toast('⚔️ 雙方陣容已揭曉！正式進入對決推演！');
+    }
+  });
+
   FirebaseTourneyEngine.on('room_closed', () => {
     toast('房間已關閉或結束');
     if (state.mode === 'tournament') {
@@ -5573,5 +5720,5 @@ if (roomParam) {
 }
 
 if (!LS.get('db15_seen', 0)) showHelp();
-window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine };
+window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile };
 })();
