@@ -489,11 +489,16 @@ function setupMatch() {
     setupMatch();
     return;
   } else if (state.mode === 'bo3') {
-    if (!state.bo3.active) {
+    if (state.isOnlinePvp) {
+      state.event = state.bo3.nextEvent || state.event || pick(EVENTS);
+      state.enemy = state.pvpOpponentDeck ? state.pvpOpponentDeck.slice() : null;
+      state.enemyName = state.bo3.rivalName;
+      state.enemyDoc = state.pvpOpponentDoc || 'defense';
+    } else if (!state.bo3.active) {
       initBo3Series();
     } else {
       state.event = state.bo3.nextEvent || pick(EVENTS);
-      state.enemy = state.bo3.enemyDeck.slice();
+      state.enemy = (state.bo3.enemyDeck && state.bo3.enemyDeck.slice()) || [];
       state.enemyName = state.bo3.rivalName;
       state.enemyDoc = state.bo3.enemyDoc;
     }
@@ -1606,6 +1611,15 @@ if (brandLogo) {
 function setMode(m) {
   // 無論何時點選上方功能列（即使在戰鬥中或檢視戰場情形），立即乾淨退出戰鬥
   exitActiveBattle();
+
+  // 若從線上雙人對戰切換至其他模式，安全關閉連線並重置狀態
+  if (m !== 'bo3' && state.isOnlinePvp) {
+    OnlinePvPEngine.closeConnection();
+    state.isOnlinePvp = false;
+    state.pvpMyReady = false;
+    state.pvpOpponentReady = false;
+    state.pvpOpponentDeck = null;
+  }
 
   // 相容舊 ghost 模式：自動映射至快速對戰之幽靈子模式
   if (m === 'ghost') {
@@ -3892,10 +3906,17 @@ function checkBothReadyAndStartCombat() {
   if (!state.pvpMyReady || !state.pvpOpponentReady) return;
 
   if (OnlinePvPEngine.isHostUser()) {
-    // 房主生成同一個公平隨機種子與戰場事件
+    // 房主生成同一個公平隨機種子與動態戰場事件 (優先使用下局預告事件)
     const seed = (Math.random() * 4294967296) >>> 0;
-    const event = state.event || pick(EVENTS);
-    OnlinePvPEngine.sendPacket('COMBAT_SYNC', { seed, event });
+    const event = state.bo3.nextEvent || pick(EVENTS.filter(e => !state.event || e.id !== state.event.id));
+    state.bo3.nextEvent = null;
+    // 同時在 COMBAT_SYNC 攜帶備援卡組資訊，徹底杜絕網路延遲競爭
+    OnlinePvPEngine.sendPacket('COMBAT_SYNC', {
+      seed,
+      event,
+      deck: state.deck.slice(),
+      doctrine: state.doctrine
+    });
     startOnlinePvpBattle(seed, event);
   }
 }
@@ -3919,7 +3940,7 @@ function startOnlinePvpBattle(seed, event) {
     docB: state.enemyDoc
   });
   state.lastRes = res;
-  openBattle(res);
+  showBattle(res);
 }
 
 OnlinePvPEngine.on('game_session_started', payload => {
@@ -3960,6 +3981,11 @@ OnlinePvPEngine.on('opponent_deck_ready', payload => {
 });
 
 OnlinePvPEngine.on('combat_start_sync', payload => {
+  if (payload.deck && (!state.pvpOpponentDeck || !state.pvpOpponentDeck.length)) {
+    state.pvpOpponentDeck = payload.deck;
+    state.pvpOpponentDoc = payload.doctrine || 'defense';
+    state.pvpOpponentReady = true;
+  }
   startOnlinePvpBattle(payload.seed, payload.event);
 });
 
