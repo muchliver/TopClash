@@ -3288,27 +3288,41 @@ $('#bo3CounterConfirm').onclick = () => {
 /* BO3 系列賽冠軍結算 */
 function showBo3SeriesResult(isPlayerWon) {
   const bo3 = state.bo3;
+  const isHost = OnlinePvPEngine.isHostUser();
   if (isPlayerWon) {
     stats.bo3Won = (stats.bo3Won || 0) + 1;
     LS.set('db15_stats', stats);
   }
   currentActiveModal = $('#bo3SeriesModal');
+  const scoreText = state.isOnlinePvp
+    ? `(本部 ${bo3.winsA} - 突擊 ${bo3.winsB})`
+    : `(${bo3.winsA} - ${bo3.winsB})`;
+
   $('#bo3SeriesCard').innerHTML = `
     <button class="modal-x" id="bo3CloseX" title="關閉彈窗並檢視戰場情形">✕</button>
     <div class="trophy-banner">
       <div class="tag">CONQUEST SERIES CHAMPIONSHIP</div>
-      <h2>${isPlayerWon ? `🏆 榮獲 BO5 系列賽總冠軍！(${bo3.winsA} - ${bo3.winsB})` : `系列賽惜敗 (${bo3.winsA} - ${bo3.winsB})`}</h2>
-      <p class="muted" style="margin-top:6px">${isPlayerWon ? '恭喜你在殘酷的戰術禁用與兵種相剋博弈中奪得 3 勝大獲全勝！' : '敵方指揮官在關鍵局完成了針對性反制。再接再厲！'}</p>
+      <h2>${isPlayerWon ? `🏆 榮獲 BO5 系列賽總冠軍！${scoreText}` : `系列賽惜敗 ${scoreText}`}</h2>
+      <p class="muted" style="margin-top:6px">${isPlayerWon ? '恭喜你在殘酷的戰術禁用與兵種相剋博弈中奪得 3 勝大獲全勝！' : '對手指揮官在關鍵局完成了針對性反制。再接再厲！'}</p>
     </div>
     <div class="bo3-timeline">
-      ${bo3.history.map(h => `<div class="bo3-round-row">
-        <span><b>第 ${h.round}/5 局</b> · ${h.event.icon} ${h.event.name}</span>
-        <span>我方 ${h.scoreA.toFixed(0)} : ${h.scoreB.toFixed(0)} 敵方</span>
-        <b style="color:${h.winner === 'A' ? 'var(--green)' : 'var(--red)'}">${h.winner === 'A' ? '勝 利 ✔' : '敗 北 ✘'}</b>
-      </div>`).join('')}
+      ${bo3.history.map(h => {
+        const roundWon = state.isOnlinePvp ? (isHost ? h.winner === 'A' : h.winner === 'B') : (h.winner === 'A');
+        const isDraw = h.winner === 'draw';
+        const resultLabel = isDraw ? '平 局 ⚖' : (roundWon ? '勝 利 ✔' : '敗 北 ✘');
+        const resultColor = isDraw ? 'var(--amber)' : (roundWon ? 'var(--green)' : 'var(--red)');
+        const scoreLine = state.isOnlinePvp
+          ? `本部 ${h.scoreA.toFixed(0)} : ${h.scoreB.toFixed(0)} 突擊`
+          : `我方 ${h.scoreA.toFixed(0)} : ${h.scoreB.toFixed(0)} 敵方`;
+        return `<div class="bo3-round-row">
+          <span><b>第 ${h.round}/5 局</b> · ${h.event.icon} ${h.event.name}</span>
+          <span>${scoreLine}</span>
+          <b style="color:${resultColor}">${resultLabel}</b>
+        </div>`;
+      }).join('')}
     </div>
     <div class="res-actions">
-      <button class="btn primary" id="bo3NewSeries">重啟新一輪 BO5 征服賽</button>
+      <button class="btn primary" id="bo3NewSeries">${state.isOnlinePvp ? '結束並返回大廳' : '重啟新一輪 BO5 征服賽'}</button>
       <button class="btn" id="bo3Review">檢視戰場情形 🔍</button>
       <button class="btn ghost" id="bo3Close">返回大廳</button>
     </div>
