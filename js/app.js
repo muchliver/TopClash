@@ -3342,9 +3342,9 @@ function showBo3SeriesResult(isPlayerWon) {
   $('#bo3SeriesCard').innerHTML = `
     <button class="modal-x" id="bo3CloseX" title="關閉彈窗並檢視戰場情形">✕</button>
     <div class="trophy-banner">
-      <div class="tag">CONQUEST SERIES CHAMPIONSHIP</div>
-      <h2>${isPlayerWon ? `🏆 榮獲 BO5 系列賽總冠軍！${scoreText}` : `系列賽惜敗 ${scoreText}`}</h2>
-      <p class="muted" style="margin-top:6px">${isPlayerWon ? '恭喜你在殘酷的戰術禁用與兵種相剋博弈中奪得 3 勝大獲全勝！' : '對手指揮官在關鍵局完成了針對性反制。再接再厲！'}</p>
+      <div class="tag">BO5 SERIES VICTORY</div>
+      <h2>${isPlayerWon ? `🏆 贏得 BO5 系列賽！${scoreText}` : `BO5 系列賽惜敗 ${scoreText}`}</h2>
+      <p class="muted" style="margin-top:6px">${isPlayerWon ? '恭喜你在殘酷的戰術禁用與兵種相剋博弈中奪得 3 勝，贏得系列賽勝利！' : '對手指揮官在關鍵局完成了針對性反制。再接再厲！'}</p>
     </div>
     <div class="bo3-timeline">
       ${bo3.history.map(h => {
@@ -3363,9 +3363,9 @@ function showBo3SeriesResult(isPlayerWon) {
       }).join('')}
     </div>
     <div class="res-actions">
-      <button class="btn primary" id="bo3NewSeries">${state.isOnlinePvp ? '結束並返回大廳' : '重啟新一輪 BO5 征服賽'}</button>
+      <button class="btn primary" id="bo3NewSeries">${state.isOnlinePvp ? '結束對戰並返回大廳' : '重啟新一輪 BO5 征服賽'}</button>
       <button class="btn" id="bo3Review">檢視戰場情形 🔍</button>
-      <button class="btn ghost" id="bo3Close">返回大廳</button>
+      ${state.isOnlinePvp ? '' : '<button class="btn ghost" id="bo3Close">返回大廳</button>'}
     </div>
   `;
   $('#bo3SeriesModal').hidden = false;
@@ -3385,8 +3385,35 @@ function showBo3SeriesResult(isPlayerWon) {
     if (e.target === $('#bo3SeriesModal')) reviewBo3Battlefield();
   };
 
-  $('#bo3NewSeries').onclick = () => { $('#bo3SeriesModal').hidden = true; closeBattle(); initBo3Series(); renderAll(); };
-  $('#bo3Close').onclick = () => { $('#bo3SeriesModal').hidden = true; closeBattle(); state.bo3.active = false; setMode('quick'); };
+  $('#bo3NewSeries').onclick = () => {
+    $('#bo3SeriesModal').hidden = true;
+    closeBattle();
+    if (state.isOnlinePvp) {
+      OnlinePvPEngine.closeConnection();
+      state.isOnlinePvp = false;
+      state.pvpMyReady = false;
+      state.pvpOpponentReady = false;
+      state.pvpOpponentDeck = null;
+      initBo3Series();
+      renderAll();
+      toast('已結束線上雙人對戰，回到常規模式。');
+    } else {
+      initBo3Series();
+      renderAll();
+    }
+  };
+  if ($('#bo3Close')) {
+    $('#bo3Close').onclick = () => {
+      $('#bo3SeriesModal').hidden = true;
+      closeBattle();
+      if (state.isOnlinePvp) {
+        OnlinePvPEngine.closeConnection();
+        state.isOnlinePvp = false;
+      }
+      state.bo3.active = false;
+      setMode('quick');
+    };
+  }
 }
 
 /* ---------- 旗艦級戰鬥結算報告 (C4ISR Tactical After-Action Report, AAR) ---------- */
