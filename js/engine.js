@@ -51,7 +51,7 @@ function makeTeam(ids, side) {
       traits: [], hp: 120, atk: 60, def: 0, st: 0, ew: 0
     };
     return {
-      uid: side + i, side, id, name: d.name, cat: d.cat, cost: d.cost, v: d.v,
+      uid: `${id}-${side}${i}`, side, id, name: d.name, cat: d.cat, cost: d.cost, v: d.v,
       traits: d.traits || [], hpMax: d.hp, hp: d.hp, atk: d.atk, def: d.def,
       stealth: d.st || 0, ew: d.ew || 0, alive: true, apsUsed: false,
       dmgDone: 0, killedBy: null

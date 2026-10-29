@@ -26,11 +26,16 @@ const LS = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
 
-/* ---------- 軍規級純前端 Web Audio API 程序化物理音效合成引擎 (Procedural Military SFX) ---------- */
+/* ---------- 軍規級純前端 Web Audio API 物理聲學與戰場空間殘響合成引擎 v2 (Military Acoustic DSP Engine) ---------- */
 const SoundEngine = {
   ctx: null,
   masterComp: null,
-  noiseBuffer: null,
+  reverbNode: null,
+  reverbSend: null,
+  distCurve: null,
+  whiteBuffer: null,
+  noiseBuffer: null, // Pink Noise
+  brownBuffer: null,
   enabled: LS.get('db15_sound', true),
 
   init() {
@@ -38,28 +43,75 @@ const SoundEngine = {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (!AudioCtx) return;
       this.ctx = new AudioCtx();
+      const sr = this.ctx.sampleRate;
 
-      // 1. 母帶級動態壓限器：防止多武器交火頻率疊加造成數位破音與耳朵刺痛
+      // 1. 母帶級動態壓限器：承受多武器齊射與重低音殉爆，防止數位破音
       this.masterComp = this.ctx.createDynamicsCompressor();
-      this.masterComp.threshold.setValueAtTime(-10, this.ctx.currentTime);
-      this.masterComp.knee.setValueAtTime(24, this.ctx.currentTime);
-      this.masterComp.ratio.setValueAtTime(8, this.ctx.currentTime);
-      this.masterComp.attack.setValueAtTime(0.003, this.ctx.currentTime);
-      this.masterComp.release.setValueAtTime(0.2, this.ctx.currentTime);
+      this.masterComp.threshold.setValueAtTime(-12, this.ctx.currentTime);
+      this.masterComp.knee.setValueAtTime(18, this.ctx.currentTime);
+      this.masterComp.ratio.setValueAtTime(10, this.ctx.currentTime);
+      this.masterComp.attack.setValueAtTime(0.002, this.ctx.currentTime);
+      this.masterComp.release.setValueAtTime(0.22, this.ctx.currentTime);
       this.masterComp.connect(this.ctx.destination);
 
-      // 2. 生成高品質粉紅噪聲 (Pink Noise Buffer) 供氣流、噴氣尾焰、火藥與爆炸使用
-      const bufferSize = this.ctx.sampleRate * 2;
-      this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const data = this.noiseBuffer.getChannelData(0);
-      let b0 = 0, b1 = 0, b2 = 0;
-      for (let i = 0; i < bufferSize; i++) {
+      // 2. 非線性火藥爆燃失真曲線 (WaveShaper Soft-Clipper / Harmonic Saturation)
+      const curveLen = 8192;
+      this.distCurve = new Float32Array(curveLen);
+      for (let i = 0; i < curveLen; i++) {
+        const x = (i * 2) / curveLen - 1;
+        this.distCurve[i] = Math.tanh(x * 2.8);
+      }
+
+      // 3. 生成三種物理噪聲基底：White (超音速音爆/破片)、Pink (火箭噴流/火藥)、Brown (深層重低音殉爆/海浪)
+      const bufSize = sr * 2;
+      this.whiteBuffer = this.ctx.createBuffer(1, bufSize, sr);
+      this.noiseBuffer = this.ctx.createBuffer(1, bufSize, sr);
+      this.brownBuffer = this.ctx.createBuffer(1, bufSize, sr);
+
+      const wData = this.whiteBuffer.getChannelData(0);
+      const pData = this.noiseBuffer.getChannelData(0);
+      const bData = this.brownBuffer.getChannelData(0);
+
+      let b0 = 0, b1 = 0, b2 = 0, lastBrown = 0;
+      for (let i = 0; i < bufSize; i++) {
         const white = Math.random() * 2 - 1;
+        wData[i] = white * 0.65;
+
+        // Pink Noise
         b0 = 0.99886 * b0 + white * 0.0555179;
         b1 = 0.99332 * b1 + white * 0.0750759;
         b2 = 0.96900 * b2 + white * 0.1538520;
-        data[i] = (b0 + b1 + b2 + white * 0.08) * 0.4;
+        pData[i] = (b0 + b1 + b2 + white * 0.08) * 0.38;
+
+        // Brown Noise (低頻能量濃厚，適合火砲膛壓與遠方滾動雷鳴)
+        lastBrown = (lastBrown + (0.028 * white)) / 1.028;
+        bData[i] = lastBrown * 2.8;
       }
+
+      // 4. 建立 1.35 秒戶外開闊戰場空間殘響 (Outdoor Battlefield Convolution Reverb IR)
+      const irLen = Math.floor(sr * 1.35);
+      const irBuf = this.ctx.createBuffer(2, irLen, sr);
+      for (let ch = 0; ch < 2; ch++) {
+        const chData = irBuf.getChannelData(ch);
+        let lp = 0;
+        for (let i = 0; i < irLen; i++) {
+          const tSec = i / sr;
+          // 模擬地面與山谷早期反射 (Early Reflections at 18ms, 45ms, 88ms) + 戶外空氣衰減尾音
+          const early = (Math.abs(tSec - 0.018) < 0.004 || Math.abs(tSec - 0.045) < 0.005 || Math.abs(tSec - 0.088) < 0.006) ? 0.55 : 0;
+          const env = Math.exp(-tSec * 3.8) + early * Math.exp(-tSec * 2.0);
+          const raw = (Math.random() * 2 - 1) * env;
+          // 隨時間加深空氣低通吸收，讓遠方殘響溫暖渾厚不刺耳
+          const alpha = Math.max(0.06, 0.35 * Math.exp(-tSec * 2.2));
+          lp = lp + alpha * (raw - lp);
+          chData[i] = lp * 0.65;
+        }
+      }
+      this.reverbNode = this.ctx.createConvolver();
+      this.reverbNode.buffer = irBuf;
+      this.reverbSend = this.ctx.createGain();
+      this.reverbSend.gain.setValueAtTime(0.32, this.ctx.currentTime);
+      this.reverbNode.connect(this.reverbSend);
+      this.reverbSend.connect(this.masterComp);
     }
     if (this.ctx && this.ctx.state === 'suspended') {
       this.ctx.resume().catch(() => {});
@@ -77,7 +129,31 @@ const SoundEngine = {
     LS.set('db15_sound', this.enabled);
   },
 
-  // 播放具備真實戰場物理衝擊的軍武音效 (side: 'A' 為我方左側, 'B' 為敵方右側)
+  // 建立帶非線性火藥飽和失真、左右立體聲定位與戰場空間殘響的物理聲學通道
+  _createBus(t, side = 'A', wetLevel = 0.25, saturate = true) {
+    const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+    if (panner) {
+      panner.pan.setValueAtTime(side === 'A' ? -0.26 : 0.26, t);
+      panner.connect(this.masterComp);
+      if (this.reverbNode && wetLevel > 0) {
+        const wetGain = this.ctx.createGain();
+        wetGain.gain.setValueAtTime(wetLevel, t);
+        panner.connect(wetGain);
+        wetGain.connect(this.reverbNode);
+      }
+    }
+    const dest = panner || this.masterComp;
+    if (saturate && this.distCurve) {
+      const shaper = this.ctx.createWaveShaper();
+      shaper.curve = this.distCurve;
+      shaper.oversample = '2x';
+      shaper.connect(dest);
+      return shaper;
+    }
+    return dest;
+  },
+
+  // 播放具備真實戰場物理衝擊與空間尾韻的軍武音效 (side: 'A' 為我方左側, 'B' 為敵方右側)
   play(type, side = 'A') {
     if (!this.enabled) return;
     this.init();
@@ -85,251 +161,457 @@ const SoundEngine = {
 
     try {
       const t = this.ctx.currentTime;
-      const panner = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
-      if (panner) {
-        panner.pan.setValueAtTime(side === 'A' ? -0.22 : 0.22, t);
-        panner.connect(this.masterComp);
-      }
-      const outNode = panner || this.masterComp;
 
       if (type === 'heavy_cannon') {
-        // 【120mm/125mm 戰車滑膛砲實彈射擊】
-        // 層次 1：0~12ms 爆燃裂帛瞬態破空音 (Transient Crack)
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        const noiseFilter = this.ctx.createBiquadFilter();
-        noiseFilter.type = 'bandpass';
-        noiseFilter.frequency.setValueAtTime(1400, t);
-        noiseFilter.frequency.exponentialRampToValueAtTime(260, t + 0.15);
-        noiseFilter.Q.setValueAtTime(3.2, t);
-        const noiseGain = this.ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.55, t);
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(outNode);
-        noise.start(t);
-        noise.stop(t + 0.2);
+        // 【120mm/125mm 戰車滑膛砲實彈射擊：超音速膛口音爆 + 火藥膨脹怒吼 + 胸腔次低音 + 砲閂退殼金屬聲】
+        const bus = this._createBus(t, side, 0.45, true);
 
-        // 層次 2：38Hz 次低音胸膛後座力重擊 (Sub-Bass Chest Thud)
+        // 1. 0~14ms 超音速膛口裂帛瞬態 (Supersonic Ballistic Crack)
+        const crack = this.ctx.createBufferSource();
+        crack.buffer = this.whiteBuffer;
+        const crackHp = this.ctx.createBiquadFilter();
+        crackHp.type = 'highpass';
+        crackHp.frequency.setValueAtTime(950, t);
+        const crackGain = this.ctx.createGain();
+        crackGain.gain.setValueAtTime(0.85, t);
+        crackGain.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+        crack.connect(crackHp);
+        crackHp.connect(crackGain);
+        crackGain.connect(bus);
+        crack.start(t);
+        crack.stop(t + 0.025);
+
+        // 2. 火藥高壓燃氣膨脹轟鳴 (Propellant Blast Body)
+        const blast = this.ctx.createBufferSource();
+        blast.buffer = this.brownBuffer;
+        const blastLp = this.ctx.createBiquadFilter();
+        blastLp.type = 'lowpass';
+        blastLp.frequency.setValueAtTime(480, t);
+        blastLp.frequency.exponentialRampToValueAtTime(58, t + 0.34);
+        const blastGain = this.ctx.createGain();
+        blastGain.gain.setValueAtTime(0.95, t);
+        blastGain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+        blast.connect(blastLp);
+        blastLp.connect(blastGain);
+        blastGain.connect(bus);
+        blast.start(t);
+        blast.stop(t + 0.4);
+
+        // 3. 62Hz -> 26Hz 重型後座力次低音衝擊 (Sub-Bass Recoil Thud)
         const sub = this.ctx.createOscillator();
         const subGain = this.ctx.createGain();
         sub.type = 'sine';
-        sub.frequency.setValueAtTime(160, t);
-        sub.frequency.exponentialRampToValueAtTime(36, t + 0.26);
-        subGain.gain.setValueAtTime(0.75, t);
-        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        sub.frequency.setValueAtTime(72, t);
+        sub.frequency.exponentialRampToValueAtTime(26, t + 0.28);
+        subGain.gain.setValueAtTime(0.85, t);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
         sub.connect(subGain);
-        subGain.connect(outNode);
+        subGain.connect(bus);
         sub.start(t);
         sub.stop(t + 0.36);
 
-      } else if (type === 'cannon') {
-        // 【30mm 機砲 / 鏈砲點射 (高穿透金屬雙連發)】
-        for (let i = 0; i < 2; i++) {
-          const delay = i * 0.08;
-          const noise = this.ctx.createBufferSource();
-          noise.buffer = this.noiseBuffer;
-          const filter = this.ctx.createBiquadFilter();
-          filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(2100, t + delay);
-          filter.frequency.exponentialRampToValueAtTime(500, t + delay + 0.07);
-          filter.Q.setValueAtTime(2.8, t + delay);
-          const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(0.35, t + delay);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.08);
-          noise.connect(filter);
-          filter.connect(gain);
-          gain.connect(outNode);
-          noise.start(t + delay);
-          noise.stop(t + delay + 0.09);
+        // 4. +115ms 自動裝填機 / 砲閂金屬拋殼聲 (Breech Clatter)
+        const clack = this.ctx.createBufferSource();
+        clack.buffer = this.whiteBuffer;
+        const clackBp = this.ctx.createBiquadFilter();
+        clackBp.type = 'bandpass';
+        clackBp.frequency.setValueAtTime(2350, t + 0.115);
+        clackBp.Q.setValueAtTime(4.5, t + 0.115);
+        const clackGain = this.ctx.createGain();
+        clackGain.gain.setValueAtTime(0.24, t + 0.115);
+        clackGain.gain.exponentialRampToValueAtTime(0.001, t + 0.155);
+        clack.connect(clackBp);
+        clackBp.connect(clackGain);
+        clackGain.connect(bus);
+        clack.start(t + 0.115);
+        clack.stop(t + 0.165);
 
-          const thud = this.ctx.createOscillator();
-          const thudGain = this.ctx.createGain();
-          thud.type = 'triangle';
-          thud.frequency.setValueAtTime(180, t + delay);
-          thud.frequency.exponentialRampToValueAtTime(55, t + delay + 0.08);
-          thudGain.gain.setValueAtTime(0.38, t + delay);
-          thudGain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.09);
-          thud.connect(thudGain);
-          thudGain.connect(outNode);
-          thud.start(t + delay);
-          thud.stop(t + delay + 0.1);
+      } else if (type === 'cannon' || type === 'flak') {
+        // 【30mm/35mm 機砲 / 防空快砲 / 近迫密集陣 4 連發機械點射：徹底消除卡通滑音，呈現真實機械膛壓與金屬槍機撞擊】
+        const bus = this._createBus(t, side, 0.28, true);
+        for (let i = 0; i < 4; i++) {
+          const d = i * 0.056;
+          // 膛口火藥爆裂音
+          const snap = this.ctx.createBufferSource();
+          snap.buffer = this.whiteBuffer;
+          const bp = this.ctx.createBiquadFilter();
+          bp.type = 'bandpass';
+          bp.frequency.setValueAtTime(2400 - i * 80, t + d);
+          bp.Q.setValueAtTime(1.6, t + d);
+          const g = this.ctx.createGain();
+          g.gain.setValueAtTime(0.48, t + d);
+          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.038);
+          snap.connect(bp);
+          bp.connect(g);
+          g.connect(bus);
+          snap.start(t + d);
+          snap.stop(t + d + 0.042);
+
+          // 槍膛低頻厚重撞擊
+          const body = this.ctx.createBufferSource();
+          body.buffer = this.brownBuffer;
+          const lp = this.ctx.createBiquadFilter();
+          lp.type = 'lowpass';
+          lp.frequency.setValueAtTime(340, t + d);
+          const bg = this.ctx.createGain();
+          bg.gain.setValueAtTime(0.62, t + d);
+          bg.gain.exponentialRampToValueAtTime(0.001, t + d + 0.052);
+          body.connect(lp);
+          lp.connect(bg);
+          bg.connect(bus);
+          body.start(t + d);
+          body.stop(t + d + 0.058);
         }
 
       } else if (type === 'missile') {
-        // 【超音速巡弋/空空飛彈噴射尾焰 + 空氣呼嘯都卜勒破空】
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(320, t);
-        filter.frequency.exponentialRampToValueAtTime(1700, t + 0.16);
-        filter.frequency.exponentialRampToValueAtTime(420, t + 0.38);
-        filter.Q.setValueAtTime(4.2, t);
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.04, t);
-        gain.gain.linearRampToValueAtTime(0.42, t + 0.12);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(outNode);
-        noise.start(t);
-        noise.stop(t + 0.42);
+        // 【防空飛彈 / 超音速空對空飛彈：冷發射氣爆點火 + 固態火箭發動機寬頻撕裂噴流聲】
+        const bus = this._createBus(t, side, 0.35, true);
+
+        // 1. 發射筒點火氣爆瞬態 (Booster Ignition Thump)
+        const pop = this.ctx.createBufferSource();
+        pop.buffer = this.brownBuffer;
+        const popLp = this.ctx.createBiquadFilter();
+        popLp.type = 'lowpass';
+        popLp.frequency.setValueAtTime(260, t);
+        const popGain = this.ctx.createGain();
+        popGain.gain.setValueAtTime(0.75, t);
+        popGain.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
+        pop.connect(popLp);
+        popLp.connect(popGain);
+        popGain.connect(bus);
+        pop.start(t);
+        pop.stop(t + 0.1);
+
+        // 2. 固態火箭高壓尾焰撕裂空氣嘶吼 (Broadband Turbulent Jet Roar，寬頻帶 Q=0.8 杜絕口哨感)
+        const jet = this.ctx.createBufferSource();
+        jet.buffer = this.noiseBuffer;
+        const jetFilter = this.ctx.createBiquadFilter();
+        jetFilter.type = 'bandpass';
+        jetFilter.frequency.setValueAtTime(1650, t + 0.015);
+        jetFilter.frequency.exponentialRampToValueAtTime(680, t + 0.42);
+        jetFilter.Q.setValueAtTime(0.75, t + 0.015);
+        const jetGain = this.ctx.createGain();
+        jetGain.gain.setValueAtTime(0.05, t);
+        jetGain.gain.linearRampToValueAtTime(0.52, t + 0.045);
+        jetGain.gain.exponentialRampToValueAtTime(0.001, t + 0.44);
+        jet.connect(jetFilter);
+        jetFilter.connect(jetGain);
+        jetGain.connect(bus);
+        jet.start(t);
+        jet.stop(t + 0.46);
+
+        // 3. 尾焰低頻空氣震動基底
+        const rumble = this.ctx.createBufferSource();
+        rumble.buffer = this.brownBuffer;
+        const rumLp = this.ctx.createBiquadFilter();
+        rumLp.type = 'lowpass';
+        rumLp.frequency.setValueAtTime(280, t);
+        const rumGain = this.ctx.createGain();
+        rumGain.gain.setValueAtTime(0.42, t + 0.02);
+        rumGain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+        rumble.connect(rumLp);
+        rumLp.connect(rumGain);
+        rumGain.connect(bus);
+        rumble.start(t + 0.02);
+        rumble.stop(t + 0.4);
 
       } else if (type === 'rocket_salvo') {
-        // 【海馬斯 / 多管火箭飽和齊射 (多發呼嘯)】
-        for (let i = 0; i < 3; i++) {
-          const delay = i * 0.065;
-          const noise = this.ctx.createBufferSource();
-          noise.buffer = this.noiseBuffer;
+        // 【海馬斯 / 多管火箭 / 巡弋飛彈波次齊射：4 發連續出筒悶響與火箭推進尾流】
+        const bus = this._createBus(t, side, 0.38, true);
+        for (let i = 0; i < 4; i++) {
+          const delay = i * 0.068;
+          // 發射箱點火重擊
+          const tube = this.ctx.createBufferSource();
+          tube.buffer = this.brownBuffer;
+          const tubeLp = this.ctx.createBiquadFilter();
+          tubeLp.type = 'lowpass';
+          tubeLp.frequency.setValueAtTime(220, t + delay);
+          const tubeGain = this.ctx.createGain();
+          tubeGain.gain.setValueAtTime(0.55, t + delay);
+          tubeGain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.075);
+          tube.connect(tubeLp);
+          tubeLp.connect(tubeGain);
+          tubeGain.connect(bus);
+          tube.start(t + delay);
+          tube.stop(t + delay + 0.085);
+
+          // 火箭噴流嘶吼
+          const roar = this.ctx.createBufferSource();
+          roar.buffer = this.noiseBuffer;
           const filter = this.ctx.createBiquadFilter();
           filter.type = 'bandpass';
-          filter.frequency.setValueAtTime(260 + i * 40, t + delay);
-          filter.frequency.exponentialRampToValueAtTime(1200 + i * 150, t + delay + 0.12);
-          filter.frequency.exponentialRampToValueAtTime(350, t + delay + 0.24);
-          filter.Q.setValueAtTime(3.5, t + delay);
+          filter.frequency.setValueAtTime(1150 - i * 70, t + delay);
+          filter.frequency.exponentialRampToValueAtTime(420, t + delay + 0.25);
+          filter.Q.setValueAtTime(0.85, t + delay);
           const gain = this.ctx.createGain();
-          gain.gain.setValueAtTime(0.05, t + delay);
-          gain.gain.linearRampToValueAtTime(0.28, t + delay + 0.08);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.26);
-          noise.connect(filter);
+          gain.gain.setValueAtTime(0.04, t + delay);
+          gain.gain.linearRampToValueAtTime(0.38, t + delay + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + delay + 0.28);
+          roar.connect(filter);
           filter.connect(gain);
-          gain.connect(outNode);
-          noise.start(t + delay);
-          noise.stop(t + delay + 0.28);
+          gain.connect(bus);
+          roar.start(t + delay);
+          roar.stop(t + delay + 0.3);
         }
 
       } else if (type === 'torpedo') {
-        // 【重型反潛魚雷水下低頻推進】
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(240, t);
-        filter.frequency.exponentialRampToValueAtTime(65, t + 0.4);
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.45, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.42);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(outNode);
-        noise.start(t);
-        noise.stop(t + 0.44);
+        // 【重型魚雷 / 潛艦高壓水下發射：高壓氣體出管悶響 + 螺旋槳空泡湍流 + 聲納回波】
+        const bus = this._createBus(t, side, 0.35, false);
+
+        // 1. 水下高壓魚雷管射出悶響
+        const slug = this.ctx.createBufferSource();
+        slug.buffer = this.brownBuffer;
+        const slugLp = this.ctx.createBiquadFilter();
+        slugLp.type = 'lowpass';
+        slugLp.frequency.setValueAtTime(180, t);
+        slugLp.frequency.exponentialRampToValueAtTime(55, t + 0.35);
+        const slugGain = this.ctx.createGain();
+        slugGain.gain.setValueAtTime(0.75, t);
+        slugGain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+        slug.connect(slugLp);
+        slugLp.connect(slugGain);
+        slugGain.connect(bus);
+        slug.start(t);
+        slug.stop(t + 0.4);
+
+        // 2. 水下泵噴推進空泡水流聲 (Cavitation Turbulence)
+        const cav = this.ctx.createBufferSource();
+        cav.buffer = this.noiseBuffer;
+        const cavBp = this.ctx.createBiquadFilter();
+        cavBp.type = 'bandpass';
+        cavBp.frequency.setValueAtTime(520, t + 0.03);
+        cavBp.frequency.exponentialRampToValueAtTime(240, t + 0.42);
+        cavBp.Q.setValueAtTime(1.4, t + 0.03);
+        const cavGain = this.ctx.createGain();
+        cavGain.gain.setValueAtTime(0.28, t + 0.03);
+        cavGain.gain.exponentialRampToValueAtTime(0.001, t + 0.44);
+        cav.connect(cavBp);
+        cavBp.connect(cavGain);
+        cavGain.connect(bus);
+        cav.start(t + 0.03);
+        cav.stop(t + 0.45);
 
       } else if (type === 'swarm') {
-        // 【自殺無人機蜂群高速掠空 (高頻無刷馬達與氣流)】
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(820, t);
-        osc.frequency.linearRampToValueAtTime(1420, t + 0.16);
-        osc.frequency.linearRampToValueAtTime(640, t + 0.32);
-        gain.gain.setValueAtTime(0.02, t);
-        gain.gain.linearRampToValueAtTime(0.22, t + 0.15);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.34);
-        osc.connect(gain);
-        gain.connect(outNode);
-        osc.start(t);
-        osc.stop(t + 0.35);
+        // 【自殺無人機 / 巡飛彈蜂群：多旋翼葉片調幅氣流聲 + 高速俯衝風切聲 (無卡通鋸齒滑音)】
+        const bus = this._createBus(t, side, 0.2, false);
+
+        // 高速俯衝風切氣流
+        const wind = this.ctx.createBufferSource();
+        wind.buffer = this.noiseBuffer;
+        const windBp = this.ctx.createBiquadFilter();
+        windBp.type = 'bandpass';
+        windBp.frequency.setValueAtTime(620, t);
+        windBp.frequency.linearRampToValueAtTime(980, t + 0.16);
+        windBp.frequency.linearRampToValueAtTime(480, t + 0.34);
+        windBp.Q.setValueAtTime(1.5, t);
+        const windGain = this.ctx.createGain();
+        windGain.gain.setValueAtTime(0.04, t);
+        windGain.gain.linearRampToValueAtTime(0.34, t + 0.14);
+        windGain.gain.exponentialRampToValueAtTime(0.001, t + 0.36);
+        wind.connect(windBp);
+        windBp.connect(windGain);
+        windGain.connect(bus);
+        wind.start(t);
+        wind.stop(t + 0.38);
+
+        // 螺旋槳葉片切割空氣脈衝 (Rotor Blade Pass Modulation)
+        const rotor = this.ctx.createOscillator();
+        const rotorFilter = this.ctx.createBiquadFilter();
+        const rotorGain = this.ctx.createGain();
+        rotor.type = 'triangle';
+        rotor.frequency.setValueAtTime(210, t);
+        rotor.frequency.linearRampToValueAtTime(265, t + 0.16);
+        rotor.frequency.linearRampToValueAtTime(175, t + 0.34);
+        rotorFilter.type = 'lowpass';
+        rotorFilter.frequency.setValueAtTime(750, t);
+        rotorGain.gain.setValueAtTime(0.02, t);
+        rotorGain.gain.linearRampToValueAtTime(0.14, t + 0.14);
+        rotorGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        rotor.connect(rotorFilter);
+        rotorFilter.connect(rotorGain);
+        rotorGain.connect(bus);
+        rotor.start(t);
+        rotor.stop(t + 0.36);
 
       } else if (type === 'explosion') {
-        // 【戰損毀滅大爆炸 (高空破片裂帛 + 80Hz 低通重型滾動巨響 + 40Hz 次低音)】
-        // 衝擊波裂帛與破片
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1400, t);
-        filter.frequency.exponentialRampToValueAtTime(70, t + 0.6);
-        filter.Q.setValueAtTime(2.2, t);
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.85, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.68);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(outNode);
-        noise.start(t);
-        noise.stop(t + 0.7);
+        // 【戰損毀滅雙段式重型殉爆：初段高爆破片裂帛 ➔ 70ms 彈藥庫二次深層重低音殉爆 ➔ 1.35s 戰場轟鳴尾音】
+        const bus = this._createBus(t, side, 0.58, true);
 
-        // 核心殉爆次低音震顫 (Sub-Bass Rumble)
+        // 1. 初段高爆破空瞬態 (Initial Detonation Snap)
+        const snap = this.ctx.createBufferSource();
+        snap.buffer = this.whiteBuffer;
+        const snapLp = this.ctx.createBiquadFilter();
+        snapLp.type = 'lowpass';
+        snapLp.frequency.setValueAtTime(2800, t);
+        snapLp.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+        const snapGain = this.ctx.createGain();
+        snapGain.gain.setValueAtTime(0.85, t);
+        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        snap.connect(snapLp);
+        snapLp.connect(snapGain);
+        snapGain.connect(bus);
+        snap.start(t);
+        snap.stop(t + 0.24);
+
+        // 2. 二段彈藥庫殉爆深層滾動巨響 (Secondary Ammo Cook-off Brown Roar)
+        const rumble = this.ctx.createBufferSource();
+        rumble.buffer = this.brownBuffer;
+        const rumLp = this.ctx.createBiquadFilter();
+        rumLp.type = 'lowpass';
+        rumLp.frequency.setValueAtTime(320, t + 0.045);
+        rumLp.frequency.exponentialRampToValueAtTime(48, t + 0.78);
+        const rumGain = this.ctx.createGain();
+        rumGain.gain.setValueAtTime(0.95, t + 0.045);
+        rumGain.gain.exponentialRampToValueAtTime(0.001, t + 0.85);
+        rumble.connect(rumLp);
+        rumLp.connect(rumGain);
+        rumGain.connect(bus);
+        rumble.start(t + 0.045);
+        rumble.stop(t + 0.88);
+
+        // 3. 32Hz 地面震波次低音 (Seismic Sub-Bass Shockwave)
         const sub = this.ctx.createOscillator();
         const subGain = this.ctx.createGain();
         sub.type = 'sine';
-        sub.frequency.setValueAtTime(120, t);
-        sub.frequency.exponentialRampToValueAtTime(28, t + 0.55);
-        subGain.gain.setValueAtTime(0.9, t);
-        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        sub.frequency.setValueAtTime(88, t);
+        sub.frequency.exponentialRampToValueAtTime(24, t + 0.65);
+        subGain.gain.setValueAtTime(0.92, t);
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 0.72);
         sub.connect(subGain);
-        subGain.connect(outNode);
+        subGain.connect(bus);
         sub.start(t);
-        sub.stop(t + 0.62);
+        sub.stop(t + 0.75);
 
       } else if (type === 'hit_impact') {
-        // 【裝甲受擊金屬貫穿衝擊音】
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(2600, t);
-        filter.frequency.exponentialRampToValueAtTime(400, t + 0.12);
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.45, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(outNode);
-        noise.start(t);
-        noise.stop(t + 0.15);
+        // 【裝甲鋼板動能貫穿與破片撞擊：低頻受擊悶響 + 高頻金屬碎裂】
+        const bus = this._createBus(t, side, 0.3, true);
+
+        const thud = this.ctx.createBufferSource();
+        thud.buffer = this.brownBuffer;
+        const thudLp = this.ctx.createBiquadFilter();
+        thudLp.type = 'lowpass';
+        thudLp.frequency.setValueAtTime(280, t);
+        const thudGain = this.ctx.createGain();
+        thudGain.gain.setValueAtTime(0.75, t);
+        thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+        thud.connect(thudLp);
+        thudLp.connect(thudGain);
+        thudGain.connect(bus);
+        thud.start(t);
+        thud.stop(t + 0.18);
+
+        const crunch = this.ctx.createBufferSource();
+        crunch.buffer = this.whiteBuffer;
+        const crunchBp = this.ctx.createBiquadFilter();
+        crunchBp.type = 'bandpass';
+        crunchBp.frequency.setValueAtTime(1950, t);
+        crunchBp.frequency.exponentialRampToValueAtTime(520, t + 0.11);
+        crunchBp.Q.setValueAtTime(1.8, t);
+        const crunchGain = this.ctx.createGain();
+        crunchGain.gain.setValueAtTime(0.52, t);
+        crunchGain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+        crunch.connect(crunchBp);
+        crunchBp.connect(crunchGain);
+        crunchGain.connect(bus);
+        crunch.start(t);
+        crunch.stop(t + 0.14);
 
       } else if (type === 'block') {
-        // 【主動防護系統 APS 空中金屬破片硬殺攔截】
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(2600, t);
-        osc.frequency.exponentialRampToValueAtTime(750, t + 0.09);
-        gain.gain.setValueAtTime(0.42, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-        osc.connect(gain);
-        gain.connect(outNode);
-        osc.start(t);
-        osc.stop(t + 0.11);
+        // 【主動防護系統 APS 近迫攔截彈爆破與鎢珠破片散射聲 (無卡通彈簧音)】
+        const bus = this._createBus(t, side, 0.25, true);
+
+        // 攔截彈空爆瞬態
+        const pop = this.ctx.createBufferSource();
+        pop.buffer = this.whiteBuffer;
+        const bp = this.ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.setValueAtTime(1600, t);
+        bp.Q.setValueAtTime(1.2, t);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.6, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.055);
+        pop.connect(bp);
+        bp.connect(g);
+        g.connect(bus);
+        pop.start(t);
+        pop.stop(t + 0.06);
+
+        // 3 顆高速金屬破片散射清脆撞擊
+        [0.018, 0.036, 0.054].forEach((d, idx) => {
+          const ping = this.ctx.createBufferSource();
+          ping.buffer = this.whiteBuffer;
+          const pFilter = this.ctx.createBiquadFilter();
+          pFilter.type = 'bandpass';
+          pFilter.frequency.setValueAtTime(3400 + idx * 450, t + d);
+          pFilter.Q.setValueAtTime(6.0, t + d);
+          const pGain = this.ctx.createGain();
+          pGain.gain.setValueAtTime(0.28, t + d);
+          pGain.gain.exponentialRampToValueAtTime(0.001, t + d + 0.03);
+          ping.connect(pFilter);
+          pFilter.connect(pGain);
+          pGain.connect(bus);
+          ping.start(t + d);
+          ping.stop(t + d + 0.035);
+        });
 
       } else if (type === 'emp_pulse') {
-        // 【電子戰全頻段電磁脈衝過載雜訊】
+        // 【戰機 RWR 雷達鎖定告警雙脈衝 + 寬頻電磁干擾雜訊】
+        const bus = this._createBus(t, side, 0.15, false);
+
+        // NATO RWR 威脅鎖定急促雙音 (1480Hz / 1180Hz)
+        [0, 0.065].forEach((d, idx) => {
+          const rwr = this.ctx.createOscillator();
+          const rg = this.ctx.createGain();
+          rwr.type = 'sine';
+          rwr.frequency.setValueAtTime(idx === 0 ? 1480 : 1180, t + d);
+          rg.gain.setValueAtTime(0.16, t + d);
+          rg.gain.exponentialRampToValueAtTime(0.001, t + d + 0.048);
+          rwr.connect(rg);
+          rg.connect(bus);
+          rwr.start(t + d);
+          rwr.stop(t + d + 0.052);
+        });
+
+        // 電磁干擾靜電脈衝
         const noise = this.ctx.createBufferSource();
-        noise.buffer = this.noiseBuffer;
+        noise.buffer = this.whiteBuffer;
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.setValueAtTime(3200, t);
-        filter.frequency.exponentialRampToValueAtTime(280, t + 0.28);
-        filter.Q.setValueAtTime(6.0, t);
+        filter.frequency.setValueAtTime(2200, t);
+        filter.frequency.exponentialRampToValueAtTime(650, t + 0.24);
+        filter.Q.setValueAtTime(2.2, t);
         const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.28, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        gain.gain.setValueAtTime(0.26, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.26);
         noise.connect(filter);
         filter.connect(gain);
-        gain.connect(outNode);
+        gain.connect(bus);
         noise.start(t);
-        noise.stop(t + 0.32);
+        noise.stop(t + 0.28);
 
       } else if (type === 'equip') {
-        // 【軍械卡榫上膛點擊聲 (Click-Clack)】
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1900, t);
-        osc.frequency.exponentialRampToValueAtTime(650, t + 0.04);
-        gain.gain.setValueAtTime(0.18, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-        osc.connect(gain);
-        gain.connect(outNode);
-        osc.start(t);
-        osc.stop(t + 0.06);
+        // 【軍械金屬槍機上膛卡榫聲 (Click-Clack)】
+        const bus = this._createBus(t, side, 0.05, false);
+        [0, 0.032].forEach((d, idx) => {
+          const click = this.ctx.createBufferSource();
+          click.buffer = this.whiteBuffer;
+          const bp = this.ctx.createBiquadFilter();
+          bp.type = 'bandpass';
+          bp.frequency.setValueAtTime(idx === 0 ? 1900 : 2950, t + d);
+          bp.Q.setValueAtTime(4.0, t + d);
+          const g = this.ctx.createGain();
+          g.gain.setValueAtTime(0.28, t + d);
+          g.gain.exponentialRampToValueAtTime(0.001, t + d + 0.024);
+          click.connect(bp);
+          bp.connect(g);
+          g.connect(bus);
+          click.start(t + d);
+          click.stop(t + d + 0.028);
+        });
 
       } else if (type === 'victory') {
         // 【軍事勝利凱旋和弦 (F4 -> A4 -> C5)】
+        const bus = this._createBus(t, side, 0.28, false);
         [349.23, 440.0, 523.25].forEach((freq, idx) => {
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
@@ -338,7 +620,7 @@ const SoundEngine = {
           gain.gain.setValueAtTime(0.16, t + idx * 0.08);
           gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.08 + 0.7);
           osc.connect(gain);
-          gain.connect(outNode);
+          gain.connect(bus);
           osc.start(t + idx * 0.08);
           osc.stop(t + idx * 0.08 + 0.75);
         });
@@ -346,6 +628,7 @@ const SoundEngine = {
     } catch (e) {}
   }
 };
+window.SoundEngine = SoundEngine;
 
 /* ---------- 預設社群幽靈軍武庫 ---------- */
 const SEED_GHOSTS = [
@@ -2849,32 +3132,50 @@ function playFx(ln) {
     }
   }
 
-  // 2. 觸發開火音效 (帶陣營立體聲方位)
+  // 2. 判定武器視覺與聲學類型 (7 大軍武專屬類型)
+  let wType = 'missile';
   if (aUnit) {
-    SoundEngine.play(aUnit.sfx || 'missile', ln.side);
+    if (ln.brevity === 'SEAD' || aUnit.sfx === 'emp_pulse' || (aUnit.cat === 'support' && /預警|電戰|咆哮者|干擾/.test(aUnit.name + (aUnit.weapon || '')))) {
+      wType = 'ew';
+    } else if (ln.brevity === 'SABOT' || aUnit.sfx === 'heavy_cannon') {
+      wType = 'sabot';
+    } else if (aUnit.sfx === 'cannon' || aUnit.sfx === 'flak') {
+      wType = 'autocannon';
+    } else if (aUnit.sfx === 'rocket_salvo') {
+      wType = 'salvo';
+    } else if (aUnit.sfx === 'torpedo' || (aUnit.cat === 'naval' && /潛艦|魚雷/.test(aUnit.role + (aUnit.weapon || '')))) {
+      wType = 'torpedo';
+    } else if (aUnit.sfx === 'swarm') {
+      wType = 'swarm';
+    } else {
+      wType = 'missile';
+    }
   }
 
-  // 3. 卡片高亮連動
+  // 觸發開火音效 (帶陣營立體聲方位與戶外戰場殘響)
+  if (aUnit) {
+    const sfxToPlay = wType === 'ew' ? 'emp_pulse' : (aUnit.sfx || 'missile');
+    SoundEngine.play(sfxToPlay, ln.side);
+  }
+
+  // 3. 卡片高亮連動與開火後座力
   if (aEl) {
     aEl.classList.remove('active-attacker');
     void aEl.offsetWidth;
     aEl.classList.add('active-attacker');
-    setTimeout(() => aEl.classList.remove('active-attacker'), 350 / speed);
+    setTimeout(() => aEl.classList.remove('active-attacker'), 380 / speed);
+
+    const recoilClass = ln.side === 'A' ? 'fire-recoil-a' : 'fire-recoil-b';
+    aEl.classList.remove('fire-recoil-a', 'fire-recoil-b');
+    void aEl.offsetWidth;
+    aEl.classList.add(recoilClass);
+    setTimeout(() => aEl.classList.remove(recoilClass), 320 / speed);
   }
   if (tEl) {
     tEl.classList.remove('active-target');
     void tEl.offsetWidth;
     tEl.classList.add('active-target');
-    setTimeout(() => tEl.classList.remove('active-target'), 350 / speed);
-  }
-
-  // 開火方微後座力發光動畫
-  if (aEl) {
-    const recoilClass = ln.side === 'A' ? 'fire-recoil-a' : 'fire-recoil-b';
-    aEl.classList.remove('fire-recoil-a', 'fire-recoil-b');
-    void aEl.offsetWidth;
-    aEl.classList.add(recoilClass);
-    setTimeout(() => aEl.classList.remove(recoilClass), 300 / speed);
+    setTimeout(() => tEl.classList.remove('active-target'), 380 / speed);
   }
 
   if (!tEl) return;
@@ -2884,52 +3185,330 @@ function playFx(ln) {
   const tx = tRect.left + tRect.width / 2 - layerRect.left;
   const ty = tRect.top + tRect.height / 2 - layerRect.top;
 
-  // 4. 戰術飛彈／實體彈道高速穿梭動畫（依兵種武器樣式特化）
+  // 目標卡片浮現軍規火控鎖定準星 (Tactical HUD Lock Reticle)
+  spawnLockReticle(tx, ty, wType);
+
+  // 4. 7 大兵種實體 SVG 武器模型與物理彈道動畫
   if (aEl) {
     const aRect = aEl.getBoundingClientRect();
-    const ax = (ln.side === 'A' ? aRect.right - 10 : aRect.left + 10) - layerRect.left;
+    const ax = (ln.side === 'A' ? aRect.right - 12 : aRect.left + 12) - layerRect.left;
     const ay = aRect.top + aRect.height / 2 - layerRect.top;
-
     const dx = tx - ax, dy = ty - ay;
     const dist = Math.hypot(dx, dy);
-    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const baseAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const sideColor = ln.side === 'A' ? '#3de0ff' : '#ff5d6e';
 
-    let trailClass = '';
-    if (aUnit) {
-      if (aUnit.sfx === 'heavy_cannon' || aUnit.sfx === 'cannon') trailClass = 'cannon-shell';
-      else if (aUnit.sfx === 'rocket_salvo') trailClass = 'rocket-barrage';
-      else if (aUnit.sfx === 'torpedo') trailClass = 'torpedo-trail';
-      else if (aUnit.sfx === 'swarm') trailClass = 'swarm-drone';
-    }
+    // 開火端砲口爆閃 / 垂發白煙特效
+    spawnMuzzleFx(ax, ay, baseAngle, wType, sideColor);
 
-    const proj = document.createElement('div');
-    proj.className = `fx-projectile ${ln.side === 'A' ? 'fx-side-a' : 'fx-side-b'}`;
-    proj.style.transform = `translate(${ax}px, ${ay}px) rotate(${angle}deg)`;
-    proj.innerHTML = `<div class="fx-missile ${trailClass}" style="width:${Math.min(54, Math.max(18, dist * 0.18))}px;"></div>`;
-    fxLayer.appendChild(proj);
+    if (wType === 'ew') {
+      // 【類型 7：全息電磁脈衝波束與反輻射壓制】
+      spawnEwBeam(ax, ay, tx, ty, dist, baseAngle, sideColor);
+      setTimeout(() => triggerImpact(), Math.max(90, 170 / speed));
 
-    const dur = Math.max(70, 200 / speed);
-    const startTime = performance.now();
-
-    function step(now) {
-      if (skip || !proj.parentElement) { proj.remove(); return; }
-      const p = Math.min(1, (now - startTime) / dur);
-      const curX = ax + dx * p;
-      const curY = ay + dy * p;
-      proj.style.transform = `translate(${curX}px, ${curY}px) rotate(${angle}deg)`;
-      if (p < 1) {
-        requestAnimationFrame(step);
-      } else {
-        proj.remove();
-        triggerImpact();
+    } else if (wType === 'autocannon') {
+      // 【類型 4：30mm 鏈砲 / 方陣快砲密集曳光彈幕流 (5連發高速彈鏈)】
+      const burstCount = 5;
+      for (let i = 0; i < burstCount; i++) {
+        setTimeout(() => {
+          if (skip) return;
+          const spreadY = (Math.random() - 0.5) * 22;
+          const spreadX = (Math.random() - 0.5) * 16;
+          launchSingleProjectile({
+            ax, ay: ay + (Math.random() - 0.5) * 8,
+            tx: tx + spreadX, ty: ty + spreadY,
+            wType: 'autocannon', arcHeight: 0, waveAmp: 0,
+            dur: Math.max(55, 115 / speed),
+            side: ln.side,
+            onHit: i === burstCount - 1 ? () => triggerImpact() : () => spawnMiniSparks(tx + spreadX, ty + spreadY)
+          });
+        }, (i * 26) / speed);
       }
+
+    } else if (wType === 'salvo') {
+      // 【類型 3：海馬斯 / 多管火箭 / 巡弋飛彈波次高拋物線飽和齊射 (3枚交錯彈道)】
+      const salvoCount = 3;
+      for (let i = 0; i < salvoCount; i++) {
+        setTimeout(() => {
+          if (skip) return;
+          const offX = (i - 1) * 14;
+          const offY = (i - 1) * 10;
+          launchSingleProjectile({
+            ax, ay,
+            tx: tx + offX, ty: ty + offY,
+            wType: 'salvo',
+            arcHeight: -Math.min(115, dist * 0.24) - i * 22,
+            waveAmp: 0,
+            dur: Math.max(110, (240 + i * 25) / speed),
+            side: ln.side,
+            onHit: i === salvoCount - 1
+              ? () => triggerImpact()
+              : () => spawnExplosion(tx + offX, ty + offY, false, 'salvo', 0.65)
+          });
+        }, (i * 42) / speed);
+      }
+
+    } else if (wType === 'swarm') {
+      // 【類型 6：自殺無人機 / 巡飛彈三角翼蜂群編隊 (3架螺旋蛇行突防)】
+      const droneCount = 3;
+      for (let i = 0; i < droneCount; i++) {
+        setTimeout(() => {
+          if (skip) return;
+          launchSingleProjectile({
+            ax, ay: ay + (i - 1) * 14,
+            tx: tx + (i - 1) * 8, ty: ty + (i - 1) * 8,
+            wType: 'swarm',
+            arcHeight: (i - 1) * 26,
+            waveAmp: (i % 2 === 0 ? 1 : -1) * 14,
+            dur: Math.max(120, 250 / speed),
+            side: ln.side,
+            onHit: i === droneCount - 1
+              ? () => triggerImpact()
+              : () => spawnMiniSparks(tx + (i - 1) * 8, ty + (i - 1) * 8)
+          });
+        }, (i * 35) / speed);
+      }
+
+    } else if (wType === 'sabot') {
+      // 【類型 1：120mm 翼穩脫殼穿甲彈 APFSDS (超高速平射鎢芯箭 + 穿甲震波軌跡)】
+      spawnSabotMachLine(ax, ay, tx, ty, dist, baseAngle);
+      launchSingleProjectile({
+        ax, ay, tx, ty,
+        wType: 'sabot',
+        arcHeight: 0,
+        waveAmp: 0,
+        dur: Math.max(60, 125 / speed),
+        side: ln.side,
+        onHit: () => triggerImpact()
+      });
+
+    } else if (wType === 'torpedo') {
+      // 【類型 5：重型反潛魚雷 / 反艦飛彈 (S型掠海或水下空泡推進軌跡)】
+      launchSingleProjectile({
+        ax, ay, tx, ty,
+        wType: 'torpedo',
+        arcHeight: 0,
+        waveAmp: 12,
+        dur: Math.max(110, 235 / speed),
+        side: ln.side,
+        onHit: () => triggerImpact()
+      });
+
+    } else {
+      // 【類型 2：超視距防空 / 空對空飛彈 (二段爬升俯衝曲線 + 凝結尾煙)】
+      launchSingleProjectile({
+        ax, ay, tx, ty,
+        wType: 'missile',
+        arcHeight: -Math.min(72, dist * 0.16),
+        waveAmp: 0,
+        dur: Math.max(95, 210 / speed),
+        side: ln.side,
+        onHit: () => triggerImpact()
+      });
     }
-    requestAnimationFrame(step);
   } else {
     triggerImpact();
   }
 
-  // 5. 命中受擊、爆炸衝擊波與浮動戰鬥數字 (受擊方聲相為對手方位)
+  // 生成各兵種專屬高精細 SVG 武器實體圖形
+  function getWeaponSvgHtml(type, side) {
+    const accent = side === 'A' ? '#3de0ff' : '#ff5d6e';
+    if (type === 'sabot') {
+      // 翼穩脫殼穿甲彈 (APFSDS Fin-Stabilized Tungsten Dart + Plasma Cone)
+      return `<svg class="fx-weapon-svg sabot-svg" viewBox="0 0 64 20" width="58" height="18">
+        <defs>
+          <linearGradient id="sabotGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="45%" stop-color="#f59e0b"/>
+            <stop offset="85%" stop-color="#fef08a"/>
+            <stop offset="100%" stop-color="#ffffff"/>
+          </linearGradient>
+        </defs>
+        <polygon points="0,8 46,9 46,11 0,12" fill="url(#sabotGrad)"/>
+        <polygon points="14,4 22,9 14,9" fill="#fbbf24"/>
+        <polygon points="14,16 22,11 14,11" fill="#fbbf24"/>
+        <polygon points="22,8.5 56,8.5 64,10 56,11.5 22,11.5" fill="#ffffff"/>
+        <ellipse cx="54" cy="10" rx="10" ry="3.5" fill="#fef08a" opacity="0.75"/>
+      </svg>`;
+    } else if (type === 'autocannon') {
+      // 30mm 高爆曳光穿甲彈鏈
+      return `<svg class="fx-weapon-svg cannon-svg" viewBox="0 0 42 12" width="38" height="10">
+        <polygon points="0,4 30,3.5 30,8.5 0,8" fill="#f97316" opacity="0.85"/>
+        <polygon points="24,3 42,6 24,9" fill="#fef08a"/>
+      </svg>`;
+    } else if (type === 'salvo') {
+      // 多管重型火箭彈 / 巡弋飛彈實體
+      return `<svg class="fx-weapon-svg salvo-svg" viewBox="0 0 56 22" width="48" height="20">
+        <ellipse cx="12" cy="11" rx="12" ry="4.5" fill="#f97316" opacity="0.9"/>
+        <ellipse cx="16" cy="11" rx="7" ry="2.5" fill="#fef08a"/>
+        <polygon points="18,5 25,8 18,8" fill="#94a3b8"/>
+        <polygon points="18,17 25,14 18,14" fill="#94a3b8"/>
+        <rect x="20" y="8" width="22" height="6" rx="1" fill="#e2e8f0" stroke="#475569" stroke-width="0.8"/>
+        <rect x="33" y="8" width="4" height="6" fill="#ef4444"/>
+        <polygon points="42,8 54,11 42,14" fill="#cbd5e1" stroke="#475569" stroke-width="0.8"/>
+      </svg>`;
+    } else if (type === 'torpedo') {
+      // 重型魚雷 / 掠海反艦彈體 (帶氣泡尾流與十字舵)
+      return `<svg class="fx-weapon-svg torpedo-svg" viewBox="0 0 56 22" width="48" height="20">
+        <circle cx="8" cy="11" r="4" fill="#67e8f9" opacity="0.75"/>
+        <circle cx="15" cy="9" r="2.5" fill="#cffafe" opacity="0.85"/>
+        <circle cx="15" cy="13" r="2.5" fill="#cffafe" opacity="0.85"/>
+        <polygon points="18,5 24,8 18,8" fill="#0891b2"/>
+        <polygon points="18,17 24,14 18,14" fill="#0891b2"/>
+        <rect x="20" y="7.5" width="24" height="7" rx="2" fill="#0e7490" stroke="#67e8f9" stroke-width="1"/>
+        <path d="M44,7.5 C52,7.5 54,11 54,11 C54,11 52,14.5 44,14.5 Z" fill="#22d3ee"/>
+      </svg>`;
+    } else if (type === 'swarm') {
+      // 三角翼自殺無人機 / 巡飛彈 (Loitering Munition Delta-Wing SVG)
+      return `<svg class="fx-weapon-svg swarm-svg" viewBox="0 0 36 28" width="32" height="24">
+        <polygon points="6,2 28,14 6,26 12,14" fill="#334155" stroke="${accent}" stroke-width="1.3"/>
+        <polygon points="12,11 34,14 12,17" fill="#cbd5e1"/>
+        <circle cx="29" cy="14" r="2.2" fill="#ff2a4b"/>
+        <ellipse cx="7" cy="14" rx="5" ry="2" fill="${accent}" opacity="0.85"/>
+      </svg>`;
+    } else {
+      // 超音速防空 / 空對空飛彈 (Supersonic AAM/SAM with fins & dual afterburner)
+      return `<svg class="fx-weapon-svg missile-svg" viewBox="0 0 58 22" width="50" height="20">
+        <ellipse cx="11" cy="11" rx="11" ry="4" fill="${accent}" opacity="0.85"/>
+        <ellipse cx="16" cy="11" rx="6" ry="2.2" fill="#ffffff"/>
+        <polygon points="19,4 25,8.5 19,8.5" fill="#64748b"/>
+        <polygon points="19,18 25,13.5 19,13.5" fill="#64748b"/>
+        <polygon points="33,6 38,8.5 33,8.5" fill="#475569"/>
+        <polygon points="33,16 38,13.5 33,13.5" fill="#475569"/>
+        <rect x="20" y="8.5" width="24" height="5" fill="#f8fafc" stroke="#475569" stroke-width="0.7"/>
+        <rect x="36" y="8.5" width="3.5" height="5" fill="${accent}"/>
+        <polygon points="44,8.5 56,11 44,13.5" fill="#e2e8f0" stroke="#475569" stroke-width="0.7"/>
+      </svg>`;
+    }
+  }
+
+  // 發射單枚具備物理拋物線/弦波軌跡與動態切線轉向的武器實體
+  function launchSingleProjectile({ ax, ay, tx, ty, wType, arcHeight, waveAmp, dur, side, onHit }) {
+    const proj = document.createElement('div');
+    proj.className = `fx-projectile fx-w-${wType} ${side === 'A' ? 'fx-side-a' : 'fx-side-b'}`;
+    proj.innerHTML = getWeaponSvgHtml(wType, side);
+    fxLayer.appendChild(proj);
+
+    const dx = tx - ax, dy = ty - ay;
+    const startTime = performance.now();
+    let prevX = ax, prevY = ay;
+    let frameCount = 0;
+
+    function step(now) {
+      if (skip || !proj.parentElement) { proj.remove(); return; }
+      const p = Math.min(1, (now - startTime) / dur);
+
+      // 計算基礎線性位置 + 拋物線仰角高度 + 弦波蛇行偏移
+      const parabola = 4 * p * (1 - p) * arcHeight;
+      const wave = waveAmp ? Math.sin(p * Math.PI * 2.5) * waveAmp * (1 - p * 0.3) : 0;
+      const curX = ax + dx * p;
+      const curY = ay + dy * p + parabola + wave;
+
+      // 動態計算瞬時切線方向角，讓飛彈/火箭鼻錐真實隨拋物線抬頭與俯衝
+      const vx = curX - prevX;
+      const vy = curY - prevY;
+      const curAngle = (Math.hypot(vx, vy) > 0.4)
+        ? (Math.atan2(vy, vx) * 180 / Math.PI)
+        : (Math.atan2(dy, dx) * 180 / Math.PI);
+
+      proj.style.transform = `translate(${curX}px, ${curY}px) rotate(${curAngle}deg)`;
+      prevX = curX;
+      prevY = curY;
+      frameCount++;
+
+      // 沿途釋放推進尾煙或水下空泡粒子
+      if (frameCount % 2 === 0 && p > 0.08 && p < 0.92) {
+        if (wType === 'missile' || wType === 'salvo') {
+          spawnTrailParticle(curX, curY, wType === 'salvo' ? 'smoke-fire' : 'contrail');
+        } else if (wType === 'torpedo') {
+          spawnTrailParticle(curX, curY, 'bubble');
+        }
+      }
+
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        proj.remove();
+        if (onHit) onHit();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  // 翼穩脫殼穿甲彈專屬：超音速金色穿甲音爆束線
+  function spawnSabotMachLine(ax, ay, tx, ty, dist, angle) {
+    const beam = document.createElement('div');
+    beam.className = 'fx-sabot-beam';
+    beam.style.width = dist + 'px';
+    beam.style.left = ax + 'px';
+    beam.style.top = ay + 'px';
+    beam.style.transform = `rotate(${angle}deg)`;
+    fxLayer.appendChild(beam);
+    setTimeout(() => beam.remove(), 240 / speed);
+  }
+
+  // 電子戰 / 反輻射專屬：全息電磁脈衝干擾波束
+  function spawnEwBeam(ax, ay, tx, ty, dist, angle, color) {
+    const ew = document.createElement('div');
+    ew.className = 'fx-ew-beam';
+    ew.style.width = dist + 'px';
+    ew.style.left = ax + 'px';
+    ew.style.top = ay + 'px';
+    ew.style.transform = `rotate(${angle}deg)`;
+    ew.style.setProperty('--ew-color', color);
+    fxLayer.appendChild(ew);
+    setTimeout(() => ew.remove(), 340 / speed);
+  }
+
+  // 開火端砲口制退火光 / 垂發煙霧
+  function spawnMuzzleFx(x, y, angle, wType, color) {
+    const mz = document.createElement('div');
+    mz.className = `fx-muzzle fx-muzzle-${wType}`;
+    mz.style.left = x + 'px';
+    mz.style.top = y + 'px';
+    mz.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
+    mz.style.setProperty('--mz-color', color);
+    fxLayer.appendChild(mz);
+    setTimeout(() => mz.remove(), 220 / speed);
+  }
+
+  // 沿途尾煙 / 水下氣泡粒子
+  function spawnTrailParticle(x, y, kind) {
+    const pt = document.createElement('div');
+    pt.className = `fx-trail-pt ${kind}`;
+    pt.style.left = (x + (Math.random() - 0.5) * 6) + 'px';
+    pt.style.top = (y + (Math.random() - 0.5) * 6) + 'px';
+    fxLayer.appendChild(pt);
+    setTimeout(() => pt.remove(), 320 / speed);
+  }
+
+  // 目標火控鎖定準星框
+  function spawnLockReticle(x, y, wType) {
+    const ret = document.createElement('div');
+    ret.className = `fx-reticle ${wType === 'ew' ? 'ew-lock' : ''}`;
+    ret.style.left = x + 'px';
+    ret.style.top = y + 'px';
+    fxLayer.appendChild(ret);
+    setTimeout(() => ret.remove(), 340 / speed);
+  }
+
+  // 機砲連射微火花
+  function spawnMiniSparks(x, y) {
+    for (let i = 0; i < 4; i++) {
+      const sp = document.createElement('div');
+      sp.className = 'fx-spark';
+      sp.style.left = x + 'px';
+      sp.style.top = y + 'px';
+      const ang = Math.random() * Math.PI * 2;
+      const d = 14 + Math.random() * 24;
+      sp.style.setProperty('--dx', `${Math.cos(ang) * d}px`);
+      sp.style.setProperty('--dy', `${Math.sin(ang) * d}px`);
+      fxLayer.appendChild(sp);
+      setTimeout(() => sp.remove(), 220 / speed);
+    }
+  }
+
+  // 5. 命中受擊、分級爆炸衝擊波與浮動戰鬥數字 (受擊方聲相為對手方位)
   function triggerImpact() {
     if (skip) return;
     const targetSide = ln.side === 'A' ? 'B' : 'A';
@@ -2937,17 +3516,26 @@ function playFx(ln) {
       tEl.classList.remove('hit-shake', 'kill-blast');
       void tEl.offsetWidth;
       tEl.classList.add('kill-blast', 'destroyed-badge');
-      spawnExplosion(tx, ty);
+      spawnExplosion(tx, ty, true, wType, 1.0);
       spawnFloater(tx, ty, '💥 擊毀!', 'kill');
       SoundEngine.play('explosion', targetSide);
+
+      // 擊毀大型目標時觸發戰場畫面微震動 (Micro Screen Shake)
+      const vb = $('#viewBattle');
+      if (vb) {
+        vb.classList.remove('battle-screen-shake');
+        void vb.offsetWidth;
+        vb.classList.add('battle-screen-shake');
+        setTimeout(() => vb.classList.remove('battle-screen-shake'), 280 / speed);
+      }
     } else if (ln.kind === 'hit') {
       tEl.classList.remove('hit-shake');
       void tEl.offsetWidth;
       tEl.classList.add('hit-shake');
-      spawnExplosion(tx, ty);
+      spawnExplosion(tx, ty, false, wType, 1.0);
       const dmgText = ln.dmg ? `−${ln.dmg}` : `命中!`;
       spawnFloater(tx, ty, dmgText, 'hit');
-      SoundEngine.play('hit_impact', targetSide);
+      if (wType !== 'ew') SoundEngine.play('hit_impact', targetSide);
     } else if (ln.kind === 'block') {
       spawnShield(tx, ty);
       spawnFloater(tx, ty, '🛡️ APS 攔截', 'block');
@@ -2957,12 +3545,61 @@ function playFx(ln) {
     }
   }
 
-  function spawnExplosion(x, y) {
+  // 多層次物理爆炸：核心火球 + 超音速震波環 + 金屬破片飛濺 + 濃煙 / 水柱
+  function spawnExplosion(x, y, isKill = false, weaponType = 'missile', scale = 1.0) {
+    // 1. 核心高熱火球
     const boom = document.createElement('div');
-    boom.className = 'fx-explosion';
-    boom.style.left = x + 'px'; boom.style.top = y + 'px';
+    boom.className = `fx-explosion ${isKill ? 'fx-explosion-kill' : ''} ${weaponType === 'ew' ? 'fx-explosion-ew' : ''}`;
+    boom.style.left = x + 'px';
+    boom.style.top = y + 'px';
+    if (scale !== 1.0) boom.style.transform = `scale(${scale})`;
     fxLayer.appendChild(boom);
-    setTimeout(() => boom.remove(), 380 / speed);
+    setTimeout(() => boom.remove(), (isKill ? 520 : 380) / speed);
+
+    // 2. 擴散超音速震波環 (Shockwave Ring)
+    const ring = document.createElement('div');
+    ring.className = `fx-shockwave ${isKill ? 'kill-ring' : ''} ${weaponType === 'ew' ? 'ew-ring' : ''}`;
+    ring.style.left = x + 'px';
+    ring.style.top = y + 'px';
+    fxLayer.appendChild(ring);
+    setTimeout(() => ring.remove(), (isKill ? 480 : 340) / speed);
+
+    // 3. 魚雷 / 制海武器專屬：衝天白色水柱 (Water Plume)
+    if (weaponType === 'torpedo') {
+      const plume = document.createElement('div');
+      plume.className = 'fx-water-plume';
+      plume.style.left = x + 'px';
+      plume.style.top = y + 'px';
+      fxLayer.appendChild(plume);
+      setTimeout(() => plume.remove(), 460 / speed);
+    }
+
+    // 4. 飛濺高熱破片火花 (Debris Sparks)
+    const sparkCount = isKill ? 12 : 6;
+    for (let i = 0; i < sparkCount; i++) {
+      const sp = document.createElement('div');
+      sp.className = `fx-spark ${isKill ? 'kill-spark' : ''}`;
+      sp.style.left = x + 'px';
+      sp.style.top = y + 'px';
+      const ang = (Math.PI * 2 * i) / sparkCount + (Math.random() - 0.5) * 0.4;
+      const dist = (isKill ? 36 : 20) + Math.random() * (isKill ? 44 : 24);
+      sp.style.setProperty('--dx', `${Math.cos(ang) * dist}px`);
+      sp.style.setProperty('--dy', `${Math.sin(ang) * dist}px`);
+      fxLayer.appendChild(sp);
+      setTimeout(() => sp.remove(), (isKill ? 460 : 300) / speed);
+    }
+
+    // 5. 擊毀時竄升黑煙雲團
+    if (isKill) {
+      for (let s = 0; s < 2; s++) {
+        const sm = document.createElement('div');
+        sm.className = 'fx-smoke-cloud';
+        sm.style.left = (x + (s === 0 ? -10 : 10)) + 'px';
+        sm.style.top = y + 'px';
+        fxLayer.appendChild(sm);
+        setTimeout(() => sm.remove(), 620 / speed);
+      }
+    }
   }
 
   function spawnShield(x, y) {

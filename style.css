@@ -615,16 +615,71 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 @keyframes killBlast{0%{transform:scale(1.1);box-shadow:0 0 35px rgba(255,93,110,.95);border-color:var(--red)}40%{filter:brightness(2.2) contrast(1.6)}100%{transform:none}}
 .bu.destroyed-badge::after{content:'💥 DESTROYED';position:absolute;right:8px;bottom:5px;font-family:var(--head);font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--red);background:rgba(255,93,110,.14);border:1px solid rgba(255,93,110,.4);padding:1px 6px;border-radius:4px}
 
-/* 戰術彈道飛彈特效 (Ballistic Missile FX) */
-.fx-projectile{position:absolute;top:0;left:0;pointer-events:none;z-index:36;display:flex;align-items:center;will-change:transform}
-.fx-missile{height:4px;border-radius:2px;box-shadow:0 0 12px currentColor;position:relative}
-.fx-missile::after{content:'';position:absolute;right:-4px;top:-3px;width:10px;height:10px;border-radius:50%;background:#ffffff;box-shadow:0 0 16px currentColor}
-.fx-side-a .fx-missile{background:linear-gradient(90deg,transparent,var(--cyan));color:var(--cyan)}
-.fx-side-b .fx-missile{background:linear-gradient(90deg,transparent,var(--red));color:var(--red)}
+/* 戰術實體武器與物理彈道特效 (7-Archetype Weapon SVG & Ballistic FX) */
+.fx-projectile{position:absolute;top:0;left:0;pointer-events:none;z-index:36;display:flex;align-items:center;margin-top:-10px;margin-left:-24px;will-change:transform}
+.fx-weapon-svg{display:block;overflow:visible;filter:drop-shadow(0 0 8px rgba(255,255,255,.75))}
+.fx-side-a .fx-weapon-svg{filter:drop-shadow(0 0 10px rgba(61,224,255,.85))}
+.fx-side-b .fx-weapon-svg{filter:drop-shadow(0 0 10px rgba(255,93,110,.85))}
+.fx-w-sabot .fx-weapon-svg{filter:drop-shadow(0 0 14px #fbbf24) drop-shadow(0 0 24px #f59e0b)}
+.fx-w-salvo .fx-weapon-svg{filter:drop-shadow(0 0 12px #f97316)}
+.fx-w-torpedo .fx-weapon-svg{filter:drop-shadow(0 0 12px #06b6d4)}
 
-/* 爆炸火球衝擊波 (Explosion Blast) */
-.fx-explosion{position:absolute;width:64px;height:64px;margin-left:-32px;margin-top:-32px;pointer-events:none;z-index:38;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,179,64,.85) 35%,rgba(255,93,110,.6) 70%,transparent 100%);animation:boom .36s cubic-bezier(.1,1,.3,1) forwards}
-@keyframes boom{0%{opacity:1;transform:scale(.2)}50%{opacity:.95;transform:scale(1.45)}100%{opacity:0;transform:scale(2.1)}}
+/* 翼穩脫殼穿甲彈超音速音爆束線 (APFSDS Mach Vapor Trail) */
+.fx-sabot-beam{position:absolute;height:3px;margin-top:-1.5px;transform-origin:0 50%;pointer-events:none;z-index:35;background:linear-gradient(90deg,transparent 0%,rgba(251,191,36,.35) 25%,rgba(254,240,138,.95) 80%,#ffffff 100%);box-shadow:0 0 16px #fbbf24,0 0 30px #f59e0b;animation:sabotBeamFade .24s ease-out forwards}
+@keyframes sabotBeamFade{0%{opacity:1;transform:scaleY(1.8)}100%{opacity:0;transform:scaleY(.2)}}
+
+/* 全息電磁脈衝與反輻射壓制波束 (EW / SEAD Jamming Beam) */
+.fx-ew-beam{position:absolute;height:20px;margin-top:-10px;transform-origin:0 50%;pointer-events:none;z-index:35;background:repeating-linear-gradient(90deg,transparent 0px,transparent 10px,var(--ew-color,#3de0ff) 10px,var(--ew-color,#3de0ff) 14px,rgba(167,139,250,.85) 14px,rgba(167,139,250,.85) 18px);box-shadow:0 0 20px var(--ew-color,#3de0ff);border-top:1px dashed rgba(255,255,255,.7);border-bottom:1px dashed rgba(255,255,255,.7);animation:ewPulseBeam .34s ease-out forwards}
+@keyframes ewPulseBeam{0%{opacity:0;transform:scaleY(.2)}30%{opacity:1;transform:scaleY(1.35)}100%{opacity:0;transform:scaleY(.4)}}
+
+/* 開火端砲口制退爆閃 / 垂發冷發射煙霧 (Muzzle Blast & Launch Plume) */
+.fx-muzzle{position:absolute;width:44px;height:44px;pointer-events:none;z-index:37;border-radius:50%;background:radial-gradient(circle,#ffffff 0%,#fef08a 35%,var(--mz-color,#f59e0b) 70%,transparent 100%);animation:muzzleFlash .22s ease-out forwards}
+.fx-muzzle-sabot{width:62px;height:62px;background:radial-gradient(circle,#ffffff 0%,#fbbf24 45%,#ea580c 75%,transparent 100%);box-shadow:0 0 28px #f59e0b}
+@keyframes muzzleFlash{0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}45%{opacity:1;transform:translate(-50%,-50%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.6)}}
+
+/* 飛彈凝結尾煙與水下魚雷空泡粒子 (Contrail & Cavitation Particles) */
+.fx-trail-pt{position:absolute;width:9px;height:9px;margin-left:-4.5px;margin-top:-4.5px;border-radius:50%;pointer-events:none;z-index:34}
+.fx-trail-pt.contrail{background:radial-gradient(circle,rgba(248,250,252,.85) 0%,rgba(148,163,184,.4) 65%,transparent 100%);animation:trailPuff .32s ease-out forwards}
+.fx-trail-pt.smoke-fire{background:radial-gradient(circle,rgba(251,146,60,.9) 0%,rgba(100,116,139,.55) 65%,transparent 100%);animation:trailPuff .34s ease-out forwards}
+.fx-trail-pt.bubble{border:1.5px solid rgba(103,232,249,.9);background:rgba(207,250,254,.35);animation:bubblePop .32s ease-out forwards}
+@keyframes trailPuff{0%{opacity:.9;transform:scale(.5)}100%{opacity:0;transform:scale(2.2)}}
+@keyframes bubblePop{0%{opacity:1;transform:scale(.4)}100%{opacity:0;transform:scale(1.8) translateY(-6px)}}
+
+/* 目標火控鎖定準星框 (Tactical HUD Lock-On Reticle) */
+.fx-reticle{position:absolute;width:58px;height:58px;margin-left:-29px;margin-top:-29px;pointer-events:none;z-index:39;border:1.5px dashed rgba(255,93,110,.85);border-radius:50%;box-shadow:0 0 16px rgba(255,93,110,.45),inset 0 0 12px rgba(255,93,110,.3);animation:reticleLock .34s cubic-bezier(.16,1,.3,1) forwards}
+.fx-reticle::before,.fx-reticle::after{content:'';position:absolute;inset:-5px;border:2px solid transparent;border-top-color:#ff5d6e;border-bottom-color:#ff5d6e;border-radius:4px}
+.fx-reticle.ew-lock{border-color:#a78bfa;box-shadow:0 0 18px rgba(167,139,250,.6)}
+.fx-reticle.ew-lock::before,.fx-reticle.ew-lock::after{border-top-color:#3de0ff;border-bottom-color:#a78bfa}
+@keyframes reticleLock{0%{opacity:0;transform:scale(1.85) rotate(-45deg)}45%{opacity:1;transform:scale(.92) rotate(0deg)}100%{opacity:0;transform:scale(1.05) rotate(15deg)}}
+
+/* 多層次爆炸火球、超音速震波環、飛濺火花與水柱 (Layered Detonation FX) */
+.fx-explosion{position:absolute;width:72px;height:72px;margin-left:-36px;margin-top:-36px;pointer-events:none;z-index:38;border-radius:50%;background:radial-gradient(circle,#ffffff 0%,#fef08a 25%,rgba(255,158,27,.92) 52%,rgba(239,68,68,.75) 76%,transparent 100%);box-shadow:0 0 28px rgba(245,158,11,.85);animation:boom .38s cubic-bezier(.1,1,.3,1) forwards}
+.fx-explosion.fx-explosion-kill{width:112px;height:112px;margin-left:-56px;margin-top:-56px;box-shadow:0 0 48px rgba(255,93,110,.95),0 0 80px rgba(245,158,11,.8);animation:boomKill .52s cubic-bezier(.1,1,.3,1) forwards}
+.fx-explosion.fx-explosion-ew{background:radial-gradient(circle,#ffffff 0%,#67e8f9 35%,#a78bfa 70%,transparent 100%);box-shadow:0 0 32px #3de0ff}
+@keyframes boom{0%{opacity:1;transform:scale(.2)}45%{opacity:1;transform:scale(1.4)}100%{opacity:0;transform:scale(2.15)}}
+@keyframes boomKill{0%{opacity:1;transform:scale(.25)}35%{opacity:1;transform:scale(1.65)}70%{opacity:.9;transform:scale(2.1)}100%{opacity:0;transform:scale(2.65)}}
+
+.fx-shockwave{position:absolute;width:84px;height:84px;margin-left:-42px;margin-top:-42px;pointer-events:none;z-index:37;border-radius:50%;border:2.5px solid rgba(254,240,138,.9);box-shadow:0 0 18px rgba(251,191,36,.75);animation:shockRing .35s cubic-bezier(.1,1,.3,1) forwards}
+.fx-shockwave.kill-ring{width:136px;height:136px;margin-left:-68px;margin-top:-68px;border-width:3.5px;border-color:#ffffff;box-shadow:0 0 30px #ff5d6e,inset 0 0 20px #fbbf24;animation:shockRing .48s cubic-bezier(.1,1,.3,1) forwards}
+.fx-shockwave.ew-ring{border-color:#3de0ff;box-shadow:0 0 24px #a78bfa}
+@keyframes shockRing{0%{opacity:1;transform:scale(.15)}100%{opacity:0;transform:scale(1.85)}}
+
+/* 破片飛濺火花 (Incandescent Armor Sparks) */
+.fx-spark{position:absolute;width:6px;height:3px;border-radius:2px;background:#fef08a;box-shadow:0 0 8px #f59e0b,0 0 12px #ef4444;pointer-events:none;z-index:39;animation:sparkFly .3s cubic-bezier(.15,1,.3,1) forwards}
+.fx-spark.kill-spark{width:9px;height:3.5px;background:#ffffff;box-shadow:0 0 10px #fbbf24,0 0 18px #ff5d6e;animation-duration:.45s}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1.2)}100%{opacity:0;transform:translate(var(--dx,24px),var(--dy,-24px)) scale(.3)}}
+
+/* 魚雷與反艦命中衝天水柱 (Naval Water Plume) */
+.fx-water-plume{position:absolute;width:46px;height:88px;margin-left:-23px;margin-top:-74px;pointer-events:none;z-index:39;background:radial-gradient(ellipse at 50% 90%,#ffffff 0%,#cffafe 45%,rgba(34,211,238,.55) 75%,transparent 100%);border-radius:50% 50% 25% 25%;filter:drop-shadow(0 0 14px rgba(103,232,249,.85));transform-origin:50% 100%;animation:waterPlume .46s cubic-bezier(.15,1,.3,1) forwards}
+@keyframes waterPlume{0%{opacity:1;transform:scaleY(.15) scaleX(.5)}50%{opacity:.95;transform:scaleY(1.25) scaleX(1.1)}100%{opacity:0;transform:scaleY(1.5) scaleX(1.4) translateY(-12px)}}
+
+/* 擊毀殉爆濃煙雲團 (Black-Grey Smoke Plume) */
+.fx-smoke-cloud{position:absolute;width:54px;height:54px;margin-left:-27px;margin-top:-27px;border-radius:50%;pointer-events:none;z-index:36;background:radial-gradient(circle,rgba(30,41,59,.85) 0%,rgba(71,85,105,.55) 60%,transparent 100%);animation:smokeRise .62s ease-out forwards}
+@keyframes smokeRise{0%{opacity:.85;transform:scale(.4) translateY(0)}100%{opacity:0;transform:scale(2.1) translateY(-34px)}}
+
+/* 重型單位擊毀時戰場畫面微震動 (Tactical Screen Micro-Shake) */
+.battle-screen-shake{animation:battleScreenShake .26s cubic-bezier(.36,.07,.19,.97)}
+@keyframes battleScreenShake{0%,100%{transform:none}20%{transform:translate(-4px,3px)}40%{transform:translate(4px,-3px)}60%{transform:translate(-3px,-2px)}80%{transform:translate(3px,2px)}}
 
 /* 主動防護蜂巢能量護盾 (APS Shield) */
 .fx-shield{position:absolute;width:76px;height:76px;margin-left:-38px;margin-top:-38px;pointer-events:none;z-index:38;border-radius:50%;border:3px solid var(--violet);background:radial-gradient(circle,rgba(167,139,250,.45) 0%,transparent 70%);box-shadow:0 0 28px var(--violet);animation:shieldPulse .42s ease-out forwards}
