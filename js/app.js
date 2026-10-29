@@ -2245,7 +2245,7 @@ function setMode(m) {
 /* =====================================================
    🏆 天梯競技場介面與交互邏輯 (Tactical Ladder UI Controller)
    ===================================================== */
-let currentRosterTab = 'live'; // 'live', 'zone', 或 'yesterday'
+let currentRosterTab = 'zone'; // 'live', 'zone', 或 'yesterday'
 
 function renderLadderTargetsTray() {
   const section = $('#ladderTargetsSection');
@@ -2290,8 +2290,8 @@ function renderLadderTargetsTray() {
       // 戰術電戰迷霧：僅公開第 1 槽（旗艦），後 4 槽完全受密電遮蔽
       const isMasked = slotIdx >= 1;
       if (isMasked) {
-        return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
-          <span style="font-size:10px">📡</span>
+        return `<div class="r-deck-chip masked" title="受戰術電戰迷霧遮蔽：未知武器裝備">
+          <span class="chip-mask-q">?</span>
         </div>`;
       }
       if (!unit) return '<div class="r-deck-chip"></div>';
@@ -2313,7 +2313,7 @@ function renderLadderTargetsTray() {
           <div class="t-commander-meta">
             <span style="color:${tier.color};font-weight:700">${tier.name}</span>
             <span>${u.rp.toLocaleString()} RP</span>
-            <span class="doctrine-secret" style="font-size:10px;color:#94a3b8" title="戰略保密教條">🔒 密電保密</span>
+            <span class="doctrine-secret" style="font-size:10px;color:#94a3b8" title="戰略保密教條">🔒 戰術教條保密</span>
           </div>
         </div>
       </div>
@@ -2367,6 +2367,8 @@ function renderLadderView() {
   }
   const myRankVal = $('#myRankVal');
   if (myRankVal) myRankVal.textContent = `#${player.rank}`;
+  const scrollMyRankEl = $('#btnScrollMyRank');
+  if (scrollMyRankEl) scrollMyRankEl.textContent = player.rank;
 
   const myRankTrend = $('#myRankTrend');
   if (myRankTrend) {
@@ -2489,8 +2491,8 @@ function renderLadderRosterTable() {
       const unit = UNIT_MAP[id];
       const isMasked = !isMe && slotIdx >= 1;
       if (isMasked) {
-        return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
-          <span style="font-size:10px">📡</span>
+        return `<div class="r-deck-chip masked" title="受戰術電戰迷霧遮蔽：未知武器裝備">
+          <span class="chip-mask-q">?</span>
         </div>`;
       }
       if (!unit) return '<div class="r-deck-chip"></div>';
@@ -2523,7 +2525,7 @@ function renderLadderRosterTable() {
         <span style="font-size:18px">${u.flag}</span>
         <div class="r-name-block">
           <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="該指揮官啟用了戰略保密教條，進場交戰時方能偵知">🔒 密電保密</span>`}</span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="敵方駐防戰術教條（先發制人 / 縱深防禦 / 電子欺敵）保密中，進場推演時解密">🔒 戰術教條保密</span>`}</span>
         </div>
       </div>
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>

@@ -6737,3 +6737,137 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-sizing: border-box !important;
   }
 }
+
+/* =====================================================
+   🎖️ 將官四星星陣防溢出與武器電戰迷霧問號 (?) 優化樣式
+   ===================================================== */
+.my-tier-badge {
+  width: 48px !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding: 2px !important;
+  flex-shrink: 0 !important;
+}
+.tier-stars-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+  line-height: 1 !important;
+  user-select: none !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+}
+.tier-stars-box.stars-4 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 2px 3px !important;
+  width: 28px !important;
+  max-width: 28px !important;
+  font-size: 11px !important;
+  place-items: center !important;
+}
+
+/* 武器電戰遮蔽：以科技感 (?) 呈現未知武器 */
+.r-deck-chip.masked {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px dashed rgba(56, 189, 248, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+}
+.chip-mask-q {
+  font-family: var(--mono) !important;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
+  color: var(--cyan) !important;
+  opacity: 0.9 !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 6px rgba(56, 189, 248, 0.7) !important;
+}
+[data-theme="light"] .r-deck-chip.masked {
+  background: #f1f5f9 !important;
+  border-color: rgba(2, 132, 199, 0.45) !important;
+}
+[data-theme="light"] .chip-mask-q {
+  color: #0284c7 !important;
+  text-shadow: none !important;
+}
+
+/* =====================================================
+   ⚔️ 雙欄名冊行 (Roster Row) 緊湊自適應優化
+   確保 ⚔️ 挑戰 按鈕與 5 槽晶片在任何螢幕寬度下 100% 完整露出，絕不被擠出右側！
+   ===================================================== */
+.roster-row {
+  padding: 6px 10px !important;
+  gap: 6px !important;
+}
+.r-rank {
+  width: 32px !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+}
+.r-trend {
+  width: 50px !important;
+  font-size: 10px !important;
+  flex-shrink: 0 !important;
+}
+.r-streak {
+  width: 86px !important;
+  flex-shrink: 0 !important;
+}
+.r-streak-tag {
+  font-size: 9.5px !important;
+  padding: 1px 4px !important;
+}
+.r-commander {
+  flex: 1 1 180px !important;
+  min-width: 0 !important;
+  gap: 6px !important;
+}
+.r-name {
+  font-size: 12.5px !important;
+}
+.r-title-sub {
+  font-size: 10px !important;
+}
+.r-rp {
+  width: 75px !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+}
+.r-deck-preview {
+  gap: 3px !important;
+  flex-shrink: 0 !important;
+}
+.r-deck-chip {
+  width: 25px !important;
+  height: 25px !important;
+}
+.r-deck-chip .chip-cost {
+  font-size: 8.5px !important;
+  bottom: 0px !important;
+  right: 1px !important;
+}
+.r-action {
+  width: 82px !important;
+  flex-shrink: 0 !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+}
+.btn-ladder-engage {
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+  white-space: nowrap !important;
+}
+.r-action-pill {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+  white-space: nowrap !important;
+}
