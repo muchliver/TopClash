@@ -2245,7 +2245,85 @@ function setMode(m) {
 /* =====================================================
    🏆 天梯競技場介面與交互邏輯 (Tactical Ladder UI Controller)
    ===================================================== */
-let currentRosterTab = 'live'; // 'live' 或 'yesterday'
+let currentRosterTab = 'live'; // 'live', 'zone', 或 'yesterday'
+
+function renderLadderTargetsTray() {
+  const section = $('#ladderTargetsSection');
+  if (!section || typeof LadderEngine === 'undefined') return;
+  const lState = LadderEngine.getState();
+  const player = lState.player;
+  const targets = (LadderEngine.getChallengeableTargets && LadderEngine.getChallengeableTargets()) || [];
+
+  const rankRangeEl = $('#targetRankRange');
+  const scrollMyRankEl = $('#btnScrollMyRank');
+  if (scrollMyRankEl) scrollMyRankEl.textContent = player.rank;
+
+  if (targets.length === 0) {
+    if (rankRangeEl) rankRangeEl.textContent = player.rank === 1 ? '您已登頂榜首' : '暫無可挑戰目標';
+    const grid = $('#targetsCardGrid');
+    if (grid) {
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:16px;color:#94a3b8;font-size:13px">
+        ${player.rank === 1 ? '👑 恭喜登頂天梯榜首！您是全服頂尖戰略指揮官，請駐防守衛您的榮譽席位！' : '目前前方無可挑戰之席位。'}
+      </div>`;
+    }
+    return;
+  }
+
+  const minRank = targets[targets.length - 1].rank;
+  const maxRank = targets[0].rank;
+  if (rankRangeEl) {
+    rankRangeEl.textContent = minRank === maxRank ? `#${minRank}` : `#${minRank} ~ #${maxRank}`;
+  }
+
+  const grid = $('#targetsCardGrid');
+  if (!grid) return;
+
+  grid.innerHTML = targets.map(u => {
+    const tier = LadderEngine.getRankTier(u.rp);
+    const streak = u.streakDays || 1;
+    const isBreaker = streak >= 3;
+    const docObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1];
+    const rpDiff = u.rp - player.rp;
+
+    const deckChipsHtml = (u.deck || []).map((id, slotIdx) => {
+      const unit = UNIT_MAP[id];
+      const isMasked = (player.rank - u.rank >= 3) && (slotIdx === 1 || slotIdx === 2);
+      if (isMasked) {
+        return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
+          <span style="font-size:10px">📡</span>
+        </div>`;
+      }
+      if (!unit) return '<div class="r-deck-chip"></div>';
+      return `<div class="r-deck-chip" title="${esc(unit.name)} ($${unit.cost})">
+        <img src="${unit.img || `assets/units/${unit.id}.jpg`}" alt="${esc(unit.name)}" onerror="this.style.display='none'"/>
+        <span class="chip-cost">$${unit.cost}</span>
+      </div>`;
+    }).join('');
+
+    return `<div class="target-card ${isBreaker ? 'breaker-bonus' : ''}">
+      <div class="t-card-head">
+        <span class="t-card-rank">#${u.rank}</span>
+        ${isBreaker ? `<span class="t-card-streak" title="敵方守位 >= 3 天，擊破額外獲得 +15 RP 終結者加成！">👑 守位${streak}天 (+15)</span>` : `<span style="font-size:11px;color:${rpDiff >= 0 ? 'var(--cyan)' : '#a3e635'}">${rpDiff >= 0 ? `+${rpDiff} RP` : `${rpDiff} RP`}</span>`}
+      </div>
+      <div class="t-card-body">
+        <div class="t-commander-row">
+          <span style="font-size:16px">${u.flag || '🌐'}</span>
+          <span class="t-commander-name" title="${esc(u.name)}">${esc(u.name)}</span>
+        </div>
+        <div class="t-commander-meta">
+          <span style="color:${tier.color};font-weight:700">${tier.name}</span>
+          <span>${u.rp.toLocaleString()} RP</span>
+          <span style="color:var(--cyan);font-size:10.5px" title="駐防教條：${docObj.name}">${docObj.icon}</span>
+        </div>
+        <div class="t-deck-chips">${deckChipsHtml}</div>
+      </div>
+      <button type="button" class="btn-ladder-engage t-card-btn" data-target-rank="${u.rank}" data-target-id="${u.id}">
+        ⚔️ 挑戰 (#${u.rank})
+      </button>
+    </div>`;
+  }).join('');
+}
+
 
 function renderLadderView() {
   if (typeof LadderEngine === 'undefined') return;
@@ -2336,7 +2414,10 @@ function renderLadderView() {
       </div>`;
   }
 
-  // 2. 渲染 Top 30 單列階梯天梯榜
+  // 2. 渲染上方可挑戰目標托盤
+  renderLadderTargetsTray();
+
+  // 3. 渲染階梯天梯榜 (支援全榜與戰區頁籤)
   renderLadderRosterTable();
 }
 
@@ -2346,8 +2427,15 @@ function renderLadderRosterTable() {
   const lState = LadderEngine.getState();
   const player = lState.player;
 
-  const isLive = currentRosterTab === 'live';
-  const list = isLive ? LadderEngine.getRosterTop30() : lState.yesterdayTop10;
+  const isLive = currentRosterTab === 'live' || currentRosterTab === 'zone';
+  let list = [];
+  if (currentRosterTab === 'zone') {
+    list = (LadderEngine.getRosterZone && LadderEngine.getRosterZone()) || LadderEngine.getRosterTop30();
+  } else if (currentRosterTab === 'yesterday') {
+    list = lState.yesterdayTop10;
+  } else {
+    list = LadderEngine.getRosterTop30();
+  }
 
   tableBox.innerHTML = list.map((u, idx) => {
     const isMe = u.id === player.id;
@@ -2458,19 +2546,54 @@ $('#viewLadder')?.addEventListener('click', e => {
     return;
   }
 
-  // 2. 切換即時榜 vs 昨日榮譽榜
+  // 2. 切換即時榜 vs 戰區席位 vs 昨日榮譽榜
+  if (e.target.closest('#tabRosterZone')) {
+    currentRosterTab = 'zone';
+    $('#tabRosterZone')?.classList.add('active');
+    $('#tabRosterLive')?.classList.remove('active');
+    $('#tabRosterYesterday')?.classList.remove('active');
+    renderLadderRosterTable();
+    return;
+  }
   if (e.target.closest('#tabRosterLive')) {
     currentRosterTab = 'live';
-    $('#tabRosterLive').classList.add('active');
-    $('#tabRosterYesterday').classList.remove('active');
+    $('#tabRosterLive')?.classList.add('active');
+    $('#tabRosterZone')?.classList.remove('active');
+    $('#tabRosterYesterday')?.classList.remove('active');
     renderLadderRosterTable();
     return;
   }
   if (e.target.closest('#tabRosterYesterday')) {
     currentRosterTab = 'yesterday';
-    $('#tabRosterYesterday').classList.add('active');
-    $('#tabRosterLive').classList.remove('active');
+    $('#tabRosterYesterday')?.classList.add('active');
+    $('#tabRosterLive')?.classList.remove('active');
+    $('#tabRosterZone')?.classList.remove('active');
     renderLadderRosterTable();
+    return;
+  }
+
+  // 2.1 定位我的天梯席位 (#btnScrollToMe)
+  if (e.target.closest('#btnScrollToMe')) {
+    if (currentRosterTab === 'yesterday') {
+      currentRosterTab = 'live';
+      $('#tabRosterLive')?.classList.add('active');
+      $('#tabRosterZone')?.classList.remove('active');
+      $('#tabRosterYesterday')?.classList.remove('active');
+      renderLadderRosterTable();
+    }
+    setTimeout(() => {
+      const myRow = document.querySelector('.roster-row.is-me');
+      if (myRow) {
+        myRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        myRow.classList.remove('highlight-me');
+        void myRow.offsetWidth;
+        myRow.classList.add('highlight-me');
+        setTimeout(() => myRow.classList.remove('highlight-me'), 2500);
+        toast(`📍 已精確定位至我方天梯席位 (#${LadderEngine.getState().player.rank})！`);
+      } else {
+        toast(`📍 我方席位為 #${LadderEngine.getState().player.rank}，已切換顯示！`);
+      }
+    }, 60);
     return;
   }
 

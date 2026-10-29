@@ -3400,6 +3400,165 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: rgba(251, 191, 36, 0.4);
 }
 
+/* 🎯 當前可挑戰獵殺目標專區 (Target Matchmaking Tray) */
+.ladder-targets-section {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(15, 23, 42, 0.6));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  margin-bottom: 14px;
+}
+[data-theme="light"] .ladder-targets-section {
+  background: linear-gradient(135deg, #f0f9ff, #ffffff);
+  border-color: rgba(2, 132, 199, 0.25);
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.06);
+}
+.targets-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.targets-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.targets-badge {
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--cyan);
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: .05em;
+}
+.targets-sub {
+  font-size: 12px;
+  color: #94a3b8;
+}
+[data-theme="light"] .targets-sub {
+  color: #64748b;
+}
+
+/* 候選卡片網格 (響應式 1~5 列) */
+.targets-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+.target-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="light"] .target-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.target-card:hover {
+  border-color: var(--cyan);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.2);
+}
+.target-card.breaker-bonus {
+  border-color: rgba(251, 191, 36, 0.45);
+}
+.target-card.breaker-bonus::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.t-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.t-card-rank {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--cyan);
+  background: rgba(56, 189, 248, 0.12);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.t-card-streak {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+.t-card-body {
+  margin-bottom: 10px;
+}
+.t-commander-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.t-commander-name {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #f8fafc;
+}
+[data-theme="light"] .t-commander-name {
+  color: #0f172a;
+}
+.t-commander-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.t-deck-chips {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+.t-deck-chips .r-deck-chip {
+  width: 28px;
+  height: 28px;
+}
+.t-card-btn {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.roster-row.highlight-me {
+  animation: highlightPulse 2s ease-in-out;
+}
+@keyframes highlightPulse {
+  0%, 100% { box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.08); }
+  50% { box-shadow: 0 0 20px rgba(56, 189, 248, 0.6), inset 0 0 20px rgba(56, 189, 248, 0.3); }
+}
+
 .roster-table-box {
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.1);

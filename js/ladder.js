@@ -271,6 +271,26 @@ const LadderEngine = (function() {
     return targetRank < pRank && targetRank >= pRank - 5;
   }
 
+  /* 取得當前可挑戰的目標清單（前方最近 5 名以內之對手） */
+  function getChallengeableTargets() {
+    sortAndReindex();
+    const pRank = state.player.rank;
+    if (pRank <= 1) return [];
+    // 依名次從近到遠排序（例如 #24, #23, #22, #21, #20）
+    return state.roster.filter(u => u.id !== state.player.id && u.rank < pRank && u.rank >= pRank - 5)
+      .sort((a, b) => b.rank - a.rank);
+  }
+
+  /* 取得我方戰區席位清單（包含我方及其前後對手） */
+  function getRosterZone() {
+    sortAndReindex();
+    const pRank = state.player.rank;
+    const minR = Math.max(1, pRank - 5);
+    const maxR = Math.min(state.roster.length, pRank + 4);
+    return state.roster.filter(u => u.rank >= minR && u.rank <= maxR)
+      .sort((a, b) => a.rank - b.rank);
+  }
+
   /* 挑選 3 名具備挑戰梯度的候選對手 (附帶戰術偵察迷霧) */
   function getMatchCandidates() {
     sortAndReindex();
@@ -549,6 +569,8 @@ const LadderEngine = (function() {
     getRosterTop30,
     getRosterUserByRank,
     canChallengeRank,
+    getChallengeableTargets,
+    getRosterZone,
     getMatchCandidates,
     resolveMatch,
     setDefenseFleet,

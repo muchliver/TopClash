@@ -269,9 +269,22 @@
     </div>
   </div>
 
+  <!-- 🎯 當前可挑戰獵殺目標席（前 5 名鎖定專區） -->
+  <div class="ladder-targets-section" id="ladderTargetsSection">
+    <div class="targets-header">
+      <div class="targets-title-wrap">
+        <span class="targets-badge">🎯 當前可挑戰獵殺目標</span>
+        <span class="targets-sub">依交戰守則，您當前可挑戰前方最近 5 名指揮官（第 <b id="targetRankRange" style="color:var(--cyan)">-- ~ --</b> 名），戰勝直接超車名次！</span>
+      </div>
+      <button class="btn-micro" id="btnScrollToMe" type="button" style="border-color:var(--cyan);color:var(--cyan);font-weight:800">📍 定位我的席位 (#<span id="btnScrollMyRank">--</span>)</button>
+    </div>
+    <div class="targets-card-grid" id="targetsCardGrid"></div>
+  </div>
+
   <!-- 下方：Top 30 精英單列天梯名冊 -->
   <div class="ladder-roster-section">
     <div class="roster-tabs">
+      <button class="roster-tab" id="tabRosterZone">⚔️ 我的戰區目標 (我方與前後對手)</button>
       <button class="roster-tab active" id="tabRosterLive">🏆 全球 TOP 30 頂尖階梯殿堂 (每席一列)</button>
       <button class="roster-tab" id="tabRosterYesterday">📜 昨日榮譽殿堂 (昨日 00:00 截算)</button>
     </div>
