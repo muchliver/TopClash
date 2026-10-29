@@ -1087,8 +1087,16 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-shadow: 0 0 20px rgba(217,119,6,.4);
 }
 
-/* C/D 級：作戰惜敗/潰敗警報紅光 */
-.grade-c, .grade-d{
+/* C 級：浴血苦戰/殘局惜敗 紫晶光 */
+.grade-c{
+  background: radial-gradient(circle at 30% 30%, #f5e8ff, #a855f7 65%, #6b21a8);
+  color: #1e053a;
+  border-color: #d8b4fe;
+  box-shadow: 0 0 20px rgba(168,85,247,.45);
+}
+
+/* D 級：作戰潰敗 警報血紅光 */
+.grade-d{
   background: radial-gradient(circle at 30% 30%, #ffe4e6, #e11d48 65%, #881337);
   color: #3f0713;
   border-color: #fda4af;

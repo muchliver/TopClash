@@ -4383,25 +4383,57 @@ function showResult(res, bo3Custom) {
   const f = x => x.toFixed(1);
   const why = buildWhy(res);
 
+  // 雙方生還統計與得分對比
+  const aliveCountA = res.final.A.filter(u => u.alive).length;
+  const aliveCountB = res.final.B.filter(u => u.alive).length;
+  const mySide = state.isOnlinePvp ? (isHost ? 'A' : 'B') : 'A';
+  const enemySide = mySide === 'A' ? 'B' : 'A';
+  const myAlive = mySide === 'A' ? aliveCountA : aliveCountB;
+  const enemyAlive = mySide === 'A' ? aliveCountB : aliveCountA;
+  const myTotalVP = res.vp[mySide].total;
+  const enemyTotalVP = res.vp[enemySide].total;
+  const diffVP = myTotalVP - enemyTotalVP;
+  const enemyWiped = enemyAlive === 0;
+
   // 1. 計算作戰評級 (Combat Grade)
-  let grade = 'B', gradeTitle = '險 勝', gradeDesc = '戰局焦灼，驚險獲勝', gradeClass = 'grade-b';
+  // S: 頂級完勝（零戰損 5/5 全員生還，或建制高度完好 4/5 生還且淨勝積分優勢/敵軍全殲）
+  // A: 戰術大勝（3/5+ 生還且火力壓制/全殲敵軍）
+  // B: 戰術險勝（2/5 生還，或互有折損險勝）
+  // C: 苦戰慘勝（僅 1/5 生還之皮洛士式勝利）/ 或戰敗時之「作戰惜敗」
+  // ⚖: 勢均力敵戰略僵局
+  // D: 作戰潰敗（部隊折損慘重）
+  let grade = 'B', gradeTitle = '戰 術 險 勝', gradeDesc = '戰局焦灼，驚險獲勝', gradeClass = 'grade-b';
   if (won) {
-    const allAlive = res.final.A.every(u => u.alive);
-    if (res.wipeout || allAlive) {
+    if (myAlive === 5) {
       grade = 'S';
       gradeTitle = '戰 略 完 勝';
-      gradeDesc = allAlive ? 'ACE 全隊全員生還 · 完美殲敵' : '全殲敵方全體特遣部隊';
+      gradeDesc = '★ ACE 全員零損耗生還 · 完美殲敵';
       gradeClass = 'grade-s';
-    } else if (A.total - B.total >= 10) {
+    } else if (myAlive >= 4 && (diffVP >= 8 || enemyWiped)) {
+      grade = 'S';
+      gradeTitle = '戰 略 完 勝';
+      gradeDesc = `主力建制極度完好 (${myAlive}/5 存活) · 壓倒性戰略優勢`;
+      gradeClass = 'grade-s';
+    } else if (myAlive >= 3 && (diffVP >= 5 || enemyWiped)) {
       grade = 'A';
       gradeTitle = '戰 術 大 勝';
-      gradeDesc = '火力全面壓制，取得決定性戰略分差';
+      gradeDesc = `火力全面壓制，重創敵主力建制 (${myAlive}/5 存活)`;
       gradeClass = 'grade-a';
-    } else {
+    } else if (myAlive >= 4) {
+      grade = 'A';
+      gradeTitle = '優 勢 獲 勝';
+      gradeDesc = `主力防線保持穩固 (${myAlive}/5 存活)，奪取戰場主動權`;
+      gradeClass = 'grade-a';
+    } else if (myAlive >= 2) {
       grade = 'B';
       gradeTitle = '戰 術 險 勝';
-      gradeDesc = '雙方互有折損，以微弱積分優勢勝出';
+      gradeDesc = `雙方激烈交火互有折損 (${myAlive}/5 存活)，突破敵防線勝出`;
       gradeClass = 'grade-b';
+    } else {
+      grade = 'C';
+      gradeTitle = '作 戰 慘 勝';
+      gradeDesc = `浴血苦戰！特遣隊遭受重創 (僅 ${myAlive}/5 存活)，驚險逆轉險勝`;
+      gradeClass = 'grade-c';
     }
   } else if (draw) {
     grade = '⚖';
@@ -4409,10 +4441,10 @@ function showResult(res, bo3Custom) {
     gradeDesc = '雙方勢均力敵，戰略積分打平';
     gradeClass = 'grade-draw';
   } else {
-    if (A.total > 0 && B.total - A.total < 10) {
+    if (diffVP > -6 || enemyAlive <= 2) {
       grade = 'C';
       gradeTitle = '作 戰 惜 敗';
-      gradeDesc = '重創敵方主力，僅因微幅戰術分差落敗';
+      gradeDesc = '重創敵方主力建制，僅因微幅戰術分差落敗';
       gradeClass = 'grade-c';
     } else {
       grade = 'D';
@@ -4423,14 +4455,12 @@ function showResult(res, bo3Custom) {
   }
 
   // 2. 計算 MVP 王牌軍武單位
-  const mvpSide = won ? 'A' : 'B';
-  const mvpUnit = res.mvp[mvpSide] || (won ? res.final.A[0] : res.final.B[0]);
+  const mvpSide = won ? mySide : enemySide;
+  const mvpUnit = res.mvp[mvpSide] || (won ? res.final[mySide][0] : res.final[enemySide][0]);
   const mvpMeta = UNIT_MAP[mvpUnit.id] || {};
-  const mvpIsMine = mvpSide === 'A';
+  const mvpIsMine = mvpSide === mySide;
 
-  // 3. 雙方生還統計與得分對比
-  const aliveCountA = res.final.A.filter(u => u.alive).length;
-  const aliveCountB = res.final.B.filter(u => u.alive).length;
+  // 3. 戰略得分比例
   const sumVP = A.total + B.total;
   const pctA = sumVP > 0 ? Math.round((A.total / sumVP) * 100) : 50;
   const pctB = 100 - pctA;
@@ -4440,6 +4470,10 @@ function showResult(res, bo3Custom) {
   else if (state.mode === 'ghost' || (state.mode === 'quick' && state.quickSubMode === 'ghost')) subtitle += ` · 幽靈對決 (${state.ghostTarget?.callsign || '名將'})`;
   else if (state.mode === 'bo3') subtitle += ` · BO5 第 ${state.bo3.round} 局 (比分 ${state.bo3.winsA} - ${state.bo3.winsB})`;
   else subtitle += ' · 快速交鋒 · AI 戰術演練';
+
+  const modeTagText = won 
+    ? (enemyWiped ? '💥 全殲敵軍' : '🎯 戰略判定') 
+    : (myAlive === 0 ? '💥 全軍覆沒' : (draw ? '⚖ 平局判定' : '🎯 戰略判定'));
 
   $('#resultCard').innerHTML = `
     <button class="modal-x" id="rCloseX" title="關閉彈窗並檢視戰場情形">✕</button>
@@ -4455,7 +4489,7 @@ function showResult(res, bo3Custom) {
       <div class="outcome-title-col">
         <div class="outcome-headline">
           <h2 class="outcome-main-title">${gradeTitle}</h2>
-          <span class="outcome-mode-tag">${res.wipeout ? '💥 全殲' : '🎯 戰略判定'}</span>
+          <span class="outcome-mode-tag">${modeTagText}</span>
           <span class="outcome-sub-desc">${gradeDesc}</span>
         </div>
         <div class="outcome-meta-row">
@@ -4705,6 +4739,7 @@ function showResult(res, bo3Custom) {
     editBtn.onclick = handleExitBattleToCurrentMode;
   }
 }
+window.showResult = showResult;
 
 function buildWhy(res) {
   const A = res.vp.A, B = res.vp.B, out = [];
