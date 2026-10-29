@@ -400,6 +400,32 @@ function getPartialDeckSynergies(idsOrUnits) {
   }
   return out;
 }
+
+function getUnitSynergyHints(u) {
+  if (!u) return [];
+  const hints = [];
+  const isCecEw = (u.ew || 0) >= 50;
+  const isCecAa = (u.traits || []).includes('AEGIS') || (u.traits || []).includes('AA_LONG');
+  if (isCecEw) hints.push({ icon: '📡', name: '協同接戰網 (CEC)', hint: '搭配【神盾艦／長程防空】可啟動：電戰+12、防空命中+6%' });
+  if (isCecAa) hints.push({ icon: '📡', name: '協同接戰網 (CEC)', hint: '搭配【$5 高階預警機】可啟動：電戰+12、防空命中+6%' });
+
+  const is5th = u.cat === 'air' && u.cost === 5;
+  const isDrone = DRONE_IDS.has(u.id) || (u.traits || []).includes('SWARM');
+  if (is5th) hints.push({ icon: '🛸', name: '有人無人協同 (MUM-T)', hint: '搭配【無人機／巡飛彈／無人快艇】可啟動：無人單位傷害+15%、全體隱匿+5' });
+  if (isDrone) hints.push({ icon: '🛸', name: '有人無人協同 (MUM-T)', hint: '搭配【$5 五代空優戰機】可啟動：無人單位傷害+15%、全體隱匿+5' });
+
+  const isNav = (u.traits || []).includes('ASW') || (u.traits || []).includes('SUB');
+  const isSpot = (u.ew || 0) >= 15 || (u.traits || []).includes('SPOT');
+  if (isNav) hints.push({ icon: '🌊', name: '立體反潛網 (ASW Net)', hint: '搭配【電戰或校射偵蒐 (EW≥15/SPOT)】可啟動：制海命中+6%、海軍傷害+12%' });
+  if (isSpot && u.cat !== 'naval') hints.push({ icon: '🌊', name: '立體反潛網 (ASW Net)', hint: '搭配【反潛艦／潛艦】可啟動：制海命中+6%、海軍傷害+12%' });
+
+  const isTank = (u.traits || []).includes('HEAVY') || (u.traits || []).includes('APS');
+  const isArty = (u.traits || []).includes('ARTY') || (u.traits || []).includes('SPOT');
+  if (isTank) hints.push({ icon: '⚙', name: '步坦砲協同鐵拳', hint: '搭配【自走砲／長程火砲／前觀校射】可啟動：火砲與裝甲傷害+10%' });
+  if (isArty && u.cat !== 'armor') hints.push({ icon: '⚙', name: '步坦砲協同鐵拳', hint: '搭配【重裝甲／APS主戰坦克】可啟動：火砲與裝甲傷害+10%' });
+
+  return hints;
+}
 const MAX_HP = Math.max(...UNITS.map(u => u.hp));
 const MAX_ATK = Math.max(...UNITS.map(u => u.atk));
 

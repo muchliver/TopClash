@@ -1268,6 +1268,11 @@ function showTooltip(u, x, y) {
         <dt>減傷防禦</dt><dd>${Math.round(u.def * 100)}%</dd>
       </dl>
       ${u.traits && u.traits.length ? `<ul>${u.traits.map(t => `<li>${esc(TRAITS[t])}</li>`).join('')}</ul>` : ''}
+      ${(() => {
+        const synHints = typeof getUnitSynergyHints === 'function' ? getUnitSynergyHints(u) : [];
+        if (!synHints.length) return '';
+        return `<div class="u-tt-synergy-box">${synHints.map(h => `<div class="u-tt-syn-item"><b>${h.icon} ${esc(h.name)}：</b><span>${esc(h.hint)}</span></div>`).join('')}</div>`;
+      })()}
     </div>`;
 
   const pad = 18;
@@ -1408,9 +1413,6 @@ function renderCommandDeck() {
         const tip = '【⚠ 缺破甲手段】缺乏真實破甲 (TRUE_AT)、空中密接 (CAS) 或重火砲，面對重裝甲主戰坦克易陷入苦戰';
         badges.push(`<span class="syn-chip warn" data-syn-tip="${esc(tip)}" title="${esc(tip)}">⚠ 缺破甲手段</span>`);
       }
-    } else if (pickedUnits.length === 0) {
-      const tip = '湊齊特定兵種組合可觸發【📡協同接戰網 / 🛸有人無人協同 / 🌊立體反潛網 / ⚙步坦砲鐵拳】戰術加成！';
-      badges.push(`<span class="syn-chip muted" data-syn-tip="${esc(tip)}" title="${esc(tip)}">💡 湊齊特定組合可觸發【📡協同網 / 🛸有人無人 / 🌊反潛網 / ⚙步坦砲】加成</span>`);
     }
     const htmlStr = badges.join('');
     synBar.innerHTML = htmlStr;
@@ -1670,6 +1672,12 @@ function openUnitDetailModal(u) {
       <div class="sheet-traits-list">
         ${u.traits.map(t => `<div class="sheet-trait-item"><b>▸</b>${esc(TRAITS[t])}</div>`).join('')}
       </div>` : ''}
+    ${(() => {
+      const synHints = typeof getUnitSynergyHints === 'function' ? getUnitSynergyHints(u) : [];
+      if (!synHints.length) return '';
+      return `<div class="sheet-label">聯合作戰體系羈絆搭檔</div>
+      <div class="sheet-synergy-hints">${synHints.map(h => `<div class="sheet-syn-hint-item"><b>${h.icon} ${esc(h.name)}</b><span>${esc(h.hint)}</span></div>`).join('')}</div>`;
+    })()}
     <div style="display:flex;gap:8px;margin-top:16px">
       <button class="btn ghost sm" id="btnSheetToggleVar" data-cat="${u.cat}" data-cost="${u.cost}" style="flex:1">
         切換為 ${u.v === 'A' ? 'B' : 'A'} 型
@@ -4814,6 +4822,12 @@ function showHelp() {
     <li><b>⚔ 先發制人</b>：階段一、二攻擊火力 <b>+12%</b>，但承受傷害 <b>+5%</b>（適合長程精準刺殺、速攻斬首）。</li>
     <li><b>🛡 縱深防禦</b>：全隊承受傷害 <b>−12%</b>，防空攔截敵機命中率 <b>+6%</b>（適合重裝甲抗揍與陣地戰）。</li>
     <li><b>📡 電子欺敵</b>：電戰值 <b>×1.5 倍</b>（更容易奪取電磁優勢），並使敵方全體命中率 <b>−8%</b>（適合迴避流與反制高命中昂貴大殺器）。</li>
+  </ul>
+  <h3>五、四大聯合作戰體系羈絆 (Combined Arms Synergies)</h3><ul>
+    <li><b>📡 協同接戰網 (CEC)</b>：預警機 (EW≥50) ＋ 遠程防空／神盾艦 ➔ 全隊電戰 +12、防空命中 +6%。</li>
+    <li><b>🛸 有人無人協同 (MUM-T)</b>：$5 五代空優戰機 ＋ 無人機／巡飛彈／無人艇 ➔ 無人與支援單位傷害 +15%、全體隱匿 +5。</li>
+    <li><b>🌊 立體海空獵殺網 (ASW Net)</b>：反潛艦／潛艦 ＋ 電戰／校射偵蒐 (EW≥15/SPOT) ➔ 制海命中 +6%、海軍傷害 +12%。</li>
+    <li><b>⚙ 步坦砲協同鐵拳 (Land Force)</b>：重裝甲／主動防護戰車 ＋ 自走砲／校射支援 ➔ 階段三裝甲與火砲傷害 +10%。</li>
   </ul>`;
   $('#helpModal').hidden = false;
   $('#helpClose').onclick = () => { $('#helpModal').hidden = true; LS.set('db15_seen', 1); };
