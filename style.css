@@ -4416,18 +4416,54 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
-.lobby-head h2 {
-  font-size: 17px;
-  margin: 0 0 2px;
-  color: #f1f5f9;
-}
-.lobby-head p {
-  font-size: 12px;
-  margin: 0 0 4px;
+.lobby-title-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
 }
 
-[data-theme="light"] .lobby-head h2 {
-  color: #0f172a;
+.lobby-main-title {
+  font-family: var(--head);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin: 0;
+  color: #fbbf24;
+  text-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="light"] .lobby-main-title {
+  color: #b45309;
+  text-shadow: none;
+}
+
+.tourney-lobby-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(61, 224, 255, 0.4);
+  background: rgba(61, 224, 255, 0.12);
+  color: var(--cyan);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s ease;
+}
+
+[data-theme="light"] .tourney-lobby-badge {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.lobby-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 0 0 6px;
+  color: var(--muted);
 }
 
 .lobby-settings-grid {
@@ -5844,6 +5880,19 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     padding: 12px 10px 20px !important;
     max-height: none !important;
     overflow: visible !important;
+  }
+  .lobby-title-strip {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+  }
+  .lobby-main-title {
+    font-size: 15.5px !important;
+    letter-spacing: 0.02em !important;
+  }
+  .tourney-lobby-badge {
+    font-size: 11px !important;
+    padding: 3px 10px !important;
   }
   .tourney-mode-tabs {
     flex-direction: row !important;

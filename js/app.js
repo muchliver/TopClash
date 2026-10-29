@@ -5427,19 +5427,20 @@ function renderTournamentView() {
     isLobby = (t.status === 'registration');
   }
 
+  const tourneyHeader = $('#tourneyHeader');
   const lobbyCard = $('#tourneyLobbyCard');
   const bracketVp = $('#tourneyBracketViewport');
   const tourneyLayout = $('#viewTournament');
 
   if (tourneyLayout) tourneyLayout.classList.toggle('is-lobby', isLobby);
+  if (tourneyHeader) tourneyHeader.hidden = isLobby; // 大廳備戰時隱藏獨立 HUD，徹底消除重複卡片
   if (lobbyCard) lobbyCard.hidden = !isLobby;
   if (bracketVp) bracketVp.hidden = isLobby;
-
-  renderTourneyHeader(t, isOnlineActive);
 
   if (isLobby) {
     renderTourneyLobby(t, isOnlineActive);
   } else {
+    renderTourneyHeader(t, isOnlineActive);
     renderTournamentBracket(t);
   }
 }
@@ -5478,6 +5479,26 @@ function renderTourneyHeader(t, isOnline = false) {
 
   $('#tourneyRoundPill').textContent = `第 ${t.currentRound}/${t.totalRounds} 輪 · ${roundNames[t.currentRound] || '淘汰賽'}`;
   $('#tourneyFormatName').textContent = formatNames[t.format || t.matchType] || '標準賽制';
+
+  const statusTagEl = $('#tourneyStatusTag');
+  if (statusTagEl) {
+    if (t.status === 'completed') {
+      statusTagEl.textContent = '🏁 賽事圓滿完結';
+      statusTagEl.style.background = 'rgba(245, 158, 11, 0.15)';
+      statusTagEl.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      statusTagEl.style.color = '#fbbf24';
+    } else if (amIEliminated) {
+      statusTagEl.textContent = '👀 戰術觀戰中';
+      statusTagEl.style.background = 'rgba(148, 163, 184, 0.15)';
+      statusTagEl.style.borderColor = 'rgba(148, 163, 184, 0.4)';
+      statusTagEl.style.color = '#94a3b8';
+    } else {
+      statusTagEl.textContent = '🟢 激戰進行中';
+      statusTagEl.style.background = 'rgba(16, 185, 129, 0.15)';
+      statusTagEl.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      statusTagEl.style.color = '#34d399';
+    }
+  }
 
   const myStateEl = $('#tourneyMyState');
   if (myStateEl) {
@@ -5648,6 +5669,67 @@ function renderTourneyLobby(t, isOnline = false) {
   }).join('');
 }
 
+function getFormatNameShort(fmt) {
+  if (fmt === 'bo1') return '⚡ 全程 BO1';
+  if (fmt === 'bo3') return '⚔️ 全程 BO3';
+  return '⭐ 決賽升級制';
+}
+
+function updateTourneyLobbyBadge() {
+  const badge = $('#tourneyLobbyModeBadge');
+  if (!badge) return;
+
+  const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+  if (onlineRoom && onlineRoom.status === 'waiting') {
+    badge.innerHTML = `👥 私人房間 [#${esc(onlineRoom.id)}] · <b>${onlineRoom.size} 強</b> <span style="opacity:0.85">(${getFormatNameShort(onlineRoom.format || onlineRoom.matchType)})</span>`;
+    badge.style.color = 'var(--amber)';
+    badge.style.borderColor = 'rgba(245,158,11,.45)';
+    badge.style.background = 'rgba(245,158,11,.12)';
+    return;
+  }
+
+  if (currentTourneyTab === 'solo') {
+    badge.innerHTML = `👤 單人闖關 · <b>${tourneySelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(tourneySelectedFormat)})</span>`;
+    badge.style.color = 'var(--cyan)';
+    badge.style.borderColor = 'rgba(61,224,255,.45)';
+    badge.style.background = 'rgba(61,224,255,.12)';
+  } else if (currentTourneyTab === 'private') {
+    badge.innerHTML = `👥 私人好友 · <b>${privateSelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(privateSelectedFormat)})</span>`;
+    badge.style.color = 'var(--amber)';
+    badge.style.borderColor = 'rgba(245,158,11,.45)';
+    badge.style.background = 'rgba(245,158,11,.12)';
+  } else {
+    badge.innerHTML = `🌐 公開隨機 · <b>${publicSelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(publicSelectedFormat)})</span>`;
+    badge.style.color = 'var(--green)';
+    badge.style.borderColor = 'rgba(93,255,176,.45)';
+    badge.style.background = 'rgba(93,255,176,.12)';
+  }
+}
+
+function syncTourneySelectorsUI() {
+  // Solo 面板按鈕選取同步
+  document.querySelectorAll('#tourneySizeSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.size === tourneySelectedSize);
+  });
+  document.querySelectorAll('#tourneyFormatSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.format === tourneySelectedFormat);
+  });
+  // Private 面板按鈕選取同步
+  document.querySelectorAll('#privateSizeSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.size === privateSelectedSize);
+  });
+  document.querySelectorAll('#privateFormatSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.format === privateSelectedFormat);
+  });
+  // Public 面板按鈕選取同步
+  document.querySelectorAll('#publicSizeSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', +b.dataset.size === publicSelectedSize);
+  });
+  document.querySelectorAll('#publicFormatSelector .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.format === publicSelectedFormat);
+  });
+}
+
 function updateTourneyTabPanels() {
   document.querySelectorAll('#tourneyModeTabs .t-mode-tab').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.tab === currentTourneyTab);
@@ -5657,22 +5739,8 @@ function updateTourneyTabPanels() {
   $('#panelTourneyPrivate').hidden = (currentTourneyTab !== 'private');
   $('#panelTourneyPublic').hidden = (currentTourneyTab !== 'public');
 
-  const badge = $('#tourneyLobbyModeBadge');
-  if (badge) {
-    if (currentTourneyTab === 'solo') {
-      badge.textContent = '👤 單人世界盃闖關賽';
-      badge.style.color = 'var(--cyan)';
-      badge.style.borderColor = 'rgba(61,224,255,.4)';
-    } else if (currentTourneyTab === 'private') {
-      badge.textContent = '👥 私人好友開房模式';
-      badge.style.color = 'var(--amber)';
-      badge.style.borderColor = 'rgba(245,158,11,.4)';
-    } else {
-      badge.textContent = '🌐 公開大廳開房或隨機匹配';
-      badge.style.color = 'var(--green)';
-      badge.style.borderColor = 'rgba(93,255,176,.4)';
-    }
-  }
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
 
   if (currentTourneyTab === 'public' && typeof FirebaseTourneyEngine !== 'undefined') {
     startListeningPublicRooms();
@@ -6410,48 +6478,52 @@ $('#tourneyModeTabs')?.addEventListener('click', e => {
 
 $('#tourneySizeSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#tourneySizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   tourneySelectedSize = +btn.dataset.size;
   TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
   renderTournamentView();
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
 });
 
 $('#tourneyFormatSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#tourneyFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   tourneySelectedFormat = btn.dataset.format;
   TournamentEngine.create(tourneySelectedSize, tourneySelectedFormat, getTournamentPlayerProfile());
   renderTournamentView();
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
 });
 
 $('#privateSizeSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#privateSizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   privateSelectedSize = +btn.dataset.size;
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
+  toast(`已設定私人房間規模：${privateSelectedSize} 強`);
 });
 
 $('#privateFormatSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#privateFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   privateSelectedFormat = btn.dataset.format || 'hybrid';
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
+  toast(`已設定私人賽制：${getFormatNameShort(privateSelectedFormat)}`);
 });
 
 $('#publicSizeSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#publicSizeSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   publicSelectedSize = +btn.dataset.size;
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
+  toast(`已設定公開排隊規模：${publicSelectedSize} 強`);
 });
 
 $('#publicFormatSelector')?.addEventListener('click', e => {
   const btn = e.target.closest('.pill-btn'); if (!btn) return;
-  document.querySelectorAll('#publicFormatSelector .pill-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
   publicSelectedFormat = btn.dataset.format || 'hybrid';
+  syncTourneySelectorsUI();
+  updateTourneyLobbyBadge();
+  toast(`已設定公開賽制：${getFormatNameShort(publicSelectedFormat)}`);
 });
 
 $('#btnTourneyFillAI')?.addEventListener('click', () => {

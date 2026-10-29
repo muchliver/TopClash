@@ -283,8 +283,8 @@
      🥇 4/8/16/32 強世界盃淘汰錦標賽主介面 (Tournament Arena)
      ===================================================== -->
 <section id="viewTournament" class="tournament-layout" hidden>
-  <!-- 錦標賽頂部抬頭 HUD (賽程進度、生存狀態、出擊操作) -->
-  <div class="tourney-header" id="tourneyHeader">
+  <!-- 錦標賽頂部抬頭 HUD (賽程進度、生存狀態、出擊操作，正式開賽後展示) -->
+  <div class="tourney-header" id="tourneyHeader" hidden>
     <div class="tourney-status-box">
       <div class="tourney-title-row">
         <span class="tourney-badge" id="tourneyBadge">🏆 2026 軍武世界盃淘汰錦標賽</span>
@@ -305,14 +305,14 @@
     </div>
   </div>
 
-  <!-- 錦標賽大廳 (建房/選人/AI補位，未開賽時展示) -->
+  <!-- 錦標賽大廳 (建房/選人/AI補位，未開賽備戰時展示，與 HUD 完全整併) -->
   <div class="tourney-lobby-card" id="tourneyLobbyCard" hidden>
     <div class="lobby-head">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-        <h2 style="margin:0">🏆 2026 軍武世界盃大獎賽 (Tournament Arena)</h2>
-        <span class="badge" id="tourneyLobbyModeBadge" style="background:rgba(61,224,255,.15);color:var(--cyan);border:1px solid rgba(61,224,255,.4);font-size:11px;font-weight:700">👤 單人世界盃闖關賽</span>
+      <div class="lobby-title-strip">
+        <h2 class="lobby-main-title">🏆 2026 軍武世界盃淘汰錦標賽 (Tournament Arena)</h2>
+        <span class="badge tourney-lobby-badge" id="tourneyLobbyModeBadge">👤 單人世界盃 · 16 強 (⭐ 決賽升級制)</span>
       </div>
-      <p class="muted">支援純單機世界盃闖關、私人好友開房連線（專屬房間碼 / 邀請連結），以及公開大廳 60 秒 (1分鐘) 自動湊桌隨機排隊！</p>
+      <p class="muted lobby-desc">支援純單機世界盃闖關、私人好友開房連線（專屬房間碼 / 邀請連結），以及公開大廳 60 秒 (1分鐘) 自動湊桌隨機排隊！</p>
     </div>
 
     <!-- 模式選籤列 -->
