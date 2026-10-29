@@ -6672,3 +6672,68 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   margin-top: 2px !important;
   margin-bottom: 0 !important;
 }
+
+/* =====================================================
+   📱 手機版戰鬥對峙陣容顯示專項修復 (Mobile Battle Squad Display Fix)
+   徹底解決手機端 (<=768px) 因 Flex/Grid 高度塌陷導致左右隊伍高度僅 12px 被隱藏的 Bug
+   ===================================================== */
+@media (max-width: 768px) {
+  .battle {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .battle-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "teama teamb"
+      "log log" !important;
+    gap: 8px !important;
+    width: 100% !important;
+    align-items: start !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-x: hidden !important;
+  }
+  .team-col.a {
+    grid-area: teama !important;
+    order: 1 !important;
+  }
+  .team-col.b {
+    grid-area: teamb !important;
+    order: 2 !important;
+  }
+  .team-col {
+    height: auto !important;
+    min-height: 220px !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+  }
+  .team-units-box {
+    height: auto !important;
+    flex: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 6px !important;
+    box-sizing: border-box !important;
+  }
+  .units-card-list {
+    height: auto !important;
+    flex: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    box-sizing: border-box !important;
+  }
+  .bu {
+    flex: none !important;
+    min-height: 44px !important;
+    height: auto !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-sizing: border-box !important;
+  }
+}

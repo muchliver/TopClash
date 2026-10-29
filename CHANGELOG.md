@@ -6,6 +6,18 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.2.0] - 2026-10-30
+#### 📱 手機端戰鬥對峙陣容顯示專項修復 (Mobile Battle Squad Display Fix)
+- **修復手機版對戰時「畫面中無隊伍顯示、兩側隊伍被壓扁為 12px 隱藏」之嚴重渲染 Bug**：
+  - **根本原因**：在手機端 @media (max-width: 768px) 中，.team-col 設為 height: auto，而內部 .team-units-box 與 .units-card-list 卻繼承了桌機版的 lex: 1 1 0; height: 100%; min-height: 0;。在 CSS Grid 規則下，因為找不到明確的父級固定高度，子容器的高度直接坍縮為 0，導致左右雙方的 5 個部隊卡片全部被 overflow: hidden 裁切遮蔽，畫面上只剩下一條 12px 的紫色邊框。
+  - **修復方案**：
+    - 強制宣告手機端 .team-col 為自適應內容高度（min-height: 220px !important; height: auto !important;）。
+    - 內部 .team-units-box 與 .units-card-list 改為 lex: none !important; height: auto !important;。
+    - 單兵卡片 .bu 設為 lex: none !important; min-height: 44px !important;，由卡片實體高度自然撐開陣容容器。
+  - **驗證成果**：在 iPhone (390×844) 及各式小螢幕實測下，我方 5 單位與敵方 5 單位雙欄橫向對峙、血條、造價、國旗與部隊縮圖 100% 完好呈現！
+
+---
+
 ### [v4.1.9] - 2026-10-30
 #### 🏆 雙主軸天梯戰略儀表板重構：修復下方滾動截斷與全服 TOP 30 高手榜同屏展示 (Dual-Column Ladder Arena & Top 30 Showcase)
 - **徹底修復視窗下方被裁切截斷之嚴重版面 Bug**：
