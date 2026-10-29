@@ -648,16 +648,22 @@ function getGhostPool() {
 function saveGhostPool(p) { LS.set('db15_ghost_pool', p); }
 
 const stats = LS.get('db15_stats', { played: 0, win: 0, streak: 0, best: 0, bo3Won: 0 });
-const playerGhost = LS.get('db15_player_ghost', { rp: 1000, callsign: '新晉指揮官', rankTitle: '准尉', wins: 0, losses: 0, myGhostDeck: null });
+const playerGhost = LS.get('db15_player_ghost', { rp: 2055, callsign: '破浪突擊巡防大隊', rankTitle: '四星上將', wins: 0, losses: 0, myGhostDeck: null });
 
 function calcRankTitle(rp) {
-  if (rp < 1100) return '准尉';
-  if (rp < 1250) return '少尉';
-  if (rp < 1400) return '上尉';
-  if (rp < 1600) return '少校';
-  if (rp < 1800) return '中校';
-  if (rp < 2000) return '上校';
-  return '五星上將';
+  if (typeof LadderEngine !== 'undefined' && LadderEngine.getRankTier) {
+    return LadderEngine.getRankTier(rp).name;
+  }
+  if (rp >= 2300) return '特級上將';
+  if (rp >= 2000) return '四星上將';
+  if (rp >= 1750) return '三星中將';
+  if (rp >= 1550) return '二星少將';
+  if (rp >= 1400) return '一星准將';
+  if (rp >= 1280) return '戰區上校';
+  if (rp >= 1180) return '作戰中校';
+  if (rp >= 1100) return '戰術少校';
+  if (rp >= 1040) return '特遣上尉';
+  return '作戰少尉';
 }
 
 const savedDeckA = LS.get('db15_deck_A', [null, null, null, null, null]);
@@ -1549,18 +1555,34 @@ function renderCommandDeck() {
 }
 
 function renderHud() {
-  const p = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState().player : null;
-  const myName = p?.name ? esc(p.name.split(' ')[0]) : '我方指揮官';
-  const myFlag = p?.flag || '🇹🇼';
-  $('#hudStats').innerHTML = `
-    <span class="chip-stat player-stat-badge" title="你的個人指揮官呼號與天梯軍階 (點擊前往天梯可自訂)">
-      <span style="font-weight:800;color:var(--cyan)">${myFlag} 我方：${myName}</span>
-      <span class="badge" style="font-size:10px;padding:1px 5px;background:rgba(61,224,255,.15);color:var(--cyan);border:1px solid rgba(61,224,255,.3)">${playerGhost.rankTitle}</span>
-    </span>
-    <span class="chip-stat" title="你累計的總對戰場次">場次 <b>${stats.played}</b></span>
-    <span class="chip-stat" title="你的個人總勝率">勝率 <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b></span>
-    <span class="chip-stat" title="你的當前連勝場數">連勝 <b>${stats.streak}</b></span>
-  `;
+  const lState = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState() : null;
+  const p = lState ? lState.player : null;
+  const myName = p?.name ? esc(p.name) : (playerGhost.callsign || '破浪突擊巡防大隊');
+  const myFlag = p?.flag || playerGhost.flag || '🇹🇼';
+  const tier = (typeof LadderEngine !== 'undefined' && p)
+    ? LadderEngine.getRankTier(p.rp)
+    : { name: '四星上將', color: '#fbbf24' };
+
+  if (p && typeof playerGhost !== 'undefined') {
+    playerGhost.callsign = p.name;
+    playerGhost.rankTitle = tier.name;
+    playerGhost.rp = p.rp;
+    playerGhost.flag = myFlag;
+    LS.set('db15_player_ghost', playerGhost);
+  }
+
+  const hudStats = $('#hudStats');
+  if (hudStats) {
+    hudStats.innerHTML = `
+      <span class="chip-stat player-stat-badge" id="hudPlayerBadge" style="cursor:pointer" title="個人軍階戰績與天梯位階：${esc(tier.name)} (${p ? p.rp : 2055} RP) [點擊前往天梯競技]">
+        <span style="font-weight:800;color:var(--cyan)">${myFlag} 我方：${myName}</span>
+        <span class="badge" style="font-size:10px;padding:1px 6px;background:${tier.color}22;color:${tier.color};border:1px solid ${tier.color}66;font-weight:700">${esc(tier.name)}</span>
+      </span>
+      <span class="chip-stat" title="你累計的總對戰場次">場次 <b>${stats.played}</b></span>
+      <span class="chip-stat" title="你的個人總勝率">勝率 <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b></span>
+      <span class="chip-stat" title="你的當前連勝場數">連勝 <b>${stats.streak}</b></span>
+    `;
+  }
 }
 
 function renderAll() {
@@ -2173,6 +2195,13 @@ if (brandLogo) {
   });
 }
 
+// 點擊頂部玩家資訊徽章平滑前往天梯競技
+$('#hudStats')?.addEventListener('click', e => {
+  if (e.target.closest('#hudPlayerBadge')) {
+    setMode('ladder');
+  }
+});
+
 function setMode(m) {
   // 無論何時點選上方功能列（即使在戰鬥中或檢視戰場情形），立即乾淨退出戰鬥
   exitActiveBattle();
@@ -2215,7 +2244,8 @@ function setMode(m) {
     if (missionBar) missionBar.hidden = true;
     if (commandDeck) commandDeck.hidden = true;
     renderLadderView();
-    toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪五星特級上將席位！');
+    renderHud();
+    toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪特級上將席位！');
     const p = LadderEngine.getState().player;
     if (!p.hasCustomName) {
       setTimeout(() => openCommanderModal(), 400);
@@ -2228,6 +2258,7 @@ function setMode(m) {
     if (missionBar) missionBar.hidden = true;
     if (commandDeck) commandDeck.hidden = true;
     renderTournamentView();
+    renderHud();
     toast('🥇 已進入世界盃淘汰錦標賽：4/8/16/32 強世足樹狀爭霸戰！');
     const p = LadderEngine.getState().player;
     if (!p.hasCustomName && !localStorage.getItem('topclash_callsign_set')) {
@@ -2898,6 +2929,7 @@ $('#commanderSave')?.addEventListener('click', () => {
   $('#commanderModal').hidden = true;
   currentActiveModal = null;
   renderLadderView();
+  renderHud();
   if (state.mode === 'tournament') {
     renderTournamentView();
   }
@@ -4217,6 +4249,7 @@ function handleLadderMatchEnd(res) {
   const isWin = res.winner === 'A';
   const enemy = state.ladderEnemy;
   const rep = LadderEngine.resolveMatch(isWin, enemy, res);
+  renderHud();
 
   currentActiveModal = $('#ladderResultModal');
   const card = $('#ladderResultCard');
@@ -5073,7 +5106,7 @@ function showHelp() {
   <h3>一、組隊規則</h3><ul><li>五大專屬槽位（制空、裝甲、防空、制海、支援各選 1 件，同一兵種不可重複選取）。</li><li>總預算 $15，無 $5 裝備數量限制（可自由配置多個 $5 單位，只要總預算不超標）；同一裝備不可重複。</li><li>每件裝備有 A（精準科技）與 B（重火力）兩種風格，$5 的戰力約為 $1 的 6 倍（明星溢價）。</li></ul>
   <h3>二、五大遊戲模式</h3><ul>
     <li><b>快速對戰</b>：對戰 6 種 AI 風格，每場事件與對手皆不同。</li>
-    <li><b>幽靈對戰 🌐</b>：非同步挑戰其他真人玩家部署的防衛陣容，升級你的天梯軍銜（准尉 ➔ 上將），亦可部署自己的影子陣容！</li>
+    <li><b>幽靈對戰 🌐</b>：非同步挑戰其他真人玩家部署的防衛陣容，升級你的天梯軍銜（作戰少尉 ➔ 特級上將），亦可部署自己的影子陣容！</li>
     <li><b>BO5 征服賽 🏆</b>：五局三勝制！敗方享有「戰術反制」特權，指定禁用敵方上一局的 1 件裝備，考驗臨場反制與更換配裝。</li>
     <li><b>精選對戰</b>：對手擁有 <b>$19 ~ $25</b> 超標陣容，你只有 $15，挑戰極限以小博大克敵制勝！</li>
     <li><b>沙盒模擬</b>：一鍵模擬 300 場，查看勝率與各事件表現。</li>
