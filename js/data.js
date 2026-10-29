@@ -23,9 +23,9 @@ const SLOTS = [
 ];
 
 const TRAITS = {
-  CAS:     '空中密接：第三階段對裝甲傷害 ×1.7（一般戰機 ×1.05）',
+  CAS:     '空中密接：第三階段對地傷害 ×1.8（一般戰機 ×1.15，對裝甲再 ×1.1）',
   LR:      '遠程截擊：空戰命中率 +6%',
-  HEAVY:   '重裝甲：額外減傷 12%',
+  HEAVY:   '重裝甲：複合／貧鈾重裝甲防護（減傷高達 22%～27%）',
   APS:     '主動防護：自動攔截第一次來襲的攻擊',
   AA_LONG: '遠程防空：防空命中率 +8%',
   CIWS:    '近防火網：敵方無人機傷害減半',
@@ -38,8 +38,8 @@ const TRAITS = {
   SEAD:    '壓制防空：階段一先制攻擊敵方防空單位',
   DEEP:    '縱深打擊：階段一直擊敵方最貴單位',
   ARTY:    '火砲支援：第三階段持續打擊敵方裝甲',
-  SAT:     '飽和面殺傷：同時攻擊兩個目標（單次傷害 ×0.7）',
-  TRUE_AT: '穿甲打擊：無視裝甲減傷，對裝甲傷害 ×2.0',
+  SAT:     '飽和面殺傷：同時攻擊兩個目標（單次傷害 ×0.75）',
+  TRUE_AT: '穿甲打擊：無視裝甲減傷（真實傷害），對裝甲額外破防加成',
   SPOT:    '校射引導：友軍火砲傷害 +15%'
 };
 
@@ -75,7 +75,7 @@ const RAW_UNITS = [
   // ==================== 重裝鐵騎 (armor, 20 款) ====================
   // $5
   ['M1A2','M1A2 SEPv3 艾布蘭','armor',5,'A','貧鈾重裝甲','美軍主戰坦克，貧鈾複合裝甲，極致減傷掌控戰線。',5,0,['HEAVY'],363,108,0.27],
-  ['LEO2','豹 2A8','armor',5,'B','頂級火控·主動防護','配備 Trophy 主動防護系統，自動攔截首發反裝甲彈藥。',5,0,['APS','HEAVY'],345,118,0.15],
+  ['LEO2','豹 2A8','armor',5,'B','頂級火控·主動防護','配備 Trophy 主動防護系統，自動攔截首發反裝甲彈藥。',5,0,['APS','HEAVY'],345,118,0.25],
   ['T14','T-14 阿瑪塔','armor',5,'C','無人砲塔攻防','無人砲塔隔艙設計，穿甲火力兇猛，自帶主動防禦。',10,0,['APS'],350,125,0.15],
   ['MK4','梅卡瓦 Mk 4M','armor',5,'D','前置重盾步坦協同','前置發動機超厚車體，全遊戲最高裝甲生命值。',5,0,['APS','HEAVY'],378,104,0.25],
   // $4
@@ -173,7 +173,7 @@ const RAW_UNITS = [
   ['MQ9','MQ-9 死神無人機','support',2,'A','持久偵打一體','長滯空偵察與定點獵殺，提供少量電戰值與持續砲火。',35,18,['ARTY'],101,48,0],
   ['TB2','TB-2 察打無人機','support',2,'B','低空戰術襲擾','廉價察打無人機，配備激光導引炸彈穿甲獵殺戰車。',40,0,['TRUE_AT'],94,55,0],
   ['SW600','彈簧刀 600 (Switchblade)','support',2,'C','重型巡飛破甲彈','標槍彈頭長時巡飛，隱匿值高且破甲爆發極強。',52,0,['TRUE_AT'],88,64,0],
-  ['ORION','獵戶座 (Orion) 察打機','support',2,'D','前沿戰術光電導引','兼具電戰與持續反裝甲，血量厚實不易被擊落。',30,10,[],106,50,0],
+  ['ORION','獵戶座 (Orion) 察打機','support',2,'D','前沿戰術光電導引','兼具電戰與持續反裝甲，血量厚實不易被擊落。',30,10,['TRUE_AT'],106,50,0],
   // $1
   ['FPV','FPV 自殺無人機組','support',1,'A','裝甲點穴蜂群','穿越機改裝自殺無人機群，專剋昂貴戰車，無視減傷。',58,0,['TRUE_AT','SWARM'],75,46,0],
   ['SPOT','民用無人機校射組','support',1,'B','熱像視野引導','民用無人機校射，讓友軍火砲傷害 +15% 且提供電戰。',40,16,['SPOT'],86,42,0],
@@ -318,6 +318,48 @@ UNITS.forEach(u => { UNIT_MAP[u.id] = u; });
 // 向後相容舊版存檔或模板 ID 別名
 if (UNIT_MAP['F35A'] && !UNIT_MAP['F35']) UNIT_MAP['F35'] = UNIT_MAP['F35A'];
 if (UNIT_MAP['HQ9L'] && !UNIT_MAP['HQ9']) UNIT_MAP['HQ9'] = UNIT_MAP['HQ9L'];
+if (UNIT_MAP['PAC3'] && !UNIT_MAP['PATRIOT']) UNIT_MAP['PATRIOT'] = UNIT_MAP['PAC3'];
+if (UNIT_MAP['DDG51'] && !UNIT_MAP['BURKE']) UNIT_MAP['BURKE'] = UNIT_MAP['DDG51'];
+if (UNIT_MAP['TJ'] && !UNIT_MAP['TUOCHIANG']) UNIT_MAP['TUOCHIANG'] = UNIT_MAP['TJ'];
+
+/* ---------- 聯合作戰體系羈絆 (Combined Arms Synergies) ---------- */
+const DRONE_IDS = new Set(['FPV', 'TB2', 'MQ9', 'SW600', 'SW300', 'ORION', 'SPOT', 'RQ4', 'USV']);
+const SYNERGIES = [
+  {
+    id: 'cec',
+    icon: '📡',
+    name: '協同接戰網 (CEC)',
+    desc: '高階電戰預警機 (EW≥50) ＋ 遠程防空／神盾艦：電戰 +12、防空命中 +6%',
+    check: units => units.some(u => (u.ew || 0) >= 50) && units.some(u => (u.traits || []).includes('AEGIS') || (u.traits || []).includes('AA_LONG'))
+  },
+  {
+    id: 'mumt',
+    icon: '🛸',
+    name: '有人無人協同 (MUM-T)',
+    desc: '$5 五代空優戰機 ＋ 無人機／巡飛彈／無人艇：支援與無人單位傷害 +15%、全體隱匿 +5',
+    check: units => units.some(u => u.cat === 'air' && u.cost === 5) && units.some(u => DRONE_IDS.has(u.id) || (u.traits || []).includes('SWARM'))
+  },
+  {
+    id: 'asw_net',
+    icon: '🌊',
+    name: '立體海空獵殺網 (ASW Net)',
+    desc: '反潛艦／潛艦 ＋ 電戰／校射偵蒐 (EW≥15 或 SPOT)：制海命中 +6%、海軍傷害 +12%',
+    check: units => units.some(u => (u.traits || []).includes('ASW') || (u.traits || []).includes('SUB')) && units.some(u => (u.ew || 0) >= 15 || (u.traits || []).includes('SPOT'))
+  },
+  {
+    id: 'iron_fist',
+    icon: '⚙',
+    name: '步坦砲協同鐵拳 (Land Force)',
+    desc: '重裝甲／主動防護戰車 ＋ 自走砲／校射支援：階段三裝甲與火砲傷害 +10%',
+    check: units => units.some(u => (u.traits || []).includes('HEAVY') || (u.traits || []).includes('APS')) && units.some(u => (u.traits || []).includes('ARTY') || (u.traits || []).includes('SPOT'))
+  }
+];
+
+function getDeckSynergies(idsOrUnits) {
+  const units = (idsOrUnits || []).map(x => (typeof x === 'string' ? UNIT_MAP[x] : x)).filter(Boolean);
+  if (units.length < 2) return [];
+  return SYNERGIES.filter(syn => syn.check(units));
+}
 const MAX_HP = Math.max(...UNITS.map(u => u.hp));
 const MAX_ATK = Math.max(...UNITS.map(u => u.atk));
 

@@ -1,0 +1,18 @@
+{
+  "name": "頂尖對戰 15元聯合作戰 | Top Clash 15",
+  "short_name": "TopClash 15",
+  "description": "15元預算制現代海陸空聯合作戰兵棋與世界盃淘汰錦標賽",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b111e",
+  "theme_color": "#0b111e",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "assets/units/F35A.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
+

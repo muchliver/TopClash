@@ -9,12 +9,12 @@
 
   // 主題控制
   function initTheme() {
-    const saved = localStorage.getItem('db15_theme') || 'dark';
+    const saved = localStorage.getItem('db15_theme') || 'light';
     document.documentElement.dataset.theme = saved;
     updateThemeIcon(saved);
 
     $('#btnTheme')?.addEventListener('click', () => {
-      const current = document.documentElement.dataset.theme || 'dark';
+      const current = document.documentElement.dataset.theme || 'light';
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       localStorage.setItem('db15_theme', next);
@@ -24,7 +24,15 @@
 
   function updateThemeIcon(t) {
     const icon = $('#themeIcon');
-    if (icon) icon.textContent = t === 'dark' ? '🌙' : '☀️';
+    if (icon) icon.textContent = t === 'dark' ? '☀️' : '🌙';
+  }
+  window.addEventListener('storage', e => {
+    if (e.key === 'db15_theme' && e.newValue) {
+      document.documentElement.dataset.theme = e.newValue;
+      updateThemeIcon(e.newValue);
+    }
+  });
+  if (false) {
   }
 
   // 狀態管理

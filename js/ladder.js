@@ -30,8 +30,8 @@ const LadderEngine = (function() {
       orders: 5, // 今日剩餘作戰派遣令
       lastResetDate: '',
       streakDays: 1, // 連續維持該名次天數
-      defenseDeck: ['F16V', 'M1A2', 'TC2', 'TUOCHIANG', 'FPV'],
-      defenseDoc: 'air_sup',
+      defenseDeck: ['F16V', 'M1A2', 'TC2', 'TJ', 'FPV'],
+      defenseDoc: 'strike',
       stats: { wins: 0, losses: 0, highestRank: 25, highestRP: 2055, miracleKills: 0, streakBreaks: 0 }
     },
     roster: [], // 全體天梯名冊 (包含玩家與對手，即時依 rp 降序)
@@ -42,6 +42,78 @@ const LadderEngine = (function() {
     load();
     checkDailyReset();
     sortAndReindex();
+    setTimeout(() => syncCloudGhosts(), 600);
+  }
+
+  /* 雲端鏡像駐防同步 (Firebase Realtime Database: ladder_ghosts) */
+  function getFirebaseDb() {
+    try {
+      if (typeof window !== 'undefined' && window.firebase && window.firebase.apps && window.firebase.apps.length) {
+        return window.firebase.database();
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function pushDefenseFleetToCloud() {
+    const db = getFirebaseDb();
+    if (!db || !state.player || !state.player.uid) return;
+    const key = String(state.player.uid).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const deck = (state.player.defenseDeck || []).map(id => (id === 'TUOCHIANG' ? 'TJ' : id));
+    if (typeof validateDeck === 'function' && validateDeck(deck).length > 0) return;
+    db.ref('ladder_ghosts/' + key).set({
+      uid: state.player.uid,
+      name: state.player.name || '無名指揮官',
+      flag: state.player.flag || '🇹🇼',
+      rp: state.player.rp || 2055,
+      deck: deck,
+      doc: state.player.defenseDoc === 'air_sup' ? 'strike' : (state.player.defenseDoc || 'defense'),
+      streakDays: state.player.streakDays || 1,
+      updatedAt: Date.now()
+    }).catch(() => {});
+  }
+
+  function syncCloudGhosts(onUpdated) {
+    const db = getFirebaseDb();
+    if (!db) return;
+    db.ref('ladder_ghosts').orderByChild('updatedAt').limitToLast(20).once('value').then(snap => {
+      const val = snap.val();
+      if (!val || typeof val !== 'object') return;
+      let changed = false;
+      Object.values(val).forEach(g => {
+        if (!g || !g.uid || g.uid === state.player.uid) return;
+        if (!Array.isArray(g.deck) || g.deck.length !== 5) return;
+        if (typeof validateDeck === 'function' && validateDeck(g.deck).length > 0) return;
+        const existing = state.roster.find(u => u.uid === g.uid || (u.isCloudGhost && u.name === g.name));
+        if (existing && existing.id !== state.player.id) {
+          existing.name = g.name;
+          existing.flag = g.flag || '🌐';
+          existing.deck = g.deck.slice();
+          existing.doc = g.doc || 'defense';
+          existing.isCloudGhost = true;
+          changed = true;
+        } else {
+          // 尋找一名低互動 NPC 席位替換為真實玩家雲端駐防艦隊
+          const npcCandidates = state.roster.filter(u => u.id !== state.player.id && !u.isCloudGhost && Math.abs(u.rp - (g.rp || 2100)) <= 260);
+          const targetNpc = npcCandidates[0];
+          if (targetNpc) {
+            targetNpc.uid = g.uid;
+            targetNpc.name = g.name;
+            targetNpc.flag = g.flag || '🌐';
+            targetNpc.deck = g.deck.slice();
+            targetNpc.doc = g.doc || 'defense';
+            targetNpc.title = '☁ 雲端真人駐防';
+            targetNpc.isCloudGhost = true;
+            changed = true;
+          }
+        }
+      });
+      if (changed) {
+        sortAndReindex();
+        save();
+        if (typeof onUpdated === 'function') onUpdated();
+      }
+    }).catch(() => {});
   }
 
   function getTodayDateStr() {
@@ -399,6 +471,7 @@ const LadderEngine = (function() {
       state.player.defenseDoc = doc;
     }
     save();
+    pushDefenseFleetToCloud();
   }
 
   /* 檢查特定呼號是否已被天梯中的其他席位使用 (名稱不可重複) */
@@ -479,6 +552,8 @@ const LadderEngine = (function() {
     getMatchCandidates,
     resolveMatch,
     setDefenseFleet,
+    syncCloudGhosts,
+    pushDefenseFleetToCloud,
     setPlayerProfile,
     isCallsignTaken,
     validateCallsign,

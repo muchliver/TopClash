@@ -38,9 +38,11 @@ const DOCTRINES = [
   { id: 'deception', icon: '📡', name: '電子欺敵', desc: '電戰值 ×1.5；敵方全體命中率 −8%。' }
 ];
 const DOC_FX = {
-  strike:    { atkEarly: 1.12, taken: 1.05, adHit: 0,    ewMult: 1,   enemyPen: 0 },
-  defense:   { atkEarly: 1,    taken: 0.88, adHit: 0.06, ewMult: 1,   enemyPen: 0 },
-  deception: { atkEarly: 1,    taken: 1,    adHit: 0,    ewMult: 1.5, enemyPen: 0.08 }
+  strike:     { atkEarly: 1.12, taken: 1.05, adHit: 0,    ewMult: 1,   enemyPen: 0 },
+  defense:    { atkEarly: 1,    taken: 0.88, adHit: 0.06, ewMult: 1,   enemyPen: 0 },
+  deception:  { atkEarly: 1,    taken: 1,    adHit: 0,    ewMult: 1.5, enemyPen: 0.08 },
+  electronic: { atkEarly: 1,    taken: 1,    adHit: 0,    ewMult: 1.5, enemyPen: 0.08 },
+  air_sup:    { atkEarly: 1.12, taken: 1.05, adHit: 0,    ewMult: 1,   enemyPen: 0 }
 };
 
 /* ---------- 隊伍建立 ---------- */
@@ -69,13 +71,27 @@ function resolveBattle(deckA, deckB, opts) {
   const ev = opts.event || EVENTS[EVENTS.length - 1];
   const m = Object.assign({ armorDmg: 1, navalDmg: 1, artyDmg: 1, droneDmg: 1, airHit: 0, ewMult: 1, stealthAdd: 0 }, ev.mod || {});
   const T = { A: makeTeam(deckA, 'A'), B: makeTeam(deckB, 'B') };
-  const docs = { A: opts.docA || 'defense', B: opts.docB || 'defense' };
+  const normDoc = d => (d === 'electronic' ? 'deception' : d === 'air_sup' ? 'strike' : (DOC_FX[d] ? d : 'defense'));
+  const docs = { A: normDoc(opts.docA), B: normDoc(opts.docB) };
   const S = {
-    A: Object.assign({ hitPen: 0 }, DOC_FX[docs.A]),
-    B: Object.assign({ hitPen: 0 }, DOC_FX[docs.B])
+    A: Object.assign({ hitPen: 0, ewBonus: 0, navHit: 0, navMult: 1, droneMult: 1, landMult: 1 }, DOC_FX[docs.A]),
+    B: Object.assign({ hitPen: 0, ewBonus: 0, navHit: 0, navMult: 1, droneMult: 1, landMult: 1 }, DOC_FX[docs.B])
   };
   S.A.hitPen = S.B.enemyPen;
   S.B.hitPen = S.A.enemyPen;
+
+  const syn = {
+    A: typeof getDeckSynergies === 'function' ? getDeckSynergies(T.A) : [],
+    B: typeof getDeckSynergies === 'function' ? getDeckSynergies(T.B) : []
+  };
+  for (const s of ['A', 'B']) {
+    for (const sy of syn[s]) {
+      if (sy.id === 'cec') { S[s].ewBonus += 12; S[s].adHit += 0.06; }
+      if (sy.id === 'mumt') { S[s].droneMult *= 1.15; T[s].forEach(u => { u.stealth += 5; }); }
+      if (sy.id === 'asw_net') { S[s].navHit += 0.06; S[s].navMult *= 1.12; }
+      if (sy.id === 'iron_fist') { S[s].landMult *= 1.10; }
+    }
+  }
 
   const frames = [];
   const keys = [];
@@ -133,6 +149,7 @@ function resolveBattle(deckA, deckB, opts) {
         if (at.traits.includes('SEAD')) brv = 'SEAD 壓制';
         else if (at.traits.includes('DEEP')) brv = 'DEEP 點穴';
         else if (at.traits.includes('TRUE_AT')) brv = 'DRONE 突防';
+        else if (at.traits.includes('EW') || at.traits.includes('SPOT')) brv = 'ISR 導引';
         else brv = 'ARTY 齊射';
       }
 
@@ -197,10 +214,13 @@ function resolveBattle(deckA, deckB, opts) {
   }
 
   /* ===== 階段一：電子戰與先制壓制 ===== */
-  const ewOf = s => alive(s).reduce((x, u) => x + u.ew, 0) * S[s].ewMult * m.ewMult;
+  const ewOf = s => (alive(s).reduce((x, u) => x + u.ew, 0) + S[s].ewBonus) * S[s].ewMult * m.ewMult;
   const ewA = ewOf('A'), ewB = ewOf('B');
   let advSide = null;
-  const l1 = [{ side: 'N', kind: 'info', text: `電戰值：我方 ${ewA.toFixed(0)} ／ 敵方 ${ewB.toFixed(0)}` }];
+  const l1 = [];
+  if (syn.A.length) l1.push({ side: 'A', kind: 'info', text: `我方啟動聯合作戰體系：${syn.A.map(x => x.icon + ' ' + x.name).join('、')}` });
+  if (syn.B.length) l1.push({ side: 'B', kind: 'info', text: `敵方啟動聯合作戰體系：${syn.B.map(x => x.icon + ' ' + x.name).join('、')}` });
+  l1.push({ side: 'N', kind: 'info', text: `電戰值：我方 ${ewA.toFixed(0)} ／ 敵方 ${ewB.toFixed(0)}` });
   if (Math.abs(ewA - ewB) >= 10) {
     advSide = ewA > ewB ? 'A' : 'B';
     const ratio = clamp(Math.abs(ewA - ewB) / 50, 0, 1);
@@ -223,7 +243,7 @@ function resolveBattle(deckA, deckB, opts) {
         if (u.traits.includes('DEEP')) t = pickTop(alive(e));
         else t = pickTop(alive(e, x => x.cat === 'air_defense')) || pickTop(alive(e, x => x.cat === 'naval')) || pickTop(alive(e));
         if (!t) continue;
-        at.push({ att: u, tgt: t, hit: hitP(u, t, 0.82, 0.55), dmg: u.atk * 1.5 * S[s].atkEarly });
+        at.push({ att: u, tgt: t, hit: hitP(u, t, 0.82, 0.55), trueDmg: u.traits.includes('TRUE_AT'), dmg: u.atk * 1.5 * S[s].atkEarly });
       }
     }
     pushFrame(1, '階段一 · 先制壓制（SEAD／縱深打擊）', volley(at));
@@ -252,10 +272,13 @@ function resolveBattle(deckA, deckB, opts) {
     for (const s of ['A', 'B']) {
       const e = other(s);
       for (const u of alive(s, x => x.cat === 'air')) {
-        const t = pickTop(alive(e, x => x.cat === 'air'));
-        if (!t) continue;
-        const hit = hitP(u, t, 0.66 + (u.traits.includes('LR') ? 0.06 : 0) + (u.stealth - t.stealth) / 250, 0.3, m.airHit);
-        at.push({ att: u, tgt: t, hit, dmg: u.atk * 1.1 * S[s].atkEarly });
+        const airPool = alive(e, x => x.cat === 'air');
+        const tgts = u.traits.includes('SAT') ? pickN(airPool, 2) : [pickTop(airPool)];
+        for (const t of tgts) {
+          if (!t) continue;
+          const hit = hitP(u, t, 0.66 + (u.traits.includes('LR') ? 0.06 : 0) + (u.stealth - t.stealth) / 250, 0.3, m.airHit);
+          at.push({ att: u, tgt: t, hit, dmg: u.atk * 1.1 * (tgts.length > 1 ? 0.75 : 1) * S[s].atkEarly });
+        }
       }
     }
     pushFrame(2, '階段二 · 空中格鬥', volley(at));
@@ -276,7 +299,7 @@ function resolveBattle(deckA, deckB, opts) {
           if (u.traits.includes('SUB') && !t.traits.includes('SUB')) mult *= 1.3;
           if (u.traits.includes('AMBUSH') && t.cost >= u.cost + 2) mult *= 1.25;
           if (tgts.length > 1) mult *= 0.6;
-          at.push({ att: u, tgt: t, hit: hitP(u, t, 0.76, 0.45), dmg: u.atk * mult * m.navalDmg * S[s].atkEarly });
+          at.push({ att: u, tgt: t, hit: hitP(u, t, 0.76 + S[s].navHit, 0.45), dmg: u.atk * mult * S[s].navMult * m.navalDmg * S[s].atkEarly });
         }
       }
     }
@@ -304,42 +327,53 @@ function resolveBattle(deckA, deckB, opts) {
 
       for (const u of alive(s)) {
         if (u.cat === 'air') {
-          // 戰機全力打擊地面重裝甲或殘存敵軍
-          const t = pickTop(ground);
-          if (!t) continue;
-          const mult = u.traits.includes('CAS') ? 1.8 : 1.15;
-          at.push({
-            att: u, tgt: t,
-            hit: hitP(u, t, 0.82 - Math.min(0.3, adAlive * 0.07), 0.15, m.airHit),
-            dmg: u.atk * mult * (t.cat === 'armor' ? 1.1 : 0.8) * escal
-          });
+          // 戰機全力打擊地面重裝甲或殘存敵軍（支援 SAT 多目標與 TRUE_AT 穿甲）
+          const ts = u.traits.includes('SAT') ? pickN(ground, 2) : [pickTop(ground)];
+          const isTrueAt = u.traits.includes('TRUE_AT');
+          const mult = u.traits.includes('CAS') ? 1.8 : (isTrueAt ? 1.65 : 1.15);
+          for (const t of ts) {
+            if (!t) continue;
+            at.push({
+              att: u, tgt: t, trueDmg: isTrueAt,
+              hit: hitP(u, t, 0.82 - Math.min(0.3, adAlive * 0.07), 0.15, m.airHit),
+              dmg: u.atk * mult * (ts.length > 1 ? 0.75 : 1) * (t.cat === 'armor' ? (isTrueAt ? 1.25 : 1.1) : 0.85) * escal
+            });
+          }
         } else if (u.cat === 'naval') {
           // 艦艇優先攻擊敵艦，若無則以巡弋飛彈/艦炮轟擊地面
-          const t = enemyNaval.length ? pickTop(enemyNaval) : pickTop(ground);
-          if (!t) continue;
-          at.push({
-            att: u, tgt: t,
-            hit: hitP(u, t, 0.78, 0.25),
-            dmg: u.atk * 0.85 * m.navalDmg * escal
-          });
+          const pool = enemyNaval.length ? enemyNaval : ground;
+          const ts = u.traits.includes('SWARM') ? pickN(pool, 2) : [pickTop(pool)];
+          for (const t of ts) {
+            if (!t) continue;
+            let nMult = 0.85 * S[s].navMult;
+            if (t.traits.includes('SUB') && u.traits.includes('ASW')) nMult *= 1.35;
+            if (u.traits.includes('AMBUSH') && t.cost >= u.cost + 2) nMult *= 1.2;
+            if (ts.length > 1) nMult *= 0.65;
+            at.push({
+              att: u, tgt: t,
+              hit: hitP(u, t, 0.78 + S[s].navHit, 0.25),
+              dmg: u.atk * nMult * m.navalDmg * escal
+            });
+          }
         } else if (u.cat === 'armor') {
-          // 裝甲主力主炮猛轟
+          // 裝甲主力主炮猛轟（支援 TRUE_AT 反戰車飛彈破防）
           const t = pickTop(ground);
           if (!t) continue;
+          const isTrueAt = u.traits.includes('TRUE_AT');
           at.push({
-            att: u, tgt: t,
+            att: u, tgt: t, trueDmg: isTrueAt,
             hit: hitP(u, t, 0.85, 0.2),
-            dmg: u.atk * 1.45 * m.armorDmg * (t.cat === 'armor' ? 1.1 : 0.9) * escal
+            dmg: u.atk * (isTrueAt ? 1.65 : 1.45) * S[s].landMult * m.armorDmg * (t.cat === 'armor' ? (isTrueAt ? 1.25 : 1.1) : 0.9) * escal
           });
         } else if (u.cat === 'support') {
-          // 支援部隊（巡飛彈 / 火砲 / 海馬斯火箭）
+          // 支援部隊（巡飛彈 / 火砲 / 預警電戰指管導引打擊）
           if (u.traits.includes('TRUE_AT')) {
             const ts = u.traits.includes('SWARM') ? pickN(ground, 2) : [pickTop(ground)];
             for (const t of ts) {
               if (!t) continue;
               at.push({
                 att: u, tgt: t, hit: hitP(u, t, 0.78, 0.35), trueDmg: true,
-                dmg: u.atk * 2.2 * (ts.length > 1 ? 0.65 : 1) * m.droneDmg * (ciws ? 0.5 : 1) * escal
+                dmg: u.atk * 2.2 * (ts.length > 1 ? 0.65 : 1) * S[s].droneMult * m.droneDmg * (ciws ? 0.5 : 1) * escal
               });
             }
           } else if (u.traits.includes('ARTY') || u.traits.includes('DEEP')) {
@@ -348,7 +382,16 @@ function resolveBattle(deckA, deckB, opts) {
               if (!t) continue;
               at.push({
                 att: u, tgt: t, hit: hitP(u, t, 0.78, 0.3),
-                dmg: u.atk * 1.5 * (ts.length > 1 ? 0.75 : 1) * m.artyDmg * spot * escal
+                dmg: u.atk * 1.65 * (ts.length > 1 ? 0.75 : 1) * S[s].landMult * m.artyDmg * spot * escal
+              });
+            }
+          } else {
+            // 電戰預警／指管校射單位（E-7、空警-500、全球鷹、咆哮者、校射組、彈簧刀300）協同導引精準打擊
+            const t = pickTop(ground);
+            if (t) {
+              at.push({
+                att: u, tgt: t, hit: hitP(u, t, 0.80, 0.25),
+                dmg: u.atk * 0.85 * S[s].droneMult * spot * escal
               });
             }
           }
@@ -409,7 +452,7 @@ function resolveBattle(deckA, deckB, opts) {
   for (const s of ['A', 'B']) mvp[s] = T[s].slice().sort((a, b) => b.dmgDone - a.dmgDone)[0];
   const key = keys.slice().sort((a, b) => b.imp - a.imp).slice(0, 4).sort((a, b) => a.frame - b.frame);
 
-  return { seed, winner, wipeout, vp, frames, key, mvp, ev, docs, ewA, ewB, advSide, final: T };
+  return { seed, winner, wipeout, vp, frames, key, mvp, ev, docs, ewA, ewB, advSide, syn, final: T };
 }
 
 /* ---------- 陣容驗證 / 代碼 ---------- */
@@ -504,10 +547,15 @@ function randomDeck(rng, budget, locked) {
       }
     }
     if (spent > budget) return null;
-    for (let i = 0; i < SLOTS.length; i++) {
-      if (locked[i]) continue;
-      let rest = 0;
-      for (let j = i + 1; j < SLOTS.length; j++) if (!locked[j]) rest++;
+    const unlockedIdx = [];
+    for (let i = 0; i < SLOTS.length; i++) if (!locked[i]) unlockedIdx.push(i);
+    for (let i = unlockedIdx.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const tmp = unlockedIdx[i]; unlockedIdx[i] = unlockedIdx[j]; unlockedIdx[j] = tmp;
+    }
+    for (let k = 0; k < unlockedIdx.length; k++) {
+      const i = unlockedIdx[k];
+      const rest = unlockedIdx.length - 1 - k;
       const maxCost = Math.min(5, budget - spent - rest);
       if (maxCost < 1) { ok = false; break; }
       const cat = SLOTS[i].fixed;
@@ -529,7 +577,7 @@ function randomDeck(rng, budget, locked) {
 
 /* ---------- 推薦陣容（嚴格五大兵種各 1 件） ---------- */
 const TEMPLATES = [
-  { name: '均衡聯合', note: '無弱點的通用配置', ids: ['F35A', 'K2', 'NASAMS', 'KILO', 'FPV'] },
+  { name: '均衡聯合', note: '無弱點的通用配置', ids: ['RAFALE', 'K2', 'NASAMS', 'KILO', 'FPV'] },
   { name: '空優突襲', note: '$5 戰機＋電戰壓制', ids: ['F22', 'T72', 'PANT', 'TJ', 'EA18'] },
   { name: '鋼鐵洪流', note: '重裝甲＋火砲地面流', ids: ['FA50', 'LEO2', 'NASAMS', 'TJ', 'PZH'] },
   { name: '防空刺蝟', note: '長程防空＋潛艦伏擊', ids: ['F16V', 'T90', 'SAMPT', 'U212', 'TB2'] },

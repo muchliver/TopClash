@@ -14,6 +14,66 @@ const OnlinePvPEngine = (function() {
   let currentRoomId = '';
   let opponentInfo = null; // { name, uid, flag }
   let listeners = {};
+  let useFirebaseRelay = false;
+  let fbRoomRef = null;
+  let fbMsgListener = null;
+  const senderId = 'P-' + Math.random().toString(36).slice(2, 10);
+
+  function getFbDb() {
+    try {
+      if (typeof window !== 'undefined' && window.firebase && window.firebase.apps && window.firebase.apps.length) {
+        return window.firebase.database();
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function attachFirebaseRelay(code, hostFlag, playerProfile) {
+    const db = getFbDb();
+    if (!db) return false;
+    cleanupFirebaseRelay();
+    fbRoomRef = db.ref('pvp_rooms/' + code);
+    if (hostFlag) {
+      fbRoomRef.set({ createdAt: Date.now(), hostId: senderId, status: 'waiting' }).catch(() => {});
+      fbRoomRef.onDisconnect().remove();
+    }
+    const msgsRef = fbRoomRef.child('messages');
+    fbMsgListener = msgsRef.on('child_added', snap => {
+      const val = snap.val();
+      if (!val || val.sender === senderId) return;
+      if (val.type === '__RELAY_JOIN__' && hostFlag) {
+        useFirebaseRelay = true;
+        pvpState.connected = true;
+        sendPacket('HANDSHAKE', {
+          name: playerProfile.name,
+          uid: playerProfile.uid,
+          flag: playerProfile.flag,
+          isHost: true
+        });
+        return;
+      }
+      if (val.packet) {
+        if (!pvpState.connected) {
+          useFirebaseRelay = true;
+          pvpState.connected = true;
+        }
+        handleIncomingPacket(val.packet);
+      }
+    });
+    return true;
+  }
+
+  function cleanupFirebaseRelay() {
+    if (fbRoomRef && fbMsgListener) {
+      try { fbRoomRef.child('messages').off('child_added', fbMsgListener); } catch (e) {}
+    }
+    if (fbRoomRef && isHost) {
+      try { fbRoomRef.remove(); } catch (e) {}
+    }
+    fbRoomRef = null;
+    fbMsgListener = null;
+    useFirebaseRelay = false;
+  }
 
   // 線上 BO5 比分與狀態
   let pvpState = {
@@ -95,6 +155,7 @@ const OnlinePvPEngine = (function() {
       });
 
       peer.on('open', id => {
+        attachFirebaseRelay(shortCode, true, playerProfile);
         emit('room_created', { roomCode: shortCode, shareUrl: getShareUrl(shortCode) });
         resolve({ roomCode: shortCode, shareUrl: getShareUrl(shortCode) });
       });
@@ -137,16 +198,40 @@ const OnlinePvPEngine = (function() {
         }
       });
 
+      const startRelayFallback = () => {
+        if (pvpState.connected || useFirebaseRelay) return;
+        if (attachFirebaseRelay(cleanCode, false, playerProfile) && fbRoomRef) {
+          useFirebaseRelay = true;
+          pvpState.connected = true;
+          fbRoomRef.child('messages').push({ sender: senderId, type: '__RELAY_JOIN__', ts: Date.now() }).catch(() => {});
+          sendPacket('HANDSHAKE', {
+            name: playerProfile.name,
+            uid: playerProfile.uid,
+            flag: playerProfile.flag,
+            isHost: false
+          });
+        }
+      };
+
       peer.on('open', () => {
         const outgoing = peer.connect(fullPeerId, { reliable: true });
         setupConnection(outgoing, playerProfile);
+        // 若 4 秒內 WebRTC 無法穿透對稱型 NAT，自動無縫切換至 Firebase RTDB 雲端中繼
+        setTimeout(() => {
+          if (!pvpState.connected) startRelayFallback();
+        }, 4000);
         resolve({ roomCode: cleanCode });
       });
 
       peer.on('error', err => {
-        console.error('Peer join error:', err);
-        emit('error', '找不到該房間或房間已關閉，請確認代碼！');
-        reject(err);
+        console.warn('Peer join error, switching to Firebase Relay fallback:', err);
+        startRelayFallback();
+        setTimeout(() => {
+          if (!opponentInfo) {
+            emit('error', '找不到該房間或房間已關閉，請確認代碼！');
+            reject(err);
+          }
+        }, 3500);
       });
     });
   }
@@ -220,8 +305,13 @@ const OnlinePvPEngine = (function() {
 
   /* 發送封包 */
   function sendPacket(type, payload) {
+    const packet = { type, payload, timestamp: Date.now() };
     if (conn && conn.open) {
-      conn.send({ type, payload, timestamp: Date.now() });
+      conn.send(packet);
+      return;
+    }
+    if (useFirebaseRelay && fbRoomRef) {
+      fbRoomRef.child('messages').push({ sender: senderId, packet, ts: Date.now() }).catch(() => {});
     }
   }
 
@@ -232,6 +322,7 @@ const OnlinePvPEngine = (function() {
   }
 
   function closeConnection() {
+    cleanupFirebaseRelay();
     if (conn) {
       try { conn.close(); } catch(e) {}
       conn = null;

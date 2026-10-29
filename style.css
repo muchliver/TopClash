@@ -1589,7 +1589,6 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     flex-direction: column;
     gap: 6px;
   }
-}
   .aar-actions .btn{
     width: 100%;
   }
@@ -1773,7 +1772,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   .m-bot{font-size:10.5px!important;margin-top:5px!important}
   .m-stats{gap:6px!important}
 
-  /* ---------- 底部常駐指揮台：Grid Area 二層式行動佈局 ---------- */
+  /* ---------- 底部常駐指揮台：Grid Area 三層式行動佈局 (含即時羈絆/盲點條) ---------- */
   .command-deck[hidden]{display:none!important}
   .command-deck:not([hidden]){
     display:grid!important;
@@ -1782,12 +1781,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
       "left mid"
       "right right"!important;
     height:auto!important;
-    padding:8px 12px calc(8px + env(safe-area-inset-bottom, 0px))!important;
-    gap:6px 8px!important;
+    padding:6px 10px calc(8px + env(safe-area-inset-bottom, 0px))!important;
+    gap:5px 8px!important;
     align-items:center!important;
     position:fixed!important;bottom:0!important;left:0!important;right:0!important;
     z-index:40!important;background:var(--deck-bg)!important;
     box-shadow:0 -6px 20px rgba(0,0,0,.6)!important;
+  }
+  .deck-synergy-bar{
+    display:none!important;
   }
   .deck-left{
     grid-area:left!important;
@@ -1886,42 +1888,48 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     justify-content:center!important;
   }
 
-  /* 單欄直排垂直流：日誌雷達居頂 ➔ 友軍特遣隊 ➔ 敵軍特遣隊 */
+  /* 雙欄對峙戰場 + 底部即時雷達日誌：讓飛彈/穿甲彈/無人機在手機螢幕左右橫向對射！ */
   .battle-grid{
-    display:flex!important;
-    flex-direction:column!important;
-    gap:14px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0, 1fr) minmax(0, 1fr)!important;
+    grid-template-areas:
+      "teama teamb"
+      "log log"!important;
+    gap:8px!important;
     width:100%!important;
-    align-items:stretch!important;
+    align-items:start!important;
     overflow-x:hidden!important;
   }
+  .team-col.a{grid-area:teama!important;order:1!important}
+  .team-col.b{grid-area:teamb!important;order:2!important}
   .log-col{
-    order:1!important;
+    grid-area:log!important;
+    order:3!important;
     width:100%!important;
     min-width:0!important;
   }
   .log-integrated-box{
-    min-height:220px!important;
-    max-height:280px!important;
+    min-height:190px!important;
+    max-height:250px!important;
   }
   .log{
-    min-height:140px!important;
-    max-height:180px!important;
-    font-size:11.5px!important;
+    min-height:120px!important;
+    max-height:165px!important;
+    font-size:11px!important;
   }
   .holo-radar-strip{
     flex-wrap:wrap!important;
-    gap:6px!important;
-    padding:6px 8px!important;
+    gap:4px!important;
+    padding:5px 8px!important;
   }
   .holo-domains{
-    gap:6px!important;
-    font-size:11px!important;
+    gap:5px!important;
+    font-size:10.5px!important;
     overflow-x:auto!important;
     width:100%!important;
   }
   .log-action-ticker{
-    font-size:11.5px!important;
+    font-size:11px!important;
     padding:4px 8px!important;
   }
 
@@ -1929,29 +1937,34 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     width:100%!important;
     height:auto!important;
     min-height:0!important;
-    border-radius:12px!important;
+    border-radius:10px!important;
   }
-  .team-col.a{order:2!important}
-  .team-col.b{order:3!important}
-
+  .team-col h3{
+    font-size:11px!important;
+    padding:4px 6px!important;
+    margin-bottom:4px!important;
+  }
   .team-units-box{
-    padding:6px!important;
+    padding:5px!important;
   }
   .units-card-list{
     display:flex!important;
     flex-direction:column!important;
-    gap:5px!important;
+    gap:4px!important;
     height:auto!important;
   }
   .bu{
-    padding:7px 10px!important;
-    border-radius:8px!important;
-    min-height:56px!important;
+    padding:5px 6px!important;
+    border-radius:7px!important;
+    min-height:46px!important;
   }
-  .bu-name{font-size:12.5px!important}
-  .bu-role{font-size:10px!important}
-  .bu-cost{font-size:12.5px!important}
-  .bu-hp-fill{height:4px!important}
+  .bu-top{gap:5px!important}
+  .bu-thumb{width:26px!important;height:26px!important;border-radius:5px!important;flex:0 0 26px!important}
+  .bu-name-row{font-size:11px!important}
+  .bu-name-txt{font-size:11px!important;max-width:88px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  .bu-cat-sub{font-size:9px!important}
+  .bu-cost{font-size:11px!important;padding:1px 4px!important}
+  .bu-hp{font-size:9.5px!important}
 
   /* 手機版彈窗全螢幕或底部包覆 */
   .modal{padding:8px!important}
@@ -5481,4 +5494,420 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   background: rgba(255, 255, 255, 0.08) !important;
   color: var(--muted) !important;
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+
+/* =====================================================
+   v4.0 全新戰術系統樣式：聯合作戰體系羈絆條、傷害統計表、常用編制選單與全方位 RWD 行動端優化
+   ===================================================== */
+
+/* 1. 指揮台聯合作戰羈絆與盲點診斷條 (#deckSynergyBar) */
+.deck-synergy-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+  max-width: 440px;
+  padding: 2px 4px;
+}
+.deck-synergy-bar::-webkit-scrollbar { display: none; }
+
+.syn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+.syn-chip.active {
+  background: linear-gradient(135deg, rgba(61, 224, 255, 0.18), rgba(16, 185, 129, 0.14));
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 10px rgba(61, 224, 255, 0.22);
+}
+[data-theme="light"] .syn-chip.active {
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.14), rgba(16, 185, 129, 0.1));
+  color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.45);
+}
+.syn-chip.warn {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: var(--amber);
+}
+[data-theme="light"] .syn-chip.warn {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fcd34d;
+}
+.syn-chip.info {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: var(--cyan);
+}
+[data-theme="light"] .syn-chip.info {
+  background: #f0f9ff;
+  color: #0284c7;
+  border-color: #bae6fd;
+}
+.syn-chip.muted {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 10.5px;
+  border-style: dashed;
+}
+
+/* 2. 常用編制與推薦模板下拉選單樣式 (#codeMenu) */
+.dropdown-menu {
+  min-width: 280px;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+.menu-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 0;
+}
+.menu-subhead {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--muted);
+  padding: 4px 10px 2px;
+  letter-spacing: 0.04em;
+}
+.preset-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.02);
+  margin: 3px 4px;
+  border: 1px solid var(--line);
+}
+[data-theme="light"] .preset-menu-row {
+  background: #f8fafc;
+}
+.preset-empty-txt {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.preset-load-btn {
+  flex: 1;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.preset-load-btn b {
+  font-size: 12px;
+  color: var(--cyan);
+}
+[data-theme="light"] .preset-load-btn b {
+  color: #0284c7;
+}
+.preset-load-btn small {
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.preset-tpl-btn {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 2px !important;
+  padding: 6px 10px !important;
+}
+.preset-sub-units {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+/* 3. 暫停按鈕高亮態 (#btnPause.active) */
+#btnPause.active {
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: var(--amber) !important;
+  color: var(--amber) !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+/* 4. 戰後結算：各單位傷害輸出統計表 (Unit Damage Meter) */
+.aar-dmg-meter-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+}
+[data-theme="light"] .aar-dmg-meter-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.aar-dmg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 6px;
+}
+.dmg-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dmg-side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  font-weight: 800;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.dmg-side-col.side-a .dmg-side-head span { color: var(--cyan); }
+.dmg-side-col.side-b .dmg-side-head span { color: var(--red); }
+.dmg-unit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.dmg-unit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dmg-unit-row.is-dead {
+  opacity: 0.72;
+}
+.dmg-u-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  gap: 6px;
+}
+.dmg-u-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dmg-u-name small {
+  font-family: var(--mono);
+  color: var(--amber);
+  font-weight: 700;
+}
+.dmg-u-stat {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.dmg-u-stat i {
+  font-style: normal;
+  font-weight: 700;
+}
+.dmg-u-stat i.alive { color: var(--green); }
+.dmg-u-stat i.dead { color: var(--red); }
+.dmg-bar-track {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+[data-theme="light"] .dmg-bar-track {
+  background: rgba(15, 23, 42, 0.08);
+}
+.dmg-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+/* =====================================================
+   5. 全方位行動裝置與平板 RWD 深度優化 (Mobile & Tablet Responsive)
+   ===================================================== */
+@media (max-width: 1080px) {
+  .deck-synergy-bar { max-width: 260px; }
+}
+
+@media (max-width: 768px) {
+  /* 結算傷害表在手機改為單欄上下排列 */
+  .aar-dmg-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* 天梯競技場手機版深度優化 */
+  .ladder-layout {
+    padding: 8px 8px 90px !important;
+    gap: 10px !important;
+  }
+  .ladder-my-card {
+    padding: 12px !important;
+    gap: 10px !important;
+  }
+  .my-name-row {
+    flex-wrap: wrap !important;
+    gap: 5px !important;
+  }
+  .my-stats-pills {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .my-stats-pills .stat-pill {
+    padding: 6px 6px !important;
+    min-width: 0 !important;
+    text-align: center !important;
+  }
+  .my-stats-pills .stat-pill .val {
+    font-size: 16px !important;
+  }
+  .defense-deck-preview {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 5px !important;
+    padding-bottom: 2px !important;
+  }
+  .roster-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 6px !important;
+  }
+  .roster-tab {
+    flex: 1 1 auto !important;
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    white-space: nowrap !important;
+  }
+
+  /* 淘汰錦標賽手機版深度優化 (徹底解除高度裁切，支援觸控平移對抗樹) */
+  .tournament-layout {
+    height: auto !important;
+    min-height: calc(100dvh - 86px) !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    padding: 8px 8px 88px !important;
+    gap: 8px !important;
+  }
+  .tourney-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+  .tourney-title-row {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .tourney-meta-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 4px 8px !important;
+    font-size: 11.5px !important;
+  }
+  .tourney-meta-row span[style*="margin-left"] {
+    margin-left: 0 !important;
+  }
+  .tourney-action-box {
+    width: 100% !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .tourney-action-box .btn {
+    flex: 1 1 auto !important;
+    font-size: 12px !important;
+    padding: 7px 10px !important;
+  }
+
+  .tourney-lobby-card {
+    padding: 12px 10px 20px !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .tourney-mode-tabs {
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    gap: 4px !important;
+  }
+  .t-mode-tab {
+    font-size: 11.5px !important;
+    padding: 7px 8px !important;
+    white-space: nowrap !important;
+  }
+  .lobby-settings-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  .btn-group-pill {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+  }
+  .btn-group-pill .pill-btn {
+    width: 100% !important;
+    font-size: 11.5px !important;
+    padding: 7px 6px !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  #tourneyFormatSelector .pill-btn:nth-child(2),
+  #privateFormatSelector .pill-btn:nth-child(2),
+  #publicFormatSelector .pill-btn:nth-child(2) {
+    grid-column: 1 / -1 !important;
+  }
+  .participants-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    max-height: 240px !important;
+    overflow-y: auto !important;
+    gap: 6px !important;
+  }
+
+  /* 錦標賽對抗樹視窗：手機版支援水平與垂直雙向流暢觸控滑動 */
+  .tourney-bracket-viewport {
+    height: auto !important;
+    min-height: 500px !important;
+    max-height: 76dvh !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 8px !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  .bracket-container.is-mobile-pan {
+    position: relative !important;
+    left: 0 !important;
+    top: 0 !important;
+    transform-origin: top left !important;
+    margin: 0 auto !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .participants-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .my-stats-pills {
+    grid-template-columns: 1fr !important;
+  }
 }

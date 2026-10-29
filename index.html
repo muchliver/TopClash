@@ -9,7 +9,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3.9.0">
+<link rel="stylesheet" href="style.css?v=4.0.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 <div class="bg-grid" aria-hidden="true"></div>
@@ -92,17 +96,24 @@
       </div>
       <div class="doc-toggles" id="docToggles"></div>
     </div>
+    <div class="deck-synergy-bar" id="deckSynergyBar" aria-live="polite"></div>
     <div class="deck-tools">
       <button class="tool-btn" id="btnRand" title="隨機組建剩餘或全部槽位 [快捷鍵 R]">隨機補滿 <kbd>R</kbd></button>
       <button class="tool-btn" id="btnClear" title="清空全部槽位 [快捷鍵 C]">清空 <kbd>C</kbd></button>
       <div class="dropdown-wrap" id="codeDropdownWrap">
-        <button class="tool-btn" id="btnCodeToggle">代碼工具 ▾</button>
+        <button class="tool-btn" id="btnCodeToggle">編制 / 代碼 ▾</button>
         <div class="dropdown-menu" id="codeMenu" hidden>
-          <button class="menu-item" id="btnCopyCode">複製當前陣容代碼</button>
-          <button class="menu-item" id="btnImportCode">匯入他人分享代碼</button>
+          <button class="menu-item" id="btnCopyCode">📋 複製當前陣容代碼</button>
+          <button class="menu-item" id="btnImportCode">📥 匯入他人分享代碼</button>
+          <div class="menu-divider"></div>
+          <div class="menu-subhead">💾 自訂常用編制 (點擊套用 / 儲存)</div>
+          <div id="customPresetsMenuBox"></div>
+          <div class="menu-divider"></div>
+          <div class="menu-subhead">⚡ 參謀部推薦陣容 (一鍵套用)</div>
+          <div id="templatePresetsMenuBox"></div>
         </div>
       </div>
-      <button class="tool-btn mobile-more-btn" id="btnDeckMore" title="展開戰術司令部配置 (教條/代碼/清空)">戰術 ☰</button>
+      <button class="tool-btn mobile-more-btn" id="btnDeckMore" title="展開戰術司令部配置 (教條/編制/代碼/清空)">戰術 ☰</button>
     </div>
   </div>
 
@@ -128,6 +139,7 @@
     </div>
     <div class="battle-meta" id="battleMeta"></div>
     <div class="battle-ctl" id="battleCtl">
+      <button class="btn ghost sm" id="btnPause" title="暫停或繼續戰場推演">⏸ 暫停</button>
       <button class="btn ghost sm" id="btnSpeed">速度 ×1</button>
       <button class="btn ghost sm" id="btnSkip">跳過動畫 ⏭</button>
       <button class="btn amber sm" id="btnBattleBack" title="隨時一鍵返回所屬戰術模式">
@@ -686,6 +698,10 @@
       <div class="sheet-label">選擇戰術教條</div>
       <div class="doc-sheet-list" id="docSheetList"></div>
     </div>
+    <div class="sheet-section">
+      <div class="sheet-label">常用編制與推薦模板</div>
+      <div id="sheetPresetsBox" class="sheet-presets-box"></div>
+    </div>
     <div class="sheet-actions">
       <button class="btn ghost block" id="sheetBtnCopy">複製當前陣容代碼</button>
       <button class="btn ghost block" id="sheetBtnImport">匯入代碼</button>
@@ -703,9 +719,10 @@
 <!-- Firebase 雲端多人錦標賽模組 (Compat SDK) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="js/firebase-tourney.js?v=3.9.0"></script>
-<script src="js/tournament.js?v=3.9.0"></script>
-<script src="js/online-pvp.js?v=3.9.0"></script>
-<script src="js/app.js?v=3.9.0"></script>
+<script src="js/firebase-tourney.js?v=4.0.0"></script>
+<script src="js/tournament.js?v=4.0.0"></script>
+<script src="js/online-pvp.js?v=4.0.0"></script>
+<script src="js/app.js?v=4.0.0"></script>
+<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

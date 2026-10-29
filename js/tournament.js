@@ -20,25 +20,25 @@ const TournamentEngine = (() => {
     { name: '以色列國防軍裝甲打擊旅', flag: '🇮🇱', doc: 'strike', callsign: 'GOLANI STRIKE' },
     { name: '中華民國海軍陸戰特遣隊', flag: '🇹🇼', doc: 'defense', callsign: 'IRON FIST TW' },
     { name: '加拿大第一步兵師', flag: '🇨🇦', doc: 'defense', callsign: 'MAPLE LEAF' },
-    { name: '瑞典哥特蘭防衛軍群', flag: '🇸🇪', doc: 'electronic', callsign: 'NORDIC SHIELD' },
+    { name: '瑞典哥特蘭防衛軍群', flag: '🇸🇪', doc: 'deception', callsign: 'NORDIC SHIELD' },
     { name: '荷蘭皇家空軍快速反應群', flag: '🇳🇱', doc: 'strike', callsign: 'ORANGE TALON' },
     { name: '波蘭第十六機械化師', flag: '🇵🇱', doc: 'defense', callsign: 'WHITE EAGLE' },
     { name: '義大利重裝特遣旅', flag: '🇮🇹', doc: 'strike', callsign: 'CENTAURO' },
     { name: '西班牙特種空中突擊隊', flag: '🇪🇸', doc: 'strike', callsign: 'MATADOR AIR' },
     { name: '澳洲陸軍第一旅', flag: '🇦🇺', doc: 'defense', callsign: 'ANZAC BRIGADE' },
-    { name: '新加坡裝甲突擊群', flag: '🇸🇬', doc: 'electronic', callsign: 'LION ARMOR' },
+    { name: '新加坡裝甲突擊群', flag: '🇸🇬', doc: 'deception', callsign: 'LION ARMOR' },
     { name: '挪威北部邊防特遣隊', flag: '🇳🇴', doc: 'defense', callsign: 'ARCTIC VANGUARD' },
     { name: '芬蘭野戰砲兵戰術群', flag: '🇫🇮', doc: 'defense', callsign: 'SISU FORCE' },
     { name: '巴西空軍遠程巡邏聯隊', flag: '🇧🇷', doc: 'strike', callsign: 'VERDE AR' },
     { name: '瑞士阿爾卑斯守備聯隊', flag: '🇨🇭', doc: 'defense', callsign: 'ALPIN GUARD' },
     { name: '南非特種突擊旅', flag: '🇿🇦', doc: 'strike', callsign: 'SAVANNA LION' },
     { name: '土耳其無人機精準打擊群', flag: '🇹🇷', doc: 'strike', callsign: 'BAYRAKTAR WING' },
-    { name: '希臘愛琴海聯合打擊聯隊', flag: '🇬🇷', doc: 'electronic', callsign: 'SPARTAN NAVAL' },
+    { name: '希臘愛琴海聯合打擊聯隊', flag: '🇬🇷', doc: 'deception', callsign: 'SPARTAN NAVAL' },
     { name: '捷克第四快速部署旅', flag: '🇨🇿', doc: 'defense', callsign: 'BOHEMIAN FAST' },
     { name: '丹麥日德蘭裝甲特遣隊', flag: '🇩🇰', doc: 'defense', callsign: 'DANISH VIKING' },
     { name: '葡萄牙海軍陸戰特遣旅', flag: '🇵🇹', doc: 'strike', callsign: 'NAVIGATOR' },
     { name: '墨西哥海軍快速反應艦隊', flag: '🇲🇽', doc: 'strike', callsign: 'AZTEC STRIKE' },
-    { name: '克羅埃西亞獵鷹防空突擊團', flag: '🇭🇷', doc: 'electronic', callsign: 'FALCON SHIELD' },
+    { name: '克羅埃西亞獵鷹防空突擊團', flag: '🇭🇷', doc: 'deception', callsign: 'FALCON SHIELD' },
     { name: '奧地利山地獵兵戰術聯隊', flag: '🇦🇹', doc: 'defense', callsign: 'EDELWEISS' },
     { name: '摩洛哥皇家武裝步兵旅', flag: '🇲🇦', doc: 'strike', callsign: 'ATLAS TIGER' },
     { name: '阿拉伯聯合大公國總統防衛衛隊', flag: '🇦🇪', doc: 'strike', callsign: 'FALCON DESERT' },
@@ -54,7 +54,7 @@ const TournamentEngine = (() => {
       const p = LADDER_PRESETS[Math.floor(Math.random() * LADDER_PRESETS.length)];
       return p.deck.slice();
     }
-    return ['F35A', 'M1A2', 'PATRIOT', 'BURKE', 'HIMARS'];
+    return ['F35A', 'M1A2', 'PAC3', 'TJ', 'MORTAR'];
   }
 
   /**

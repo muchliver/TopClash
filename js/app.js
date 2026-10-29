@@ -698,7 +698,7 @@ const state = {
   pvpOpponentDeck: null,
   pvpOpponentDoc: 'defense'
 };
-let playToken = 0, speed = 1, skip = false, currentActiveModal = null;
+let playToken = 0, speed = Number(LS.get('db15_speed', 1)) || 1, skip = false, paused = false, currentActiveModal = null;
 
 function syncActiveDeck() {
   state.dualDecks[state.deckSlot] = state.deck.slice();
@@ -735,7 +735,13 @@ function dailyNo() { const d = new Date(); return Math.floor((Date.UTC(d.getFull
 const budgetLimit = () => (state.mode === 'quick' && state.scout ? BUDGET - 1 : BUDGET);
 const spent = () => deckCost(state.deck.filter(Boolean));
 const slotCat = i => SLOTS[i].fixed || state.flexCat[i];
-const sleep = ms => new Promise(r => setTimeout(r, skip ? 0 : ms / speed));
+const sleep = async ms => {
+  if (skip) return;
+  await new Promise(r => setTimeout(r, ms / speed));
+  while (paused && !skip) {
+    await new Promise(r => setTimeout(r, 80));
+  }
+};
 const pick = a => a[Math.floor(Math.random() * a.length)];
 const currentBanned = () => {
   if (state.mode !== 'bo3' || !state.bo3) return [];
@@ -1366,6 +1372,35 @@ function renderCommandDeck() {
       <span>${d.icon}</span> <span>${esc(d.name)}</span>
     </button>`).join('');
 
+  // 聯合作戰體系羈絆與戰術盲點即時診斷列
+  const synBar = $('#deckSynergyBar');
+  if (synBar) {
+    const pickedUnits = state.deck.map(id => id ? UNIT_MAP[id] : null).filter(Boolean);
+    const activeSyns = (typeof getDeckSynergies === 'function') ? getDeckSynergies(pickedUnits) : [];
+    const badges = [];
+    activeSyns.forEach(s => {
+      badges.push(`<span class="syn-chip active" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`);
+    });
+    if (pickedUnits.length >= 3) {
+      const baseEw = pickedUnits.reduce((acc, u) => acc + (u.ew || 0), 0) + (activeSyns.some(s => s.id === 'cec') ? 12 : 0);
+      const effEw = Math.round(baseEw * (state.doctrine === 'deception' ? 1.5 : 1));
+      if (effEw < 10) {
+        badges.push(`<span class="syn-chip warn" title="全隊電戰值僅 ${effEw}，面對電戰流對手易遭壓制命中率">⚠ 電戰偏弱 (EW ${effEw})</span>`);
+      } else {
+        badges.push(`<span class="syn-chip info" title="全隊有效電戰值 ${effEw}">📡 電戰值 ${effEw}</span>`);
+      }
+      const hasAntiArmor = pickedUnits.some(u => (u.traits || []).includes('TRUE_AT') || (u.traits || []).includes('CAS') || (u.traits || []).includes('ARTY') || (u.cat === 'armor' && u.atk >= 90));
+      if (!hasAntiArmor) {
+        badges.push(`<span class="syn-chip warn" title="缺乏穿甲 (TRUE_AT)、密接支援 (CAS) 或重火砲，面對重裝甲主戰坦克易陷入苦戰">⚠ 缺破甲手段</span>`);
+      }
+    } else if (pickedUnits.length === 0) {
+      badges.push(`<span class="syn-chip muted">💡 湊齊特定兵種組合可觸發【📡協同接戰網 / 🛸有人無人協同 / 🌊立體反潛網 / ⚙步坦砲鐵拳】加成</span>`);
+    }
+    synBar.innerHTML = badges.join('');
+  }
+
+  renderPresetsMenus();
+
   // 預算結餘 / 滿額效率標籤
   const effEl = $('#budgetEff');
   if (effEl) {
@@ -1476,6 +1511,93 @@ function renderAll() {
   renderHud();
 }
 
+/* ---------- 常用自訂編制與參謀部推薦模板管理 ---------- */
+function getCustomPresets() {
+  const raw = LS.get('db15_custom_presets', null);
+  if (Array.isArray(raw) && raw.length === 3) return raw;
+  return [null, null, null];
+}
+
+function saveCustomPreset(slotIdx) {
+  if (!state.deck.every(Boolean)) {
+    toast('⚠️ 請先配置滿 5 個槽位再儲存至自訂編制！');
+    return;
+  }
+  const presets = getCustomPresets();
+  const arch = analyzeDeckArchetype(state.deck);
+  presets[slotIdx] = {
+    name: `${arch.icon} 自訂編制 #${slotIdx + 1}`,
+    deck: state.deck.slice(),
+    doc: state.doctrine || 'defense',
+    cost: spent()
+  };
+  LS.set('db15_custom_presets', presets);
+  renderCommandDeck();
+  if (!$('#deckMoreModal')?.hidden) openDeckMoreModal();
+  toast(`💾 已將當前陣容儲存至【自訂編制 #${slotIdx + 1}】！`);
+}
+
+function applyPresetDeck(ids, doc, label) {
+  const cleanIds = (ids || []).map(id => (UNIT_MAP[id] ? id : null));
+  if (cleanIds.length !== 5 || !cleanIds.every(Boolean)) {
+    toast('⚠️ 編制資料不完整');
+    return;
+  }
+  const banned = currentBanned();
+  if (banned.some(b => cleanIds.includes(b))) {
+    toast('⚠️ 此編制包含本局已被戰術禁用的裝備，已為你載入可用槽位');
+  }
+  state.deck = cleanIds.map(id => banned.includes(id) ? null : id);
+  if (doc && DOCTRINES.some(d => d.id === doc)) {
+    state.doctrine = doc;
+  }
+  // 確保每個已選單位在矩陣看板中切換到對應 A/B/C/D 型號方便檢視
+  state.deck.forEach(id => {
+    const u = id ? UNIT_MAP[id] : null;
+    if (u && state.variants) state.variants[`${u.cat}_${u.cost}`] = u.v;
+  });
+  syncActiveDeck();
+  renderAll();
+  const cm = $('#codeMenu'); if (cm) cm.hidden = true;
+  const dm = $('#deckMoreModal'); if (dm) dm.hidden = true;
+  toast(`⚡ 已套用編制：【${label}】`);
+}
+
+function renderPresetsMenus() {
+  const customBox = $('#customPresetsMenuBox');
+  const tplBox = $('#templatePresetsMenuBox');
+  const presets = getCustomPresets();
+
+  if (customBox) {
+    customBox.innerHTML = presets.map((p, idx) => {
+      if (!p || !Array.isArray(p.deck)) {
+        return `<div class="preset-menu-row">
+          <span class="preset-empty-txt">槽位 #${idx + 1} (尚未儲存)</span>
+          <button type="button" class="btn-micro" data-save-preset="${idx}">💾 存入當前</button>
+        </div>`;
+      }
+      const unitNames = p.deck.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·');
+      return `<div class="preset-menu-row">
+        <button type="button" class="preset-load-btn" data-load-custom="${idx}" title="點擊套用：${esc(unitNames)}">
+          <b>${esc(p.name)} ($${p.cost || 15})</b>
+          <small>${esc(unitNames)}</small>
+        </button>
+        <button type="button" class="btn-micro" data-save-preset="${idx}" title="覆蓋儲存當前陣容">覆蓋</button>
+      </div>`;
+    }).join('');
+  }
+
+  if (tplBox && typeof TEMPLATES !== 'undefined') {
+    tplBox.innerHTML = TEMPLATES.map((t, idx) => {
+      const unitNames = t.ids.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·');
+      return `<button type="button" class="menu-item preset-tpl-btn" data-load-tpl="${idx}">
+        <div><b>🎖️ ${esc(t.name)}</b> <small class="muted">(${esc(t.note)})</small></div>
+        <div class="preset-sub-units">${esc(unitNames)}</div>
+      </button>`;
+    }).join('');
+  }
+}
+
 /* ---------- 手機版專屬：裝備詳細情報抽屜 ---------- */
 function openUnitDetailModal(u) {
   const modal = $('#unitDetailModal');
@@ -1547,6 +1669,21 @@ function openDeckMoreModal() {
       <small>${esc(d.desc)}</small>
     </div>
   `).join('');
+  const sheetPresets = $('#sheetPresetsBox');
+  if (sheetPresets) {
+    const presets = getCustomPresets();
+    const customHtml = presets.map((p, idx) => {
+      if (!p || !Array.isArray(p.deck)) {
+        return `<div class="preset-menu-row"><span class="preset-empty-txt">自訂編制 #${idx + 1} (空)</span><button type="button" class="btn-micro" data-save-preset="${idx}">💾 儲存當前</button></div>`;
+      }
+      const uNames = p.deck.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·');
+      return `<div class="preset-menu-row"><button type="button" class="preset-load-btn" data-load-custom="${idx}"><b>${esc(p.name)}</b><small>${esc(uNames)}</small></button><button type="button" class="btn-micro" data-save-preset="${idx}">覆蓋</button></div>`;
+    }).join('');
+    const tplHtml = (typeof TEMPLATES !== 'undefined' ? TEMPLATES : []).map((t, idx) =>
+      `<button type="button" class="btn ghost sm" data-load-tpl="${idx}" style="font-size:12px">⚡ ${esc(t.name)}</button>`
+    ).join('');
+    sheetPresets.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${customHtml}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${tplHtml}</div>`;
+  }
   modal.hidden = false;
 }
 
@@ -1650,6 +1787,23 @@ $('#deckMoreModal')?.addEventListener('click', e => {
     $('#deckMoreModal').hidden = true;
     return;
   }
+  const savePresetBtn = e.target.closest('[data-save-preset]');
+  if (savePresetBtn) {
+    saveCustomPreset(+savePresetBtn.dataset.savePreset);
+    return;
+  }
+  const loadCustomBtn = e.target.closest('[data-load-custom]');
+  if (loadCustomBtn) {
+    const p = getCustomPresets()[+loadCustomBtn.dataset.loadCustom];
+    if (p) applyPresetDeck(p.deck, p.doc, p.name);
+    return;
+  }
+  const loadTplBtn = e.target.closest('[data-load-tpl]');
+  if (loadTplBtn && typeof TEMPLATES !== 'undefined') {
+    const t = TEMPLATES[+loadTplBtn.dataset.loadTpl];
+    if (t) applyPresetDeck(t.ids, state.doctrine, t.name);
+    return;
+  }
   const docItem = e.target.closest('[data-sheet-doc]');
   if (docItem) {
     state.doctrine = docItem.dataset.sheetDoc;
@@ -1741,7 +1895,26 @@ $('#commandDeck').addEventListener('click', e => {
     toast('已清空所有槽位');
     return;
   }
+  const savePresetBtn = e.target.closest('[data-save-preset]');
+  if (savePresetBtn) {
+    e.stopPropagation();
+    saveCustomPreset(+savePresetBtn.dataset.savePreset);
+    return;
+  }
+  const loadCustomBtn = e.target.closest('[data-load-custom]');
+  if (loadCustomBtn) {
+    const p = getCustomPresets()[+loadCustomBtn.dataset.loadCustom];
+    if (p) applyPresetDeck(p.deck, p.doc, p.name);
+    return;
+  }
+  const loadTplBtn = e.target.closest('[data-load-tpl]');
+  if (loadTplBtn && typeof TEMPLATES !== 'undefined') {
+    const t = TEMPLATES[+loadTplBtn.dataset.loadTpl];
+    if (t) applyPresetDeck(t.ids, state.doctrine, t.name);
+    return;
+  }
   if (e.target.closest('#btnCodeToggle')) {
+    renderPresetsMenus();
     $('#codeMenu').hidden = !$('#codeMenu').hidden;
     return;
   }
@@ -1941,7 +2114,13 @@ function setMode(m) {
 
   const prevMode = state.mode;
   state.mode = m; state.sandResult = null; state.scout = false;
-  document.querySelectorAll('.mode-btn').forEach(x => x.classList.toggle('active', x.dataset.mode === m));
+  document.querySelectorAll('.mode-btn').forEach(x => {
+    const isAct = x.dataset.mode === m;
+    x.classList.toggle('active', isAct);
+    if (isAct && window.innerWidth <= 960 && typeof x.scrollIntoView === 'function') {
+      try { x.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } catch (e) {}
+    }
+  });
   
   const viewLadder = $('#viewLadder');
   const viewTournament = $('#viewTournament');
@@ -2489,6 +2668,9 @@ $('#ghostDeployOk').onclick = () => {
   if (existingIdx >= 0) pool[existingIdx] = myGhost;
   else pool.unshift(myGhost);
   saveGhostPool(pool);
+  if (typeof LadderEngine !== 'undefined' && LadderEngine.setDefenseFleet) {
+    LadderEngine.setDefenseFleet(state.deck.slice(), state.doctrine);
+  }
   $('#ghostDeployModal').hidden = true;
   renderAll();
   toast('🎉 成功部署防守部隊至全球幽靈防衛庫！');
@@ -2913,7 +3095,7 @@ function setSideHero(side, unit, action, subtext) {
 }
 
 async function showBattle(res) {
-  const token = ++playToken; skip = false;
+  const token = ++playToken; skip = false; paused = false;
   $('#viewBuild').hidden = true;
   $('#missionBar').hidden = true;
   $('#commandDeck').hidden = true;
@@ -2922,7 +3104,13 @@ async function showBattle(res) {
   hideTooltip();
   $('#viewBattle').hidden = false;
   $('#resultModal').hidden = true;
+  if ($('#btnPause')) {
+    $('#btnPause').hidden = false;
+    $('#btnPause').textContent = '⏸ 暫停';
+    $('#btnPause').classList.remove('active');
+  }
   $('#btnSpeed').hidden = false;
+  $('#btnSpeed').textContent = '速度 ×' + speed;
   $('#btnSkip').hidden = false;
   $('#btnReopenResult').hidden = true;
   $('#btnBattleExit').hidden = true;
@@ -3634,14 +3822,28 @@ function playFx(ln) {
   }
 }
 
+$('#btnPause')?.addEventListener('click', () => {
+  paused = !paused;
+  const btn = $('#btnPause');
+  if (btn) {
+    btn.textContent = paused ? '▶ 繼續' : '⏸ 暫停';
+    btn.classList.toggle('active', paused);
+  }
+  toast(paused ? '⏸ 戰場推演已暫停（可自由檢視日誌與裝備血量）' : '▶ 繼續戰場推演');
+});
 $('#btnSkip').onclick = () => {
+  paused = false;
   skip = true;
   const fx = $('#combatFxLayer');
   if (fx) fx.innerHTML = '';
   const r = $('.radar');
   if (r) r.classList.remove('emp-active');
 };
-$('#btnSpeed').onclick = () => { speed = speed === 1 ? 2 : speed === 2 ? 4 : 1; $('#btnSpeed').textContent = '速度 ×' + speed; };
+$('#btnSpeed').onclick = () => {
+  speed = speed === 1 ? 2 : speed === 2 ? 4 : 1;
+  LS.set('db15_speed', speed);
+  $('#btnSpeed').textContent = '速度 ×' + speed;
+};
 $('#btnReopenResult').onclick = () => {
   if (currentActiveModal) currentActiveModal.hidden = false;
   else $('#resultModal').hidden = false;
@@ -3774,6 +3976,7 @@ function handleLadderMatchEnd(res) {
 
   $('#btnLadderReview').onclick = () => {
     $('#ladderResultModal').hidden = true;
+    if ($('#btnPause')) $('#btnPause').hidden = true;
     $('#btnSpeed').hidden = true;
     $('#btnSkip').hidden = true;
     $('#btnReopenResult').hidden = false;
@@ -4052,6 +4255,7 @@ function showBo3SeriesResult(isPlayerWon) {
 
   const reviewBo3Battlefield = () => {
     $('#bo3SeriesModal').hidden = true;
+    if ($('#btnPause')) $('#btnPause').hidden = true;
     $('#btnSpeed').hidden = true;
     $('#btnSkip').hidden = true;
     $('#btnReopenResult').hidden = false;
@@ -4263,6 +4467,46 @@ function showResult(res, bo3Custom) {
       </div>
     </div>
 
+    <!-- 各單位傷害輸出與生還統計表 (Unit Damage Meter) -->
+    ${(() => {
+      const renderSideDmg = (units, sideLabel, sideClass) => {
+        const totalDmg = Math.max(1, units.reduce((acc, u) => acc + Math.round(u.dmgDone || 0), 0));
+        const maxDmg = Math.max(1, ...units.map(u => Math.round(u.dmgDone || 0)));
+        const sorted = units.slice().sort((a, b) => (b.dmgDone || 0) - (a.dmgDone || 0));
+        return `<div class="dmg-side-col ${sideClass}">
+          <div class="dmg-side-head">
+            <span>${sideLabel}</span>
+            <small>總輸出 <b>${totalDmg}</b></small>
+          </div>
+          <div class="dmg-unit-list">
+            ${sorted.map(u => {
+              const d = Math.round(u.dmgDone || 0);
+              const barPct = Math.round((d / maxDmg) * 100);
+              const sharePct = Math.round((d / totalDmg) * 100);
+              const hpPct = Math.max(0, Math.round((u.hp / u.hpMax) * 100));
+              const uMeta = UNIT_MAP[u.id] || {};
+              return `<div class="dmg-unit-row ${u.alive ? '' : 'is-dead'}">
+                <div class="dmg-u-info">
+                  <span class="dmg-u-name">${uMeta.flag || ''} <b>${esc(u.name)}</b> <small>$${u.cost}</small></span>
+                  <span class="dmg-u-stat">${d} 傷害 <small>(${sharePct}%)</small> · <i class="${u.alive ? 'alive' : 'dead'}">${u.alive ? `存活 ${hpPct}%` : '陣亡'}</i></span>
+                </div>
+                <div class="dmg-bar-track">
+                  <div class="dmg-bar-fill" style="width:${barPct}%;background:${CATS[u.cat]?.color || 'var(--cyan)'}"></div>
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      };
+      return `<div class="aar-dmg-meter-card">
+        <div class="intel-card-title">📊 各單位傷害輸出與戰果明細 (UNIT DAMAGE METER)</div>
+        <div class="aar-dmg-grid">
+          ${renderSideDmg(res.final.A, '🛡️ 我方特遣部隊', 'side-a')}
+          ${renderSideDmg(res.final.B, '⚔️ 敵方特遣部隊', 'side-b')}
+        </div>
+      </div>`;
+    })()}
+
     <!-- 下部網格：戰局關鍵轉折點 + 參謀本部戰術復盤 -->
     <div class="aar-intel-grid">
       <div class="aar-intel-card">
@@ -4294,6 +4538,7 @@ function showResult(res, bo3Custom) {
     <div class="aar-actions">
       ${bo3Custom ? `<button class="btn amber" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary aar-btn-main" id="rRematch">🔥 ${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
       <button class="btn ghost" id="rReview">🔍 檢視戰場情形</button>
+      <button class="btn ghost" id="rShareReplay" title="複製一鍵重播網址，戰友點擊即可完整重現本場推演">🎬 分享重播連結</button>
       <button class="btn ghost" id="rShareDebrief" title="複製精美戰報至剪貼簿">📋 複製戰報代碼</button>
       <button class="btn ghost" id="rEdit">⚙️ 返回編輯陣容</button>
     </div>
@@ -4304,6 +4549,7 @@ function showResult(res, bo3Custom) {
 
   const reviewBattlefield = () => {
     $('#resultModal').hidden = true;
+    if ($('#btnPause')) $('#btnPause').hidden = true;
     $('#btnSpeed').hidden = true;
     $('#btnSkip').hidden = true;
     $('#btnReopenResult').hidden = false;
@@ -4316,6 +4562,15 @@ function showResult(res, bo3Custom) {
   $('#resultModal').onclick = (e) => {
     if (e.target === $('#resultModal')) reviewBattlefield();
   };
+
+  // 複製一鍵戰鬥重播網址
+  if ($('#rShareReplay')) {
+    $('#rShareReplay').onclick = () => {
+      const url = buildReplayShareUrl(res);
+      copyText(url);
+      toast('🎬 已複製一鍵戰鬥重播網址！分享給好友即可100%重現本場交火動畫！');
+    };
+  }
 
   // 複製戰報代碼功能
   $('#rShareDebrief').onclick = () => {
@@ -4376,10 +4631,29 @@ function buildWhy(res) {
   return out;
 }
 
+function buildReplayShareUrl(res) {
+  const deckA = (res.final?.A || []).map(u => u.id);
+  const deckB = (res.final?.B || []).map(u => u.id);
+  const payload = [
+    deckA.join('.'),
+    deckB.join('.'),
+    res.seed >>> 0,
+    res.ev?.id || 'clear',
+    res.docs?.A || 'defense',
+    res.docs?.B || 'defense'
+  ].join('~');
+  const url = new URL(window.location.href);
+  url.search = '';
+  url.searchParams.set('replay', btoa(payload));
+  return url.toString();
+}
+
 function shareText(res) {
   const won = res.winner === 'A';
   const modeName = state.mode === 'daily' ? '精選對戰 #' + dailyNo() : (state.mode === 'ghost' || (state.mode === 'quick' && state.quickSubMode === 'ghost')) ? '幽靈對決' : '快速交鋒';
-  return `【頂尖對戰】${modeName} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n你能用 $15 做得更好嗎？`;
+  const names = (res.final?.A || []).map(u => u.name).join(' / ') || state.deck.map(id => UNIT_MAP[id]?.name || id).join(' / ');
+  const replayUrl = buildReplayShareUrl(res);
+  return `【頂尖對戰】${modeName} ${won ? '勝利 ✅' : res.winner === 'draw' ? '平手 ⚖' : '敗北 ❌'}\n戰場：${res.ev.name}　積分 ${res.vp.A.total.toFixed(0)} : ${res.vp.B.total.toFixed(0)}\n我的 $${deckCost(state.deck)} 陣容：${names}\n陣容代碼：${encodeDeck(state.deck)}\n重播連結：${replayUrl}`;
 }
 
 function closeBattle() {
@@ -4493,6 +4767,9 @@ document.addEventListener('keydown', e => {
     if ($('#unitDetailModal')) $('#unitDetailModal').hidden = true;
     if ($('#deckMoreModal')) $('#deckMoreModal').hidden = true;
     if ($('#sandboxModal')) $('#sandboxModal').hidden = true;
+    if ($('#resultModal') && !$('#resultModal').hidden) { const rc = $('#rCloseX') || $('#rEdit'); if (rc) rc.click(); else $('#resultModal').hidden = true; }
+    if ($('#tourneySpectatorModal')) $('#tourneySpectatorModal').hidden = true;
+    if ($('#commanderModal')) $('#commanderModal').hidden = true;
     return;
   }
 
@@ -4557,7 +4834,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === '3') {
-    setDoctrine('electronic');
+    setDoctrine('deception');
     return;
   }
 
@@ -5456,8 +5733,8 @@ function applyBracketFitToViewport() {
   const container = $('#bracketContainer');
   if (!viewport || !container) return 1;
 
-  // 1. 以自然設計尺寸量測（高度先還原為 auto，不受 transform 影響）
   container.style.height = 'auto';
+  container.classList.remove('is-mobile-pan');
   container.style.transform = 'translate(-50%, -50%)';
   const natW = container.offsetWidth;
   const natH = container.offsetHeight;
@@ -5465,13 +5742,30 @@ function applyBracketFitToViewport() {
   const vpH = viewport.clientHeight;
   if (!natW || !natH || !vpW || !vpH) return 1;
 
-  // 2. 等比縮放：寬高皆完整放入（保留 12px 安全邊距），小規模最多放大 1.25 倍
+  // 手機與窄螢幕 (<= 768px)：維持最小可讀字級縮放 (0.68x ~ 0.90x)，啟用觸控平移並自動聚焦至「我方作戰線」
+  if (window.innerWidth <= 768) {
+    const mScale = Math.max(0.68, Math.min((vpW - 16) / natW, 0.92));
+    container.classList.remove('is-fitted');
+    container.classList.add('is-mobile-pan');
+    container.style.transform = `scale(${mScale.toFixed(4)})`;
+    container.dataset.scale = String(mScale);
+    requestAnimationFrame(() => {
+      const myCard = container.querySelector('.b-match-card.is-my-match') || container.querySelector('.bracket-center');
+      if (myCard && !viewport.dataset.userScrolled) {
+        const cRect = container.getBoundingClientRect();
+        const mRect = myCard.getBoundingClientRect();
+        const targetLeft = (mRect.left - cRect.left) - (vpW - mRect.width) / 2;
+        viewport.scrollLeft = Math.max(0, targetLeft);
+      }
+    });
+    return mScale;
+  }
+
+  // 桌機與平板橫向 (> 768px)：一屏流等比縮放，寬高皆完整放入（保留 12px 安全邊距）
   const availW = vpW - 12;
   const availH = vpH - 12;
   const scale = Math.min(availW / natW, availH / natH, 1.25);
 
-  // 3. 若受「寬度」限制而高度有剩，將畫布高度拉長到剛好填滿可用高度，
-  //    多出的空間由各欄 space-around 平均分給卡片間距，避免上下留白
   const targetH = availH / scale;
   if (targetH > natH) container.style.height = `${Math.floor(targetH)}px`;
 
@@ -6353,6 +6647,16 @@ $('#tourneySpectatorModal')?.addEventListener('click', e => {
   if (replayBtn) {
     const matchId = replayBtn.dataset.match;
     const rIdx = +replayBtn.dataset.roundIdx;
+    const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
+    if (onlineRoom && onlineRoom.status && onlineRoom.status !== 'waiting') {
+      const fbSnap = FirebaseTourneyEngine.getMatchSnapshot(matchId, rIdx);
+      if (fbSnap && fbSnap.battleRes) {
+        $('#tourneySpectatorModal').hidden = true;
+        currentActiveModal = null;
+        showBattle(fbSnap.battleRes);
+      }
+      return;
+    }
     const snap = TournamentEngine.getMatchSnapshot(matchId);
     if (!snap || !snap.history[rIdx]) return;
     const h = snap.history[rIdx];
@@ -6454,6 +6758,43 @@ if (roomParam) {
   }, 500);
 }
 
-if (!LS.get('db15_seen', 0)) showHelp();
-window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile };
+const replayParam = urlParams.get('replay');
+if (replayParam) {
+  try {
+    const raw = atob(replayParam.trim());
+    const [dA, dB, seedStr, evId, docA, docB] = raw.split('~');
+    const deckA = dA.split('.').filter(id => UNIT_MAP[id]);
+    const deckB = dB.split('.').filter(id => UNIT_MAP[id]);
+    if (deckA.length === 5 && deckB.length === 5) {
+      LS.set('db15_seen', 1);
+      const evObj = EVENTS.find(e => e.id === evId) || EVENTS[0];
+      state.deck = deckA.slice();
+      state.enemy = deckB.slice();
+      state.event = evObj;
+      state.doctrine = docA || 'defense';
+      state.enemyDoc = docB || 'defense';
+      const res = resolveBattle(deckA, deckB, {
+        seed: Number(seedStr) >>> 0,
+        event: evObj,
+        docA: state.doctrine,
+        docB: state.enemyDoc
+      });
+      state.lastRes = res;
+      setTimeout(() => {
+        showBattle(res);
+        toast('🎬 已載入分享戰局重播，正在重現完整推演！');
+      }, 250);
+    }
+  } catch (e) {
+    console.warn('Replay decode error:', e);
+  }
+}
+
+if (!LS.get('db15_seen', 0) && !replayParam && !tourneyParam && !roomParam) showHelp();
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile, buildReplayShareUrl };
 })();

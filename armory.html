@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant" data-theme="dark">
+<html lang="zh-Hant" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3.8.1">
+<link rel="stylesheet" href="style.css?v=4.0.0">
+<link rel="manifest" href="manifest.json">
 <style>
 /* =====================================================
    軍武圖鑑專屬高質感樣式 (Armory Encyclopedia Styles)
@@ -902,7 +903,7 @@
       <div class="select-wrapper">
         <span class="select-label">戰術特性：</span>
         <select id="traitSelect" class="armory-select">
-          <option value="all">全部特性 (17種)</option>
+          <option value="all">全部特性 (18種)</option>
         </select>
       </div>
 
@@ -959,7 +960,7 @@
 
   <!-- 底部兵種克制與特性辭典專區 -->
   <section class="codex-section">
-    <h3>📖 17 種現代戰術特性全辭典 (Tactical Trait Codex)</h3>
+    <h3>📖 18 種現代戰術特性全辭典 (Tactical Trait Codex)</h3>
     <div class="codex-traits-grid" id="codexTraitsGrid"></div>
   </section>
 
@@ -994,6 +995,7 @@
 
 <!-- 腳本引入 -->
 <script src="js/data.js?v=3.8.1"></script>
-<script src="js/armory.js?v=3.8.1"></script>
+<script src="js/armory.js?v=4.0.0"></script>
+<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

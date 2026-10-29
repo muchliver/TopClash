@@ -46,13 +46,13 @@ const FirebaseTourneyEngine = (function() {
     { name: '韓國首都防衛司令部', flag: '🇰🇷', doc: 'defense', callsign: 'SHIELD CAPITAL' },
     { name: '以色列國防軍裝甲打擊旅', flag: '🇮🇱', doc: 'strike', callsign: 'GOLANI STRIKE' },
     { name: '加拿大第一步兵師', flag: '🇨🇦', doc: 'defense', callsign: 'MAPLE LEAF' },
-    { name: '瑞典哥特蘭防衛軍群', flag: '🇸🇪', doc: 'electronic', callsign: 'NORDIC SHIELD' },
+    { name: '瑞典哥特蘭防衛軍群', flag: '🇸🇪', doc: 'deception', callsign: 'NORDIC SHIELD' },
     { name: '荷蘭皇家空軍快速反應群', flag: '🇳🇱', doc: 'strike', callsign: 'ORANGE TALON' },
     { name: '波蘭第十六機械化師', flag: '🇵🇱', doc: 'defense', callsign: 'WHITE EAGLE' },
     { name: '義大利重裝特遣旅', flag: '🇮🇹', doc: 'strike', callsign: 'CENTAURO' },
     { name: '西班牙特種空中突擊隊', flag: '🇪🇸', doc: 'strike', callsign: 'MATADOR AIR' },
     { name: '澳洲陸軍第一旅', flag: '🇦🇺', doc: 'defense', callsign: 'ANZAC BRIGADE' },
-    { name: '新加坡裝甲突擊群', flag: '🇸🇬', doc: 'electronic', callsign: 'LION ARMOR' },
+    { name: '新加坡裝甲突擊群', flag: '🇸🇬', doc: 'deception', callsign: 'LION ARMOR' },
     { name: '挪威北部邊防特遣隊', flag: '🇳🇴', doc: 'defense', callsign: 'ARCTIC VANGUARD' }
   ];
 
@@ -126,7 +126,7 @@ const FirebaseTourneyEngine = (function() {
       const p = LADDER_PRESETS[Math.floor(Math.random() * LADDER_PRESETS.length)];
       return p.deck.slice();
     }
-    return ['F35A', 'M1A2', 'PATRIOT', 'BURKE', 'HIMARS'];
+    return ['F35A', 'M1A2', 'PAC3', 'TJ', 'MORTAR'];
   }
 
   /* 監聽公開大廳等待中房間列表 (自動過濾過期殭屍房) */
@@ -257,31 +257,35 @@ const FirebaseTourneyEngine = (function() {
     if (!room) throw new Error('找不到該錦標賽房間，請確認代碼是否正確');
     if (room.status !== 'waiting') throw new Error('該錦標賽已經開賽或已結束，無法加入');
 
-    let participants = Array.isArray(room.participants) ? room.participants.slice() : Object.values(room.participants || {});
-    while (participants.length < room.size) participants.push(null);
+    let mySlotIdx = -1;
+    const roomSize = room.size || 16;
+    const txRes = await roomRef.child('participants').transaction(curParts => {
+      let list = Array.isArray(curParts) ? curParts.slice() : Object.values(curParts || {});
+      while (list.length < roomSize) list.push(null);
 
-    // 檢查自己是否已在席位中
-    let mySlotIdx = participants.findIndex(p => p && p.uid === playerProfile.uid);
+      let idx = list.findIndex(p => p && p.uid === playerProfile.uid);
+      if (idx === -1) {
+        idx = list.findIndex(p => !p);
+        if (idx === -1) return; // 席位已滿，中止 transaction
+        list[idx] = {
+          slotIdx: idx,
+          seedNo: idx + 1,
+          uid: playerProfile.uid || 'CMD-' + Math.floor(1000 + Math.random() * 9000),
+          name: playerProfile.name || '特遣隊指揮官',
+          flag: playerProfile.flag || '🇹🇼',
+          isAI: false,
+          isHost: false,
+          ready: true,
+          deck: (playerProfile.deck && playerProfile.deck.every(Boolean)) ? playerProfile.deck.slice() : null,
+          doctrine: playerProfile.doctrine || 'defense'
+        };
+      }
+      mySlotIdx = idx;
+      return list;
+    });
 
-    if (mySlotIdx === -1) {
-      // 尋找第一個空席位
-      mySlotIdx = participants.findIndex(p => !p);
-      if (mySlotIdx === -1) throw new Error('參賽席位已滿，無法加入');
-
-      participants[mySlotIdx] = {
-        slotIdx: mySlotIdx,
-        seedNo: mySlotIdx + 1,
-        uid: playerProfile.uid || 'CMD-' + Math.floor(1000 + Math.random() * 9000),
-        name: playerProfile.name || '特遣隊指揮官',
-        flag: playerProfile.flag || '🇹🇼',
-        isAI: false,
-        isHost: false,
-        ready: true,
-        deck: (playerProfile.deck && playerProfile.deck.every(Boolean)) ? playerProfile.deck.slice() : null,
-        doctrine: playerProfile.doctrine || 'defense'
-      };
-
-      await roomRef.child('participants').set(participants);
+    if (!txRes.committed || mySlotIdx === -1) {
+      throw new Error('參賽席位已滿，無法加入');
     }
 
     // 設置玩家斷線 presence hook
@@ -544,7 +548,18 @@ const FirebaseTourneyEngine = (function() {
     resolveAIOnlyMatchesInCurrentRound(roomCode);
   }
 
-  /* 雙階段盲提提交 (Blind Commit)：出擊先交 ready，雙方都 ready 才發送真實陣容 */
+  /* 產生 Commit-Reveal 盲選雜湊摘要（防止對手在就緒前透過 F12 窺探明文陣容） */
+  function computeCommitHash(deck, doc, salt) {
+    const raw = `${(deck || []).join('.')}|${doc || 'defense'}|${salt}`;
+    let h = 2166136261;
+    for (let i = 0; i < raw.length; i++) {
+      h ^= raw.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(16).padStart(8, '0');
+  }
+
+  /* 雙階段盲提提交 (Commit-Reveal)：先提交雜湊摘要與就緒狀態，待雙方皆就緒才揭曉明文陣容 */
   async function submitMatchDeck(roomCode, matchId, playerUid, deck, doctrine) {
     if (!db || !currentRoomData) return;
     const roomRef = db.ref(`tournaments/${roomCode}`);
@@ -556,32 +571,39 @@ const FirebaseTourneyEngine = (function() {
     if (!isTeamA && !isTeamB) return;
 
     const slotKey = isTeamA ? 'A' : 'B';
+    const oppSlot = isTeamA ? 'B' : 'A';
+    const oppTeam = isTeamA ? match.teamB : match.teamA;
+    const oppIsAI = !!(oppTeam && oppTeam.isAI);
+    const oppReady = oppIsAI || match[`ready${oppSlot}`] === true;
+
+    const cleanDeck = ensureArray(deck);
+    const cleanDoc = doctrine || 'defense';
+    const salt = Math.random().toString(36).slice(2, 10);
+    const commitHash = computeCommitHash(cleanDeck, cleanDoc, salt);
+    const subPayload = { deck: cleanDeck, doc: cleanDoc, salt, commitHash };
 
     // 1. 本地暫存真實出陣
-    pendingSubmissions[matchId + '_' + slotKey] = {
-      deck: ensureArray(deck),
-      doc: doctrine || 'defense'
-    };
+    pendingSubmissions[matchId + '_' + slotKey] = subPayload;
 
-    // 2. 向 Firebase 提交（盲選 submission + ready 標記 + 60s 熔斷倒數時間戳）
+    // 2. 斷線自動揭曉保險：若玩家在等待對手時關閉視窗，Firebase 自動補交其鎖定陣容
+    try {
+      roomRef.child(`matches/${matchId}/submission${slotKey}`).onDisconnect().set(subPayload);
+    } catch (e) {}
+
+    // 3. 若對手尚未就緒且為真人，僅先寫入 commitHash 與 ready 標記（隱藏明文 deck）
     const updateObj = {};
     updateObj[`matches/${matchId}/ready${slotKey}`] = true;
-    updateObj[`matches/${matchId}/submission${slotKey}`] = {
-      deck: ensureArray(deck),
-      doc: doctrine || 'defense'
-    };
+    updateObj[`matches/${matchId}/commitHash${slotKey}`] = commitHash;
+    if (oppReady) {
+      updateObj[`matches/${matchId}/submission${slotKey}`] = subPayload;
+    }
     if (!match.deadline) {
       updateObj[`matches/${matchId}/deadline`] = Date.now() + 60000;
     }
     await roomRef.update(updateObj);
 
-    // 3. 檢查對手：若對手是 AI，或對手也已 ready，立即解鎖明文提交並推演
-    const oppSlot = isTeamA ? 'B' : 'A';
-    const oppTeam = isTeamA ? match.teamB : match.teamA;
-    const oppIsAI = oppTeam && oppTeam.isAI;
-    const oppReady = oppIsAI || match[`ready${oppSlot}`] === true;
-
-    if (oppReady) {
+    // 4. 若對手是 AI，或對手也已揭曉明文，立即進行推演
+    if (oppIsAI || (oppReady && (match[`submission${oppSlot}`] || pendingSubmissions[matchId + '_' + oppSlot]))) {
       await revealAndResolveMatch(roomCode, matchId);
     }
   }
@@ -625,7 +647,7 @@ const FirebaseTourneyEngine = (function() {
       res = { winner: Math.random() > 0.5 ? 'A' : 'B', vp: { A: { total: 100 }, B: { total: 80 } } };
     }
 
-    const winnerKey = (res.winner === 'draw') ? (Math.random() > 0.5 ? 'A' : 'B') : res.winner;
+    const winnerKey = (res.winner === 'draw') ? ((seed % 2 === 0) ? 'A' : 'B') : res.winner;
     const totalRounds = currentRoomData.totalRounds || Math.log2(currentRoomData.size);
     const reqWins = getRequiredWinsForMatch(match, currentRoomData.format, totalRounds);
 
@@ -673,6 +695,8 @@ const FirebaseTourneyEngine = (function() {
         // BO3 尚未分出勝負：重置雙方就緒，產生下一小局事件
         curMatch.readyA = false;
         curMatch.readyB = false;
+        curMatch.commitHashA = null;
+        curMatch.commitHashB = null;
         curMatch.submissionA = null;
         curMatch.submissionB = null;
         curMatch.deadline = null;
@@ -849,20 +873,41 @@ const FirebaseTourneyEngine = (function() {
     }
   }
 
-  /* 輪次進度安全檢查：檢查超時 AI 託管 */
+  /* 輪次進度安全檢查：雙盲 Commit-Reveal 自動揭曉與超時 AI 託管 */
   function handleTournamentProgressCheck(room, myUid) {
+    if (!room || !room.matches) return;
     const now = Date.now();
-    // 檢查是否超過 45 秒倒數截止時間
-    if (room.roundDeadline && now > room.roundDeadline) {
-      // 尋找當前輪次未完成提交的比賽
-      const activeMatches = Object.values(room.matches).filter(m => m.round === room.currentRound && m.status !== 'finished');
-      activeMatches.forEach(m => {
+    const activeMatches = Object.values(room.matches).filter(m => m && m.status === 'ready');
+
+    activeMatches.forEach(m => {
+      // 1. Commit-Reveal 第二階段：當雙方皆已 ready，若我方明文尚未揭曉則自動上傳明文並觸發裁決
+      if (m.readyA && m.readyB) {
+        const isMeA = m.teamA && m.teamA.uid === myUid;
+        const isMeB = m.teamB && m.teamB.uid === myUid;
+        const mySlot = isMeA ? 'A' : (isMeB ? 'B' : null);
+        const myPending = mySlot ? pendingSubmissions[m.id + '_' + mySlot] : null;
+        if (mySlot && myPending && !m[`submission${mySlot}`]) {
+          db.ref(`tournaments/${room.id}/matches/${m.id}/submission${mySlot}`).set(myPending).then(() => {
+            revealAndResolveMatch(room.id, m.id);
+          }).catch(() => {});
+          return;
+        }
+        // 當雙方明文皆已到位（或一方為 AI），啟動確定性推演
+        const hasSubA = !!(m.submissionA || (m.teamA && m.teamA.isAI));
+        const hasSubB = !!(m.submissionB || (m.teamB && m.teamB.isAI));
+        if (hasSubA && hasSubB && (isMeA || isMeB || (room.participants && room.participants[0] && room.participants[0].uid === myUid))) {
+          revealAndResolveMatch(room.id, m.id);
+          return;
+        }
+      }
+
+      // 2. 檢查是否超過單局 60 秒熔斷或輪次截止時間
+      if ((m.deadline && now > m.deadline) || (room.roundDeadline && now > room.roundDeadline && m.round === room.currentRound)) {
         if (!m.readyA || !m.readyB) {
-          // 超時啟動 AI 託管
           revealAndResolveMatch(room.id, m.id);
         }
-      });
-    }
+      }
+    });
   }
 
   /* 離開當前房間並清理監聽 */
@@ -991,6 +1036,36 @@ const FirebaseTourneyEngine = (function() {
     leaveRoom: leaveCurrentRoom,
     getCurrentRoom: () => currentRoomData,
     getCurrentRoomCode: () => currentRoomCode,
+    getMatchSnapshot: (matchId, roundIdx = -1) => {
+      if (!currentRoomData || !currentRoomData.matches) return null;
+      const m = currentRoomData.matches[matchId];
+      if (!m) return null;
+      const hist = ensureArray(m.history);
+      if (!hist.length) return null;
+      const idx = (roundIdx >= 0 && roundIdx < hist.length) ? roundIdx : (hist.length - 1);
+      const h = hist[idx];
+      if (!h) return null;
+      let res = null;
+      if (typeof resolveBattle === 'function') {
+        res = resolveBattle(ensureArray(h.deckA), ensureArray(h.deckB), {
+          seed: h.seed,
+          event: h.event,
+          docA: h.docA,
+          docB: h.docB
+        });
+      }
+      return {
+        matchId: m.id,
+        roundIndex: idx,
+        totalRoundsPlayed: hist.length,
+        teamA: m.teamA,
+        teamB: m.teamB,
+        scoreA: m.scoreA,
+        scoreB: m.scoreB,
+        historyItem: h,
+        battleRes: res
+      };
+    },
     on,
     emit
   };
