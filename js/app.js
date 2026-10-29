@@ -2302,25 +2302,27 @@ function renderLadderTargetsTray() {
     }).join('');
 
     return `<div class="target-card ${isBreaker ? 'breaker-bonus' : ''}">
-      <div class="t-card-head">
+      <div class="t-card-left">
         <span class="t-card-rank">#${u.rank}</span>
-        ${isBreaker ? `<span class="t-card-streak" title="敵方守位 >= 3 天，擊破額外獲得 +15 RP 終結者加成！">👑 守位${streak}天 (+15)</span>` : `<span style="font-size:11px;color:${rpDiff >= 0 ? 'var(--cyan)' : '#a3e635'}">${rpDiff >= 0 ? `+${rpDiff} RP` : `${rpDiff} RP`}</span>`}
+        <span style="font-size:15px">${u.flag || '🌐'}</span>
+        <div class="t-commander-info">
+          <div class="t-name-row">
+            <span class="t-commander-name" title="${esc(u.name)}">${esc(u.name)}</span>
+            ${isBreaker ? `<span class="t-card-streak" title="守位 >= 3 天，擊破額外獲得 +15 RP 終結者加成！">👑 守位${streak}天 (+15)</span>` : ''}
+          </div>
+          <div class="t-commander-meta">
+            <span style="color:${tier.color};font-weight:700">${tier.name}</span>
+            <span>${u.rp.toLocaleString()} RP</span>
+            <span class="doctrine-secret" style="font-size:10px;color:#94a3b8" title="戰略保密教條">🔒 密電保密</span>
+          </div>
+        </div>
       </div>
-      <div class="t-card-body">
-        <div class="t-commander-row">
-          <span style="font-size:16px">${u.flag || '🌐'}</span>
-          <span class="t-commander-name" title="${esc(u.name)}">${esc(u.name)}</span>
-        </div>
-        <div class="t-commander-meta">
-          <span style="color:${tier.color};font-weight:700">${tier.name}</span>
-          <span>${u.rp.toLocaleString()} RP</span>
-          <span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="該指揮官啟用了戰略保密教條，進場交戰時方能偵知">🔒 密電保密</span>
-        </div>
+      <div class="t-card-right">
         <div class="t-deck-chips">${deckChipsHtml}</div>
+        <button type="button" class="btn-ladder-engage t-card-btn" data-target-rank="${u.rank}" data-target-id="${u.id}">
+          ⚔️ 挑戰
+        </button>
       </div>
-      <button type="button" class="btn-ladder-engage t-card-btn" data-target-rank="${u.rank}" data-target-id="${u.id}">
-        ⚔️ 挑戰 (#${u.rank})
-      </button>
     </div>`;
   }).join('');
 }

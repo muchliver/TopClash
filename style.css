@@ -6396,3 +6396,279 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   background: rgba(0, 0, 0, 0.03);
   border-color: rgba(0, 0, 0, 0.08);
 }
+
+/* =====================================================
+   🏆 雙欄天梯競技場儀表板樣式 (Dual-Column Arena Dashboard)
+   ===================================================== */
+.ladder-layout {
+  flex: 1;
+  min-height: 0;
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 16px 16px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.4) transparent;
+}
+.ladder-dual-grid {
+  display: grid;
+  grid-template-columns: 460px 1fr;
+  gap: 16px;
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+}
+@media (max-width: 1160px) {
+  .ladder-dual-grid {
+    grid-template-columns: 420px 1fr;
+    gap: 12px;
+  }
+}
+@media (max-width: 980px) {
+  .ladder-layout {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+  .ladder-dual-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+.ladder-col-command {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+}
+.ladder-col-roster {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.ladder-roster-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 8px;
+}
+.roster-tabs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 緊湊微型目標卡 (橫向高效率作戰列) */
+.targets-card-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.target-card {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  transition: all .2s ease;
+  position: relative;
+}
+[data-theme="light"] .target-card {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+.target-card:hover {
+  border-color: var(--cyan);
+  background: rgba(15, 23, 42, 0.95);
+  transform: translateX(2px);
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.2);
+}
+.target-card.breaker-bonus::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #f59e0b, #fbbf24);
+  border-radius: 4px 0 0 4px;
+}
+.t-card-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.t-card-rank {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--cyan);
+  background: rgba(56, 189, 248, 0.12);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.t-commander-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+.t-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.t-commander-name {
+  font-size: 12.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 125px;
+  color: #f8fafc;
+}
+[data-theme="light"] .t-commander-name {
+  color: #0f172a;
+}
+.t-card-streak {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  white-space: nowrap;
+}
+.t-commander-meta {
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.t-card-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.t-deck-chips {
+  display: flex;
+  gap: 3px;
+}
+.t-deck-chips .r-deck-chip {
+  width: 25px;
+  height: 25px;
+}
+.t-card-btn {
+  padding: 4px 10px !important;
+  font-size: 11.5px !important;
+  white-space: nowrap;
+}
+
+/* 左欄個人戰情卡緊湊軍規化適配 */
+.ladder-col-command .ladder-my-card {
+  flex-direction: column !important;
+  padding: 10px 12px !important;
+  gap: 8px !important;
+  border-radius: 10px !important;
+}
+.ladder-col-command .my-info-col {
+  width: 100% !important;
+  gap: 6px !important;
+}
+.ladder-col-command .my-header-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  width: 100% !important;
+}
+.ladder-col-command .my-tier-badge {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: 8px !important;
+}
+.ladder-col-command .tier-stars-box.stars-4 {
+  font-size: 12px !important;
+  max-width: 32px !important;
+  gap: 2px !important;
+}
+.ladder-col-command .my-name-row {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 4px 6px !important;
+}
+.ladder-col-command .my-callsign {
+  font-size: 15px !important;
+  letter-spacing: 0 !important;
+}
+.ladder-col-command .my-stats-pills {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+  width: 100% !important;
+}
+.ladder-col-command .stat-pill {
+  min-width: 0 !important;
+  padding: 4px 6px !important;
+  border-radius: 6px !important;
+}
+.ladder-col-command .stat-pill .lbl {
+  font-size: 9.5px !important;
+}
+.ladder-col-command .stat-pill .val {
+  font-size: 14.5px !important;
+}
+.ladder-col-command .my-defense-col {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 6px 8px !important;
+  gap: 4px !important;
+  border-radius: 6px !important;
+}
+.ladder-col-command .defense-deck-preview {
+  display: flex !important;
+  gap: 4px !important;
+}
+.ladder-col-command .defense-deck-preview .mini-unit-chip {
+  width: 32px !important;
+  height: 32px !important;
+}
+.ladder-col-command .ladder-theater-strip {
+  padding: 6px 10px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+  gap: 8px !important;
+}
+.ladder-col-command .ladder-targets-section {
+  padding: 8px 10px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
+.ladder-col-command .ladder-rules-strip {
+  padding: 6px 10px !important;
+  margin-top: 2px !important;
+  margin-bottom: 0 !important;
+}
