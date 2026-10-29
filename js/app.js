@@ -1388,16 +1388,12 @@ function renderCommandDeck() {
   if (synBar) {
     const pickedUnits = state.deck.map(id => id ? UNIT_MAP[id] : null).filter(Boolean);
     const activeSyns = (typeof getDeckSynergies === 'function') ? getDeckSynergies(pickedUnits) : [];
-    const partialSyns = (typeof getPartialDeckSynergies === 'function') ? getPartialDeckSynergies(pickedUnits) : [];
     const badges = [];
     activeSyns.forEach(s => {
       const tip = `【${s.icon} ${s.name} 已啟動】${s.desc}`;
       badges.push(`<span class="syn-chip active" data-syn-tip="${esc(tip)}" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`);
     });
-    partialSyns.slice(0, 2).forEach(ps => {
-      const tip = `【${ps.icon} ${ps.name} 進度 1/2】${ps.hint}`;
-      badges.push(`<span class="syn-chip partial" data-syn-tip="${esc(tip)}" title="${esc(ps.hint)}">${ps.icon} ${esc(ps.name.split(' ')[0])} (1/2)</span>`);
-    });
+    // 徹底移除底欄任何未成型之組合提示按鈕 (1/2 進度)，組合指引全面回歸至卡片 Tooltip、詳細抽屜與說明手冊
     if (pickedUnits.length >= 3) {
       const baseEw = pickedUnits.reduce((acc, u) => acc + (u.ew || 0), 0) + (activeSyns.some(s => s.id === 'cec') ? 12 : 0);
       const effEw = Math.round(baseEw * (state.doctrine === 'deception' ? 1.5 : 1));
