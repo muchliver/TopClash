@@ -252,6 +252,12 @@ const LadderEngine = (function() {
     return LADDER_RANKS[LADDER_RANKS.length - 1];
   }
 
+  /* 取得 Top 10 名冊清單 (至尊上將殿堂) */
+  function getRosterTop10() {
+    sortAndReindex();
+    return state.roster.slice(0, 10);
+  }
+
   /* 取得 Top 30 名冊清單 */
   function getRosterTop30() {
     sortAndReindex();
@@ -584,6 +590,7 @@ const LadderEngine = (function() {
     getState: () => state,
     getPlayerUID: () => (state.player && state.player.uid) || 'CMD-7392',
     getRankTier,
+    getRosterTop10,
     getRosterTop30,
     getRosterUserByRank,
     canChallengeRank,

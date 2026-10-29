@@ -2313,7 +2313,7 @@ function renderLadderTargetsTray() {
           <div class="t-commander-meta">
             <span style="color:${tier.color};font-weight:700">${tier.name}</span>
             <span>${u.rp.toLocaleString()} RP</span>
-            <span class="doctrine-secret" style="font-size:10px;color:#94a3b8" title="戰略保密教條">🔒 戰術教條保密</span>
+            <span class="doctrine-secret" style="font-size:10px;color:#94a3b8" title="戰略保密教條">🔒 戰術保密</span>
           </div>
         </div>
       </div>
@@ -2450,7 +2450,7 @@ function renderLadderRosterTable() {
   } else if (currentRosterTab === 'yesterday') {
     list = lState.yesterdayTop10;
   } else {
-    list = LadderEngine.getRosterTop30();
+    list = (LadderEngine.getRosterTop10 ? LadderEngine.getRosterTop10() : LadderEngine.getRosterTop30().slice(0, 10));
   }
 
   tableBox.innerHTML = list.map((u, idx) => {
@@ -2522,10 +2522,10 @@ function renderLadderRosterTable() {
       <div class="r-trend">${trendHtml}</div>
       <div class="r-streak">${streakBadgeHtml}</div>
       <div class="r-commander">
-        <span style="font-size:18px">${u.flag}</span>
+        <span class="r-flag">${u.flag}</span>
         <div class="r-name-block">
           <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="敵方駐防戰術教條（先發制人 / 縱深防禦 / 電子欺敵）保密中，進場推演時解密">🔒 戰術教條保密</span>`}</span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="敵方駐防戰術教條（先發制人 / 縱深防禦 / 電子欺敵）保密中，進場推演時解密">🔒 戰術保密</span>`}</span>
         </div>
       </div>
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>

@@ -3660,6 +3660,21 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   gap: 10px;
   min-width: 0;
 }
+.r-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  min-width: 28px;
+  max-width: 28px;
+  height: 24px;
+  font-size: 16px;
+  font-family: var(--mono), 'JetBrains Mono', monospace;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  text-align: center;
+  flex-shrink: 0;
+}
 .r-name-block {
   display: flex;
   flex-direction: column;
@@ -6829,6 +6844,13 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   flex: 1 1 180px !important;
   min-width: 0 !important;
   gap: 6px !important;
+}
+.r-flag {
+  width: 26px !important;
+  min-width: 26px !important;
+  max-width: 26px !important;
+  font-size: 15px !important;
+  flex-shrink: 0 !important;
 }
 .r-name {
   font-size: 12.5px !important;
