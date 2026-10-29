@@ -1119,20 +1119,25 @@ function renderMissionBar() {
         ${rec ? `<span style="margin-left:8px" class="${rec.won ? 'badge-ok' : 'badge-no'}">${rec.won ? '✔ 已破局' : '尚未破局'} (${rec.tries}次)</span>` : ''}
       </div>`;
   } else if (mode === 'sandbox') {
-    const customOpt = (state.customSandEnemy && Array.isArray(state.customSandEnemy.deck))
-      ? `<option value="custom_enemy" ${state.sandEnemy === 'custom_enemy' ? 'selected' : ''}>🎯 指定敵陣：${esc(state.customSandEnemy.name)} (${state.customSandEnemy.deck.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·')})</option>`
+    const enemySource = state.customSandEnemy || state.lastBattleEnemy;
+    const customOpt = (enemySource && Array.isArray(enemySource.deck) && enemySource.deck.length === 5)
+      ? `<option value="custom_enemy" ${state.sandEnemy === 'custom_enemy' ? 'selected' : ''}>🎯 最近對戰敵陣：${esc(enemySource.name)} (${enemySource.deck.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·')})</option>`
+      : '';
+    const lastEventOpt = (enemySource && enemySource.event)
+      ? `<option value="last_event" ${state.sandEvent === 'last_event' ? 'selected' : ''}>🎯 最近對戰戰場：${esc(enemySource.event.icon + ' ' + enemySource.event.name)}</option>`
       : '';
     h = `<span class="mission-tag">SANDBOX · 大數據模擬</span>
       <div class="mission-item">
         <span class="muted">對手風格：</span>
         <select class="select sm" id="sandEnemy" style="padding:3px 8px;width:auto;font-size:12px">
           ${customOpt}
-          <option value="random" ${state.sandEnemy === 'random' ? 'selected' : ''}>全部風格輪流</option>
+          <option value="random" ${state.sandEnemy === 'random' ? 'selected' : ''}>全部風格輪流 (全天候 Meta 壓力測試)</option>
           ${ARCHETYPES.map(a => `<option value="${a.id}" ${state.sandEnemy === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
         </select>
         <span class="muted" style="margin-left:8px">戰場事件：</span>
         <select class="select sm" id="sandEvent" style="padding:3px 8px;width:auto;font-size:12px">
-          <option value="all">全部事件輪替</option>
+          ${lastEventOpt}
+          <option value="all" ${state.sandEvent === 'all' ? 'selected' : ''}>全部事件輪替 (全極端地形氣候)</option>
           ${EVENTS.map(e => `<option value="${e.id}" ${state.sandEvent === e.id ? 'selected' : ''}>${e.name}</option>`).join('')}
         </select>
       </div>`;
@@ -2217,6 +2222,14 @@ function setMode(m) {
   } else if (m === 'daily') {
     toast(`🎯 已進入精選對戰 #${dailyNo()}：挑戰超標對手，考驗戰略微操！`);
   } else if (m === 'sandbox') {
+    if (state.lastBattleEnemy && !state.customSandEnemy) {
+      state.customSandEnemy = {
+        name: state.lastBattleEnemy.name,
+        deck: state.lastBattleEnemy.deck.slice(),
+        doc: state.lastBattleEnemy.doc,
+        event: state.lastBattleEnemy.event
+      };
+    }
     toast('🧪 已進入沙盒模擬：推演 300 場大規模戰術大數據！');
   } else if (m === 'quick') {
     if (state.quickSubMode === 'ghost') {
@@ -2769,9 +2782,10 @@ function runSandbox() {
   }
 
   // 1. 取得對手風格群（支援指定對戰敵方陣容 custom_enemy）
-  const isCustomEnemy = state.sandEnemy === 'custom_enemy' && state.customSandEnemy && Array.isArray(state.customSandEnemy.deck);
+  const enemySource = (state.sandEnemy === 'custom_enemy') ? (state.customSandEnemy || state.lastBattleEnemy) : null;
+  const isCustomEnemy = enemySource && Array.isArray(enemySource.deck) && enemySource.deck.length === 5;
   const archs = isCustomEnemy
-    ? [{ id: 'custom_enemy', name: `指定敵陣 (${state.customSandEnemy.name})`, customDeck: state.customSandEnemy.deck, customDoc: state.customSandEnemy.doc }]
+    ? [{ id: 'custom_enemy', name: `指定敵陣 (${enemySource.name})`, customDeck: enemySource.deck, customDoc: enemySource.doc }]
     : (state.sandEnemy === 'random' ? ARCHETYPES : [ARCHETYPES.find(a => a.id === state.sandEnemy)].filter(Boolean));
   const targetRuns = 300;
   const per = Math.ceil(targetRuns / archs.length);
@@ -2798,11 +2812,17 @@ function runSandbox() {
 
   archs.forEach((a, k) => {
     const enemyDeck = a.customDeck ? a.customDeck.slice() : buildFromPlan(a.plan, mulberry32(baseSeed + k * 17 + 3));
+    const eventTarget = (state.sandEvent === 'all') 
+      ? null 
+      : (state.sandEvent === 'last_event' && enemySource && enemySource.event)
+        ? enemySource.event
+        : (EVENTS.find(e => e.id === state.sandEvent) || null);
+
     const r = simulate(deck, enemyDeck, per, {
       docA: state.doctrine,
       docB: a.customDoc || null,
       seed: (baseSeed + k * 997) >>> 0,
-      event: state.sandEvent === 'all' ? null : EVENTS.find(e => e.id === state.sandEvent)
+      event: eventTarget
     });
 
     ['n', 'win', 'lose', 'draw', 'sumA', 'sumB'].forEach(f => {
@@ -2891,6 +2911,9 @@ function showSandboxModal(res) {
         <div class="aar-meta-row">
           <span class="aar-mode-tag">⚡ MONTE CARLO · 蒙地卡羅大數據</span>
           <span class="aar-env-tag">已完成 ${res.n} 場模擬推演 · 採用【${esc(currentDoc.name)}】教條</span>
+          <span class="mission-tag" style="font-size:11px;color:${state.sandEnemy === 'custom_enemy' ? 'var(--cyan)' : 'var(--amber)'};border-color:currentColor">
+            ${state.sandEnemy === 'custom_enemy' ? '🎯 指定單一對手專項反制' : '🌐 全天候 6 大流派 Meta 壓力盲測'}
+          </span>
         </div>
         <h2 class="aar-main-title">${gradeTitle} · 總勝率 ${winRate}%</h2>
         <div class="aar-sub-desc">${gradeDesc}</div>
@@ -2976,6 +2999,11 @@ function showSandboxModal(res) {
     <!-- 參謀本部戰略綜合診斷 -->
     <div class="sand-debrief-box">
       <div class="sand-debrief-title">💡 參謀本部大數據戰略診斷 (STRATEGIC INSIGHTS)</div>
+      <div style="margin-bottom:10px;padding:8px 12px;border-radius:8px;font-size:12px;line-height:1.5;background:rgba(255,255,255,0.03);border:1px solid var(--line2)">
+        ${state.sandEnemy === 'custom_enemy'
+          ? '🎯 <b>專項對決模式</b>：本測試針對【' + esc((state.customSandEnemy || state.lastBattleEnemy)?.name || '指定假想敵') + '】進行 300 場確定性迭代，排除單場暴擊或閃避波動，反映點對點真實剋制勝率。'
+          : '🌐 <b>全天候 Meta 壓力測試說明</b>：大數據推演會在 300 場中輪番經受 6 大極端氣候地形與 6 種不同假想敵流派（重裝、空優、刺蝟、電戰等）考驗。若陣容偏向特定戰術，在天敵流派與劣勢地形下勝率會受到壓制，因此<b>全天候綜合勝率通常會低於針對單一對手的實戰勝率</b>。若欲驗證剛才快速對戰的點對點勝率，可於上方切換對手為「🎯 最近對戰敵陣」。'}
+      </div>
       <ul class="aar-debrief-list">
         ${bestEvent ? `
           <li class="d-good">
@@ -3054,6 +3082,14 @@ function startBattle() {
   const seed = state.mode === 'daily' ? hashStr(dateKey() + deck.join('.') + state.doctrine) : (Math.random() * 4294967296) >>> 0;
   const res = resolveBattle(deck, state.enemy, { seed, event: state.event, docA: state.doctrine, docB: state.enemyDoc });
   state.lastRes = res;
+  if (state.enemy && state.enemy.length === 5) {
+    state.lastBattleEnemy = {
+      name: state.enemyName || '最近交鋒對手',
+      deck: state.enemy.slice(),
+      doc: state.enemyDoc || 'defense',
+      event: state.event || null
+    };
+  }
   showBattle(res);
 }
 
