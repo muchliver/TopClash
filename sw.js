@@ -1,4 +1,4 @@
-const CACHE_NAME = 'topclash-v4.2.7';
+const CACHE_NAME = 'topclash-v4.2.8';
 const CORE_ASSETS = [
   './',
   './index.html',

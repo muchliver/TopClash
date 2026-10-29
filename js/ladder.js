@@ -18,6 +18,7 @@ const LadderEngine = (function() {
   }
 
   let state = {
+    version: 'v4.2.8',
     player: {
       id: 'player_me',
       uid: 'CMD-7392', // 指揮官永久專屬軍事識別碼 (對應綁定使用者名稱)
@@ -151,6 +152,20 @@ const LadderEngine = (function() {
               u.streakDays = i === 0 ? 5 : i === 1 ? 4 : i === 2 ? 3 : Math.floor(Math.random() * 4 + 1);
             }
           });
+          // 版本平滑遷移：若為舊版存檔，更新 NPC 積分至全新擴展級距階梯 (v4.2.8)
+          if (!state.version || state.version < 'v4.2.8') {
+            state.version = 'v4.2.8';
+            if (typeof LADDER_PRESETS !== 'undefined') {
+              const pMap = new Map(LADDER_PRESETS.map(p => [p.id, p.rp]));
+              state.roster.forEach(u => {
+                if (u.id !== state.player.id && pMap.has(u.id)) {
+                  u.rp = pMap.get(u.id);
+                }
+              });
+            }
+            sortAndReindex();
+            save();
+          }
           return;
         }
       }

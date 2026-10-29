@@ -654,15 +654,15 @@ function calcRankTitle(rp) {
   if (typeof LadderEngine !== 'undefined' && LadderEngine.getRankTier) {
     return LadderEngine.getRankTier(rp).name;
   }
-  if (rp >= 2300) return '特級上將';
+  if (rp >= 3000) return '特級上將';
   if (rp >= 2000) return '四星上將';
-  if (rp >= 1750) return '三星中將';
-  if (rp >= 1550) return '二星少將';
-  if (rp >= 1400) return '一星准將';
-  if (rp >= 1280) return '戰區上校';
-  if (rp >= 1180) return '作戰中校';
-  if (rp >= 1100) return '戰術少校';
-  if (rp >= 1040) return '特遣上尉';
+  if (rp >= 1600) return '三星中將';
+  if (rp >= 1300) return '二星少將';
+  if (rp >= 1050) return '一星准將';
+  if (rp >= 850)  return '戰區上校';
+  if (rp >= 650)  return '作戰中校';
+  if (rp >= 450)  return '戰術少校';
+  if (rp >= 250)  return '特遣上尉';
   return '作戰少尉';
 }
 
@@ -2247,7 +2247,7 @@ function setMode(m) {
     renderHud();
     toast('🏆 已進入天梯競技場：挑戰全球王牌防線，爭奪特級上將席位！');
     const p = LadderEngine.getState().player;
-    if (!p.hasCustomName) {
+    if (!p.hasCustomName && !localStorage.getItem('topclash_callsign_set')) {
       setTimeout(() => openCommanderModal(), 400);
     }
     return;
@@ -2398,9 +2398,11 @@ function renderLadderView() {
     const iconStr = pTier.icon || '🎖️';
     const starCount = (iconStr.match(/⭐/g) || []).length;
     if (starCount >= 2) {
-      myTierBadge.innerHTML = `<div class="tier-stars-box stars-${starCount}">${iconStr}</div>`;
+      const stars = Array.from(iconStr.replace(/\s+/g, ''));
+      const starsHtml = stars.map(s => `<span class="star-chip">${s}</span>`).join('');
+      myTierBadge.innerHTML = `<div class="tier-stars-box stars-${starCount}">${starsHtml}</div>`;
     } else {
-      myTierBadge.innerHTML = `<div class="tier-stars-box single">${iconStr}</div>`;
+      myTierBadge.innerHTML = `<div class="tier-stars-box single"><span class="star-chip">${iconStr}</span></div>`;
     }
     myTierBadge.title = `${pTier.name} (${pTier.en})`;
   }

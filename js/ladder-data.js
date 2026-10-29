@@ -5,15 +5,15 @@
    ===================================================== */
 
 const LADDER_RANKS = [
-  { tier: 10, name: '特級上將', en: 'GENERAL OF THE ARMIES', icon: '🎖️', minRP: 2300, color: '#f59e0b' },
+  { tier: 10, name: '特級上將', en: 'GENERAL OF THE ARMIES', icon: '🎖️', minRP: 3000, color: '#f59e0b' },
   { tier: 9,  name: '四星上將', en: 'FOUR-STAR GENERAL',      icon: '⭐⭐⭐⭐', minRP: 2000, color: '#fbbf24' },
-  { tier: 8,  name: '三星中將', en: 'LIEUTENANT GENERAL',     icon: '⭐⭐⭐',   minRP: 1750, color: '#38bdf8' },
-  { tier: 7,  name: '二星少將', en: 'MAJOR GENERAL',          icon: '⭐⭐',     minRP: 1550, color: '#818cf8' },
-  { tier: 6,  name: '一星准將', en: 'BRIGADIER GENERAL',      icon: '⭐',       minRP: 1400, color: '#a78bfa' },
-  { tier: 5,  name: '戰區上校', en: 'COLONEL',                icon: '⚔️⚔️',    minRP: 1280, color: '#34d399' },
-  { tier: 4,  name: '作戰中校', en: 'LT. COLONEL',            icon: '⚔️',      minRP: 1180, color: '#2dd4bf' },
-  { tier: 3,  name: '戰術少校', en: 'MAJOR',                  icon: '🛡️⭐',    minRP: 1100, color: '#94a3b8' },
-  { tier: 2,  name: '特遣上尉', en: 'CAPTAIN',                icon: '🛡️',      minRP: 1040, color: '#64748b' },
+  { tier: 8,  name: '三星中將', en: 'LIEUTENANT GENERAL',     icon: '⭐⭐⭐',   minRP: 1600, color: '#38bdf8' },
+  { tier: 7,  name: '二星少將', en: 'MAJOR GENERAL',          icon: '⭐⭐',     minRP: 1300, color: '#818cf8' },
+  { tier: 6,  name: '一星准將', en: 'BRIGADIER GENERAL',      icon: '⭐',       minRP: 1050, color: '#a78bfa' },
+  { tier: 5,  name: '戰區上校', en: 'COLONEL',                icon: '⚔️⚔️',    minRP: 850,  color: '#34d399' },
+  { tier: 4,  name: '作戰中校', en: 'LT. COLONEL',            icon: '⚔️',      minRP: 650,  color: '#2dd4bf' },
+  { tier: 3,  name: '戰術少校', en: 'MAJOR',                  icon: '🛡️⭐',    minRP: 450,  color: '#94a3b8' },
+  { tier: 2,  name: '特遣上尉', en: 'CAPTAIN',                icon: '🛡️',      minRP: 250,  color: '#64748b' },
   { tier: 1,  name: '作戰少尉', en: 'LIEUTENANT',             icon: '🔰',       minRP: 0,    color: '#475569' }
 ];
 
@@ -22,7 +22,7 @@ const LADDER_PRESETS = [
     "id": "bot_01",
     "name": "鷹隼特遣隊・阿特拉斯",
     "flag": "🇺🇸",
-    "rp": 2450,
+    "rp": 3500,
     "doc": "strike",
     "deck": [
       "J20",
@@ -37,7 +37,7 @@ const LADDER_PRESETS = [
     "id": "bot_02",
     "name": "北方威龍戰鬥群・赤羽",
     "flag": "🇨🇳",
-    "rp": 2437,
+    "rp": 3447,
     "doc": "defense",
     "deck": [
       "RAFALE",
@@ -52,7 +52,7 @@ const LADDER_PRESETS = [
     "id": "bot_03",
     "name": "北極熊近衛突擊軍・沃爾科夫",
     "flag": "🇷🇺",
-    "rp": 2424,
+    "rp": 3393,
     "doc": "strike",
     "deck": [
       "J20",
@@ -67,7 +67,7 @@ const LADDER_PRESETS = [
     "id": "bot_04",
     "name": "北約飆風聯隊・雷諾",
     "flag": "🇫🇷",
-    "rp": 2399,
+    "rp": 3340,
     "doc": "deception",
     "deck": [
       "F15EX",
@@ -82,7 +82,7 @@ const LADDER_PRESETS = [
     "id": "bot_05",
     "name": "日耳曼裝甲重拳・海因茨",
     "flag": "🇩🇪",
-    "rp": 2386,
+    "rp": 3287,
     "doc": "defense",
     "deck": [
       "M2K9",
@@ -97,7 +97,7 @@ const LADDER_PRESETS = [
     "id": "bot_06",
     "name": "高麗黑豹突擊隊・崔將軍",
     "flag": "🇰🇷",
-    "rp": 2373,
+    "rp": 3233,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -112,7 +112,7 @@ const LADDER_PRESETS = [
     "id": "bot_07",
     "name": "沙漠投石索營・艾利爾",
     "flag": "🇮🇱",
-    "rp": 2348,
+    "rp": 3180,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -127,7 +127,7 @@ const LADDER_PRESETS = [
     "id": "bot_08",
     "name": "皇家無敵艦隊・漢密爾頓",
     "flag": "🇬🇧",
-    "rp": 2335,
+    "rp": 3127,
     "doc": "defense",
     "deck": [
       "F16V",
@@ -142,7 +142,7 @@ const LADDER_PRESETS = [
     "id": "bot_09",
     "name": "大和神盾機動隊・山本",
     "flag": "🇯🇵",
-    "rp": 2322,
+    "rp": 3073,
     "doc": "deception",
     "deck": [
       "F22",
@@ -157,7 +157,7 @@ const LADDER_PRESETS = [
     "id": "bot_10",
     "name": "極北獅鷲戰隊・拉爾森",
     "flag": "🇸🇪",
-    "rp": 2297,
+    "rp": 3020,
     "doc": "strike",
     "deck": [
       "RAFALE",
@@ -172,7 +172,7 @@ const LADDER_PRESETS = [
     "id": "bot_11",
     "name": "安納托利亞蜂群・凱末爾",
     "flag": "🇹🇷",
-    "rp": 2284,
+    "rp": 2960,
     "doc": "deception",
     "deck": [
       "F22",
@@ -187,7 +187,7 @@ const LADDER_PRESETS = [
     "id": "bot_12",
     "name": "第十山地快速反應旅",
     "flag": "🇺🇸",
-    "rp": 2271,
+    "rp": 2892,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -202,7 +202,7 @@ const LADDER_PRESETS = [
     "id": "bot_13",
     "name": "東海迅雷防空營・林上校",
     "flag": "🇨🇳",
-    "rp": 2246,
+    "rp": 2825,
     "doc": "defense",
     "deck": [
       "J10C",
@@ -217,7 +217,7 @@ const LADDER_PRESETS = [
     "id": "bot_14",
     "name": "烏拉爾鋼鐵近衛旅",
     "flag": "🇷🇺",
-    "rp": 2233,
+    "rp": 2757,
     "doc": "defense",
     "deck": [
       "F15EX",
@@ -232,7 +232,7 @@ const LADDER_PRESETS = [
     "id": "bot_15",
     "name": "高盧凱撒重砲團",
     "flag": "🇫🇷",
-    "rp": 2220,
+    "rp": 2689,
     "doc": "deception",
     "deck": [
       "J20",
@@ -247,7 +247,7 @@ const LADDER_PRESETS = [
     "id": "bot_16",
     "name": "波羅的海海狼潛航隊",
     "flag": "🇩🇪",
-    "rp": 2195,
+    "rp": 2622,
     "doc": "defense",
     "deck": [
       "JAS39",
@@ -262,7 +262,7 @@ const LADDER_PRESETS = [
     "id": "bot_17",
     "name": "波斯灣黑金守衛隊",
     "flag": "🇦🇪",
-    "rp": 2182,
+    "rp": 2554,
     "doc": "strike",
     "deck": [
       "J20",
@@ -277,7 +277,7 @@ const LADDER_PRESETS = [
     "id": "bot_18",
     "name": "南十字星防衛陣線",
     "flag": "🇦🇺",
-    "rp": 2169,
+    "rp": 2486,
     "doc": "deception",
     "deck": [
       "F15EX",
@@ -292,7 +292,7 @@ const LADDER_PRESETS = [
     "id": "bot_19",
     "name": "安地斯雄鷹特混隊",
     "flag": "🇨🇱",
-    "rp": 2144,
+    "rp": 2418,
     "doc": "strike",
     "deck": [
       "F35A",
@@ -307,7 +307,7 @@ const LADDER_PRESETS = [
     "id": "bot_20",
     "name": "維京暴風巡邏隊",
     "flag": "🇳🇴",
-    "rp": 2131,
+    "rp": 2351,
     "doc": "defense",
     "deck": [
       "EF2K",
@@ -322,7 +322,7 @@ const LADDER_PRESETS = [
     "id": "bot_21",
     "name": "戰區第 21 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 2118,
+    "rp": 2283,
     "doc": "deception",
     "deck": [
       "J10C",
@@ -337,7 +337,7 @@ const LADDER_PRESETS = [
     "id": "bot_22",
     "name": "戰區第 22 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 2093,
+    "rp": 2215,
     "doc": "strike",
     "deck": [
       "RAFALE",
@@ -352,7 +352,7 @@ const LADDER_PRESETS = [
     "id": "bot_23",
     "name": "戰區第 23 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 2080,
+    "rp": 2148,
     "doc": "defense",
     "deck": [
       "F22",
@@ -367,7 +367,7 @@ const LADDER_PRESETS = [
     "id": "bot_24",
     "name": "戰區第 24 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 2067,
+    "rp": 2080,
     "doc": "deception",
     "deck": [
       "JAS39",
@@ -382,7 +382,7 @@ const LADDER_PRESETS = [
     "id": "bot_25",
     "name": "戰區第 25 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 2042,
+    "rp": 2030,
     "doc": "strike",
     "deck": [
       "J20",
@@ -397,7 +397,7 @@ const LADDER_PRESETS = [
     "id": "bot_26",
     "name": "戰區第 26 聯合防衛分隊",
     "flag": "🇹🇼",
-    "rp": 2029,
+    "rp": 2006,
     "doc": "defense",
     "deck": [
       "RAFALE",
@@ -412,7 +412,7 @@ const LADDER_PRESETS = [
     "id": "bot_27",
     "name": "戰區第 27 聯合防衛分隊",
     "flag": "🇵🇱",
-    "rp": 2016,
+    "rp": 1983,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -427,7 +427,7 @@ const LADDER_PRESETS = [
     "id": "bot_28",
     "name": "戰區第 28 聯合防衛分隊",
     "flag": "🇹🇷",
-    "rp": 1991,
+    "rp": 1959,
     "doc": "strike",
     "deck": [
       "RAFALE",
@@ -442,7 +442,7 @@ const LADDER_PRESETS = [
     "id": "bot_29",
     "name": "戰區第 29 聯合防衛分隊",
     "flag": "🇮🇹",
-    "rp": 1978,
+    "rp": 1935,
     "doc": "defense",
     "deck": [
       "F16V",
@@ -457,7 +457,7 @@ const LADDER_PRESETS = [
     "id": "bot_30",
     "name": "戰區第 30 聯合防衛分隊",
     "flag": "🇳🇴",
-    "rp": 1965,
+    "rp": 1911,
     "doc": "deception",
     "deck": [
       "EF2K",
@@ -472,7 +472,7 @@ const LADDER_PRESETS = [
     "id": "bot_31",
     "name": "戰區第 31 聯合防衛分隊",
     "flag": "🇺🇸",
-    "rp": 1940,
+    "rp": 1888,
     "doc": "strike",
     "deck": [
       "J20",
@@ -487,7 +487,7 @@ const LADDER_PRESETS = [
     "id": "bot_32",
     "name": "戰區第 32 聯合防衛分隊",
     "flag": "🇨🇳",
-    "rp": 1927,
+    "rp": 1864,
     "doc": "defense",
     "deck": [
       "JAS39",
@@ -502,7 +502,7 @@ const LADDER_PRESETS = [
     "id": "bot_33",
     "name": "戰區第 33 聯合防衛分隊",
     "flag": "🇷🇺",
-    "rp": 1914,
+    "rp": 1840,
     "doc": "deception",
     "deck": [
       "SU57",
@@ -517,7 +517,7 @@ const LADDER_PRESETS = [
     "id": "bot_34",
     "name": "戰區第 34 聯合防衛分隊",
     "flag": "🇫🇷",
-    "rp": 1889,
+    "rp": 1816,
     "doc": "strike",
     "deck": [
       "F15EX",
@@ -532,7 +532,7 @@ const LADDER_PRESETS = [
     "id": "bot_35",
     "name": "戰區第 35 聯合防衛分隊",
     "flag": "🇬🇧",
-    "rp": 1876,
+    "rp": 1793,
     "doc": "defense",
     "deck": [
       "F22",
@@ -547,7 +547,7 @@ const LADDER_PRESETS = [
     "id": "bot_36",
     "name": "戰區第 36 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 1863,
+    "rp": 1769,
     "doc": "deception",
     "deck": [
       "RAFALE",
@@ -562,7 +562,7 @@ const LADDER_PRESETS = [
     "id": "bot_37",
     "name": "戰區第 37 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 1838,
+    "rp": 1745,
     "doc": "strike",
     "deck": [
       "JAS39",
@@ -577,7 +577,7 @@ const LADDER_PRESETS = [
     "id": "bot_38",
     "name": "戰區第 38 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 1825,
+    "rp": 1721,
     "doc": "defense",
     "deck": [
       "EF2K",
@@ -592,7 +592,7 @@ const LADDER_PRESETS = [
     "id": "bot_39",
     "name": "戰區第 39 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 1812,
+    "rp": 1698,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -607,7 +607,7 @@ const LADDER_PRESETS = [
     "id": "bot_40",
     "name": "戰區第 40 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 1787,
+    "rp": 1674,
     "doc": "strike",
     "deck": [
       "M2K9",
@@ -622,7 +622,7 @@ const LADDER_PRESETS = [
     "id": "bot_41",
     "name": "戰區第 41 聯合防衛分隊",
     "flag": "🇹🇼",
-    "rp": 1774,
+    "rp": 1650,
     "doc": "defense",
     "deck": [
       "F22",
@@ -637,7 +637,7 @@ const LADDER_PRESETS = [
     "id": "bot_42",
     "name": "戰區第 42 聯合防衛分隊",
     "flag": "🇵🇱",
-    "rp": 1761,
+    "rp": 1627,
     "doc": "deception",
     "deck": [
       "SU35",
@@ -652,7 +652,7 @@ const LADDER_PRESETS = [
     "id": "bot_43",
     "name": "戰區第 43 聯合防衛分隊",
     "flag": "🇹🇷",
-    "rp": 1736,
+    "rp": 1603,
     "doc": "strike",
     "deck": [
       "F35A",
@@ -667,7 +667,7 @@ const LADDER_PRESETS = [
     "id": "bot_44",
     "name": "戰區第 44 聯合防衛分隊",
     "flag": "🇮🇹",
-    "rp": 1723,
+    "rp": 1579,
     "doc": "defense",
     "deck": [
       "SU35",
@@ -682,7 +682,7 @@ const LADDER_PRESETS = [
     "id": "bot_45",
     "name": "戰區第 45 聯合防衛分隊",
     "flag": "🇳🇴",
-    "rp": 1710,
+    "rp": 1555,
     "doc": "deception",
     "deck": [
       "J10C",
@@ -697,7 +697,7 @@ const LADDER_PRESETS = [
     "id": "bot_46",
     "name": "戰區第 46 聯合防衛分隊",
     "flag": "🇺🇸",
-    "rp": 1685,
+    "rp": 1532,
     "doc": "strike",
     "deck": [
       "F15EX",
@@ -712,7 +712,7 @@ const LADDER_PRESETS = [
     "id": "bot_47",
     "name": "戰區第 47 聯合防衛分隊",
     "flag": "🇨🇳",
-    "rp": 1672,
+    "rp": 1508,
     "doc": "defense",
     "deck": [
       "F22",
@@ -727,7 +727,7 @@ const LADDER_PRESETS = [
     "id": "bot_48",
     "name": "戰區第 48 聯合防衛分隊",
     "flag": "🇷🇺",
-    "rp": 1659,
+    "rp": 1484,
     "doc": "deception",
     "deck": [
       "JAS39",
@@ -742,7 +742,7 @@ const LADDER_PRESETS = [
     "id": "bot_49",
     "name": "戰區第 49 聯合防衛分隊",
     "flag": "🇫🇷",
-    "rp": 1634,
+    "rp": 1460,
     "doc": "strike",
     "deck": [
       "J20",
@@ -757,7 +757,7 @@ const LADDER_PRESETS = [
     "id": "bot_50",
     "name": "戰區第 50 聯合防衛分隊",
     "flag": "🇬🇧",
-    "rp": 1621,
+    "rp": 1437,
     "doc": "defense",
     "deck": [
       "F15EX",
@@ -772,7 +772,7 @@ const LADDER_PRESETS = [
     "id": "bot_51",
     "name": "戰區第 51 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 1608,
+    "rp": 1413,
     "doc": "deception",
     "deck": [
       "SU57",
@@ -787,7 +787,7 @@ const LADDER_PRESETS = [
     "id": "bot_52",
     "name": "戰區第 52 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 1583,
+    "rp": 1389,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -802,7 +802,7 @@ const LADDER_PRESETS = [
     "id": "bot_53",
     "name": "戰區第 53 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 1570,
+    "rp": 1365,
     "doc": "defense",
     "deck": [
       "F16V",
@@ -817,7 +817,7 @@ const LADDER_PRESETS = [
     "id": "bot_54",
     "name": "戰區第 54 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 1557,
+    "rp": 1342,
     "doc": "deception",
     "deck": [
       "F15EX",
@@ -832,7 +832,7 @@ const LADDER_PRESETS = [
     "id": "bot_55",
     "name": "戰區第 55 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 1532,
+    "rp": 1318,
     "doc": "strike",
     "deck": [
       "F22",
@@ -847,7 +847,7 @@ const LADDER_PRESETS = [
     "id": "bot_56",
     "name": "戰區第 56 聯合防衛分隊",
     "flag": "🇹🇼",
-    "rp": 1519,
+    "rp": 1294,
     "doc": "defense",
     "deck": [
       "J10C",
@@ -862,7 +862,7 @@ const LADDER_PRESETS = [
     "id": "bot_57",
     "name": "戰區第 57 聯合防衛分隊",
     "flag": "🇵🇱",
-    "rp": 1506,
+    "rp": 1271,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -877,7 +877,7 @@ const LADDER_PRESETS = [
     "id": "bot_58",
     "name": "戰區第 58 聯合防衛分隊",
     "flag": "🇹🇷",
-    "rp": 1481,
+    "rp": 1247,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -892,7 +892,7 @@ const LADDER_PRESETS = [
     "id": "bot_59",
     "name": "戰區第 59 聯合防衛分隊",
     "flag": "🇮🇹",
-    "rp": 1468,
+    "rp": 1223,
     "doc": "defense",
     "deck": [
       "SU57",
@@ -907,7 +907,7 @@ const LADDER_PRESETS = [
     "id": "bot_60",
     "name": "戰區第 60 聯合防衛分隊",
     "flag": "🇳🇴",
-    "rp": 1455,
+    "rp": 1199,
     "doc": "deception",
     "deck": [
       "SU35",
@@ -922,7 +922,7 @@ const LADDER_PRESETS = [
     "id": "bot_61",
     "name": "戰區第 61 聯合防衛分隊",
     "flag": "🇺🇸",
-    "rp": 1430,
+    "rp": 1176,
     "doc": "strike",
     "deck": [
       "M2K9",
@@ -937,7 +937,7 @@ const LADDER_PRESETS = [
     "id": "bot_62",
     "name": "戰區第 62 聯合防衛分隊",
     "flag": "🇨🇳",
-    "rp": 1417,
+    "rp": 1152,
     "doc": "defense",
     "deck": [
       "SU35",
@@ -952,7 +952,7 @@ const LADDER_PRESETS = [
     "id": "bot_63",
     "name": "戰區第 63 聯合防衛分隊",
     "flag": "🇷🇺",
-    "rp": 1404,
+    "rp": 1128,
     "doc": "deception",
     "deck": [
       "F22",
@@ -967,7 +967,7 @@ const LADDER_PRESETS = [
     "id": "bot_64",
     "name": "戰區第 64 聯合防衛分隊",
     "flag": "🇫🇷",
-    "rp": 1379,
+    "rp": 1104,
     "doc": "strike",
     "deck": [
       "JAS39",
@@ -982,7 +982,7 @@ const LADDER_PRESETS = [
     "id": "bot_65",
     "name": "戰區第 65 聯合防衛分隊",
     "flag": "🇬🇧",
-    "rp": 1366,
+    "rp": 1081,
     "doc": "defense",
     "deck": [
       "J20",
@@ -997,7 +997,7 @@ const LADDER_PRESETS = [
     "id": "bot_66",
     "name": "戰區第 66 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 1353,
+    "rp": 1057,
     "doc": "deception",
     "deck": [
       "F15EX",
@@ -1012,7 +1012,7 @@ const LADDER_PRESETS = [
     "id": "bot_67",
     "name": "戰區第 67 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 1328,
+    "rp": 1033,
     "doc": "strike",
     "deck": [
       "J20",
@@ -1027,7 +1027,7 @@ const LADDER_PRESETS = [
     "id": "bot_68",
     "name": "戰區第 68 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 1315,
+    "rp": 1009,
     "doc": "defense",
     "deck": [
       "RAFALE",
@@ -1042,7 +1042,7 @@ const LADDER_PRESETS = [
     "id": "bot_69",
     "name": "戰區第 69 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 1302,
+    "rp": 986,
     "doc": "deception",
     "deck": [
       "F16V",
@@ -1057,7 +1057,7 @@ const LADDER_PRESETS = [
     "id": "bot_70",
     "name": "戰區第 70 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 1277,
+    "rp": 962,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -1072,7 +1072,7 @@ const LADDER_PRESETS = [
     "id": "bot_71",
     "name": "戰區第 71 聯合防衛分隊",
     "flag": "🇹🇼",
-    "rp": 1264,
+    "rp": 938,
     "doc": "defense",
     "deck": [
       "F35A",
@@ -1087,7 +1087,7 @@ const LADDER_PRESETS = [
     "id": "bot_72",
     "name": "戰區第 72 聯合防衛分隊",
     "flag": "🇵🇱",
-    "rp": 1251,
+    "rp": 915,
     "doc": "deception",
     "deck": [
       "M2K9",
@@ -1102,7 +1102,7 @@ const LADDER_PRESETS = [
     "id": "bot_73",
     "name": "戰區第 73 聯合防衛分隊",
     "flag": "🇹🇷",
-    "rp": 1226,
+    "rp": 891,
     "doc": "strike",
     "deck": [
       "SU57",
@@ -1117,7 +1117,7 @@ const LADDER_PRESETS = [
     "id": "bot_74",
     "name": "戰區第 74 聯合防衛分隊",
     "flag": "🇮🇹",
-    "rp": 1213,
+    "rp": 867,
     "doc": "defense",
     "deck": [
       "F15EX",
@@ -1132,7 +1132,7 @@ const LADDER_PRESETS = [
     "id": "bot_75",
     "name": "戰區第 75 聯合防衛分隊",
     "flag": "🇳🇴",
-    "rp": 1200,
+    "rp": 843,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -1147,7 +1147,7 @@ const LADDER_PRESETS = [
     "id": "bot_76",
     "name": "戰區第 76 聯合防衛分隊",
     "flag": "🇺🇸",
-    "rp": 1175,
+    "rp": 820,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -1162,7 +1162,7 @@ const LADDER_PRESETS = [
     "id": "bot_77",
     "name": "戰區第 77 聯合防衛分隊",
     "flag": "🇨🇳",
-    "rp": 1162,
+    "rp": 796,
     "doc": "defense",
     "deck": [
       "J10C",
@@ -1177,7 +1177,7 @@ const LADDER_PRESETS = [
     "id": "bot_78",
     "name": "戰區第 78 聯合防衛分隊",
     "flag": "🇷🇺",
-    "rp": 1149,
+    "rp": 772,
     "doc": "deception",
     "deck": [
       "SU35",
@@ -1192,7 +1192,7 @@ const LADDER_PRESETS = [
     "id": "bot_79",
     "name": "戰區第 79 聯合防衛分隊",
     "flag": "🇫🇷",
-    "rp": 1124,
+    "rp": 748,
     "doc": "strike",
     "deck": [
       "F22",
@@ -1207,7 +1207,7 @@ const LADDER_PRESETS = [
     "id": "bot_80",
     "name": "戰區第 80 聯合防衛分隊",
     "flag": "🇬🇧",
-    "rp": 1111,
+    "rp": 725,
     "doc": "defense",
     "deck": [
       "JAS39",
@@ -1222,7 +1222,7 @@ const LADDER_PRESETS = [
     "id": "bot_81",
     "name": "戰區第 81 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 1098,
+    "rp": 701,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -1237,7 +1237,7 @@ const LADDER_PRESETS = [
     "id": "bot_82",
     "name": "戰區第 82 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 1073,
+    "rp": 677,
     "doc": "strike",
     "deck": [
       "RAFALE",
@@ -1252,7 +1252,7 @@ const LADDER_PRESETS = [
     "id": "bot_83",
     "name": "戰區第 83 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 1060,
+    "rp": 653,
     "doc": "defense",
     "deck": [
       "SU57",
@@ -1267,7 +1267,7 @@ const LADDER_PRESETS = [
     "id": "bot_84",
     "name": "戰區第 84 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 1047,
+    "rp": 630,
     "doc": "deception",
     "deck": [
       "F15EX",
@@ -1282,7 +1282,7 @@ const LADDER_PRESETS = [
     "id": "bot_85",
     "name": "戰區第 85 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 1022,
+    "rp": 606,
     "doc": "strike",
     "deck": [
       "JAS39",
@@ -1297,7 +1297,7 @@ const LADDER_PRESETS = [
     "id": "bot_86",
     "name": "戰區第 86 聯合防衛分隊",
     "flag": "🇹🇼",
-    "rp": 1009,
+    "rp": 582,
     "doc": "defense",
     "deck": [
       "F15EX",
@@ -1312,7 +1312,7 @@ const LADDER_PRESETS = [
     "id": "bot_87",
     "name": "戰區第 87 聯合防衛分隊",
     "flag": "🇵🇱",
-    "rp": 996,
+    "rp": 559,
     "doc": "deception",
     "deck": [
       "SU57",
@@ -1327,7 +1327,7 @@ const LADDER_PRESETS = [
     "id": "bot_88",
     "name": "戰區第 88 聯合防衛分隊",
     "flag": "🇹🇷",
-    "rp": 971,
+    "rp": 535,
     "doc": "strike",
     "deck": [
       "M2K9",
@@ -1342,7 +1342,7 @@ const LADDER_PRESETS = [
     "id": "bot_89",
     "name": "戰區第 89 聯合防衛分隊",
     "flag": "🇮🇹",
-    "rp": 958,
+    "rp": 511,
     "doc": "defense",
     "deck": [
       "SU57",
@@ -1357,7 +1357,7 @@ const LADDER_PRESETS = [
     "id": "bot_90",
     "name": "戰區第 90 聯合防衛分隊",
     "flag": "🇳🇴",
-    "rp": 945,
+    "rp": 487,
     "doc": "deception",
     "deck": [
       "SU35",
@@ -1372,7 +1372,7 @@ const LADDER_PRESETS = [
     "id": "bot_91",
     "name": "戰區第 91 聯合防衛分隊",
     "flag": "🇺🇸",
-    "rp": 920,
+    "rp": 464,
     "doc": "strike",
     "deck": [
       "SU57",
@@ -1387,7 +1387,7 @@ const LADDER_PRESETS = [
     "id": "bot_92",
     "name": "戰區第 92 聯合防衛分隊",
     "flag": "🇨🇳",
-    "rp": 907,
+    "rp": 440,
     "doc": "defense",
     "deck": [
       "F15EX",
@@ -1402,7 +1402,7 @@ const LADDER_PRESETS = [
     "id": "bot_93",
     "name": "戰區第 93 聯合防衛分隊",
     "flag": "🇷🇺",
-    "rp": 894,
+    "rp": 416,
     "doc": "deception",
     "deck": [
       "JAS39",
@@ -1417,7 +1417,7 @@ const LADDER_PRESETS = [
     "id": "bot_94",
     "name": "戰區第 94 聯合防衛分隊",
     "flag": "🇫🇷",
-    "rp": 869,
+    "rp": 392,
     "doc": "strike",
     "deck": [
       "EF2K",
@@ -1432,7 +1432,7 @@ const LADDER_PRESETS = [
     "id": "bot_95",
     "name": "戰區第 95 聯合防衛分隊",
     "flag": "🇬🇧",
-    "rp": 856,
+    "rp": 369,
     "doc": "defense",
     "deck": [
       "F35A",
@@ -1447,7 +1447,7 @@ const LADDER_PRESETS = [
     "id": "bot_96",
     "name": "戰區第 96 聯合防衛分隊",
     "flag": "🇩🇪",
-    "rp": 843,
+    "rp": 345,
     "doc": "deception",
     "deck": [
       "JAS39",
@@ -1462,7 +1462,7 @@ const LADDER_PRESETS = [
     "id": "bot_97",
     "name": "戰區第 97 聯合防衛分隊",
     "flag": "🇯🇵",
-    "rp": 818,
+    "rp": 321,
     "doc": "strike",
     "deck": [
       "SU57",
@@ -1477,7 +1477,7 @@ const LADDER_PRESETS = [
     "id": "bot_98",
     "name": "戰區第 98 聯合防衛分隊",
     "flag": "🇮🇱",
-    "rp": 805,
+    "rp": 297,
     "doc": "defense",
     "deck": [
       "EF2K",
@@ -1492,7 +1492,7 @@ const LADDER_PRESETS = [
     "id": "bot_99",
     "name": "戰區第 99 聯合防衛分隊",
     "flag": "🇸🇪",
-    "rp": 792,
+    "rp": 274,
     "doc": "deception",
     "deck": [
       "F35A",
@@ -1507,7 +1507,7 @@ const LADDER_PRESETS = [
     "id": "bot_100",
     "name": "戰區第 100 聯合防衛分隊",
     "flag": "🇰🇷",
-    "rp": 780,
+    "rp": 250,
     "doc": "strike",
     "deck": [
       "SU35",

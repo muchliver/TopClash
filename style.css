@@ -6624,13 +6624,13 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   width: 100% !important;
 }
 .ladder-col-command .my-tier-badge {
-  width: 46px !important;
-  height: 46px !important;
-  border-radius: 8px !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 10px !important;
 }
 .ladder-col-command .tier-stars-box.stars-4 {
-  font-size: 12px !important;
-  max-width: 32px !important;
+  font-size: 13px !important;
+  max-width: 36px !important;
   gap: 2px !important;
 }
 .ladder-col-command .my-name-row {
@@ -6779,21 +6779,21 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
    🎖️ 將官四星星陣防溢出與武器電戰迷霧問號 (?) 優化樣式
    ===================================================== */
 .my-tier-badge {
-  width: 48px !important;
-  height: 48px !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  padding: 2px !important;
+  padding: 4px !important;
   flex-shrink: 0 !important;
 }
 .tier-stars-box {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  flex-wrap: wrap !important;
   line-height: 1 !important;
   user-select: none !important;
   margin: 0 auto !important;
@@ -6801,12 +6801,48 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 .tier-stars-box.stars-4 {
   display: grid !important;
-  grid-template-columns: repeat(2, 1fr) !important;
+  grid-template-columns: repeat(2, 16px) !important;
+  grid-template-rows: repeat(2, 16px) !important;
   gap: 2px 3px !important;
-  width: 28px !important;
-  max-width: 28px !important;
-  font-size: 11px !important;
+  width: 35px !important;
+  height: 34px !important;
   place-items: center !important;
+  justify-content: center !important;
+  align-content: center !important;
+  margin: 0 auto !important;
+}
+.tier-stars-box.stars-4 .star-chip {
+  font-size: 13px !important;
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+.tier-stars-box.stars-3 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+.tier-stars-box.stars-3 .star-chip {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+.tier-stars-box.stars-2 {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+}
+.tier-stars-box.stars-2 .star-chip {
+  font-size: 16px !important;
+  line-height: 1 !important;
+}
+.tier-stars-box.single .star-chip {
+  font-size: 26px !important;
+  line-height: 1 !important;
 }
 
 /* 武器電戰遮蔽：以科技感 (?) 呈現未知武器 */
