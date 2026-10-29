@@ -1117,11 +1117,15 @@ function renderMissionBar() {
         ${rec ? `<span style="margin-left:8px" class="${rec.won ? 'badge-ok' : 'badge-no'}">${rec.won ? '✔ 已破局' : '尚未破局'} (${rec.tries}次)</span>` : ''}
       </div>`;
   } else if (mode === 'sandbox') {
+    const customOpt = (state.customSandEnemy && Array.isArray(state.customSandEnemy.deck))
+      ? `<option value="custom_enemy" ${state.sandEnemy === 'custom_enemy' ? 'selected' : ''}>🎯 指定敵陣：${esc(state.customSandEnemy.name)} (${state.customSandEnemy.deck.map(id => UNIT_MAP[id]?.name?.split(' ')[0] || id).join('·')})</option>`
+      : '';
     h = `<span class="mission-tag">SANDBOX · 大數據模擬</span>
       <div class="mission-item">
         <span class="muted">對手風格：</span>
         <select class="select sm" id="sandEnemy" style="padding:3px 8px;width:auto;font-size:12px">
-          <option value="random">全部風格輪流</option>
+          ${customOpt}
+          <option value="random" ${state.sandEnemy === 'random' ? 'selected' : ''}>全部風格輪流</option>
           ${ARCHETYPES.map(a => `<option value="${a.id}" ${state.sandEnemy === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
         </select>
         <span class="muted" style="margin-left:8px">戰場事件：</span>
@@ -1377,26 +1381,39 @@ function renderCommandDeck() {
   if (synBar) {
     const pickedUnits = state.deck.map(id => id ? UNIT_MAP[id] : null).filter(Boolean);
     const activeSyns = (typeof getDeckSynergies === 'function') ? getDeckSynergies(pickedUnits) : [];
+    const partialSyns = (typeof getPartialDeckSynergies === 'function') ? getPartialDeckSynergies(pickedUnits) : [];
     const badges = [];
     activeSyns.forEach(s => {
-      badges.push(`<span class="syn-chip active" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`);
+      const tip = `【${s.icon} ${s.name} 已啟動】${s.desc}`;
+      badges.push(`<span class="syn-chip active" data-syn-tip="${esc(tip)}" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`);
+    });
+    partialSyns.slice(0, 2).forEach(ps => {
+      const tip = `【${ps.icon} ${ps.name} 進度 1/2】${ps.hint}`;
+      badges.push(`<span class="syn-chip partial" data-syn-tip="${esc(tip)}" title="${esc(ps.hint)}">${ps.icon} ${esc(ps.name.split(' ')[0])} (1/2)</span>`);
     });
     if (pickedUnits.length >= 3) {
       const baseEw = pickedUnits.reduce((acc, u) => acc + (u.ew || 0), 0) + (activeSyns.some(s => s.id === 'cec') ? 12 : 0);
       const effEw = Math.round(baseEw * (state.doctrine === 'deception' ? 1.5 : 1));
       if (effEw < 10) {
-        badges.push(`<span class="syn-chip warn" title="全隊電戰值僅 ${effEw}，面對電戰流對手易遭壓制命中率">⚠ 電戰偏弱 (EW ${effEw})</span>`);
+        const tip = `【⚠ 電戰偏弱】全隊有效電戰值僅 ${effEw}，面對電戰流對手易遭壓制命中率（最高 -15%）`;
+        badges.push(`<span class="syn-chip warn" data-syn-tip="${esc(tip)}" title="${esc(tip)}">⚠ 電戰偏弱 (EW ${effEw})</span>`);
       } else {
-        badges.push(`<span class="syn-chip info" title="全隊有效電戰值 ${effEw}">📡 電戰值 ${effEw}</span>`);
+        const tip = `【📡 電磁戰力】全隊有效電戰值 ${effEw}（每領先對手 10 點可壓制敵命中並提升己方火力）`;
+        badges.push(`<span class="syn-chip info" data-syn-tip="${esc(tip)}" title="${esc(tip)}">📡 電戰值 ${effEw}</span>`);
       }
       const hasAntiArmor = pickedUnits.some(u => (u.traits || []).includes('TRUE_AT') || (u.traits || []).includes('CAS') || (u.traits || []).includes('ARTY') || (u.cat === 'armor' && u.atk >= 90));
       if (!hasAntiArmor) {
-        badges.push(`<span class="syn-chip warn" title="缺乏穿甲 (TRUE_AT)、密接支援 (CAS) 或重火砲，面對重裝甲主戰坦克易陷入苦戰">⚠ 缺破甲手段</span>`);
+        const tip = '【⚠ 缺破甲手段】缺乏真實破甲 (TRUE_AT)、空中密接 (CAS) 或重火砲，面對重裝甲主戰坦克易陷入苦戰';
+        badges.push(`<span class="syn-chip warn" data-syn-tip="${esc(tip)}" title="${esc(tip)}">⚠ 缺破甲手段</span>`);
       }
     } else if (pickedUnits.length === 0) {
-      badges.push(`<span class="syn-chip muted">💡 湊齊特定兵種組合可觸發【📡協同接戰網 / 🛸有人無人協同 / 🌊立體反潛網 / ⚙步坦砲鐵拳】加成</span>`);
+      const tip = '湊齊特定兵種組合可觸發【📡協同接戰網 / 🛸有人無人協同 / 🌊立體反潛網 / ⚙步坦砲鐵拳】戰術加成！';
+      badges.push(`<span class="syn-chip muted" data-syn-tip="${esc(tip)}" title="${esc(tip)}">💡 湊齊特定組合可觸發【📡協同網 / 🛸有人無人 / 🌊反潛網 / ⚙步坦砲】加成</span>`);
     }
-    synBar.innerHTML = badges.join('');
+    const htmlStr = badges.join('');
+    synBar.innerHTML = htmlStr;
+    const sheetSyn = $('#sheetSynergyBox');
+    if (sheetSyn) sheetSyn.innerHTML = htmlStr || '<span class="syn-chip muted">請先選取裝備以檢視羈絆與戰術診斷</span>';
   }
 
   renderPresetsMenus();
@@ -1684,6 +1701,11 @@ function openDeckMoreModal() {
     ).join('');
     sheetPresets.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">${customHtml}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${tplHtml}</div>`;
   }
+  const sheetSyn = $('#sheetSynergyBox');
+  const mainSyn = $('#deckSynergyBar');
+  if (sheetSyn && mainSyn) {
+    sheetSyn.innerHTML = mainSyn.innerHTML || '<span class="syn-chip muted">請先選取裝備以檢視羈絆與戰術診斷</span>';
+  }
   modal.hidden = false;
 }
 
@@ -1783,6 +1805,11 @@ $('#unitDetailModal')?.addEventListener('click', e => {
 
 // 手機版戰術司令部配置抽屜事件
 $('#deckMoreModal')?.addEventListener('click', e => {
+  const synTipEl = e.target.closest('[data-syn-tip]');
+  if (synTipEl) {
+    toast(synTipEl.dataset.synTip);
+    return;
+  }
   if (e.target.id === 'deckMoreModal' || e.target.id === 'btnDeckSheetClose') {
     $('#deckMoreModal').hidden = true;
     return;
@@ -1840,6 +1867,11 @@ $('#deckMoreModal')?.addEventListener('click', e => {
 
 // 底部指揮台點擊
 $('#commandDeck').addEventListener('click', e => {
+  const synTipEl = e.target.closest('[data-syn-tip]');
+  if (synTipEl) {
+    toast(synTipEl.dataset.synTip);
+    return;
+  }
   const abBtn = e.target.closest('[data-ab]');
   if (abBtn) {
     switchDeckSlot(abBtn.dataset.ab);
@@ -2252,8 +2284,9 @@ function renderLadderView() {
     if (player.orders === 0) myOrdersVal.style.color = '#ef4444';
   }
 
-  // 防守部隊預覽
+  // 防守部隊預覽與 AI 駐防戰術教條自選
   const defDeck = player.defenseDeck || state.deck;
+  const defDoc = player.defenseDoc || state.doctrine || 'defense';
   const defBox = $('#defenseDeckPreview');
   if (defBox) {
     defBox.innerHTML = defDeck.map(id => {
@@ -2264,6 +2297,13 @@ function renderLadderView() {
         <span class="cost-tag">$${u.cost}</span>
       </div>`;
     }).join('');
+  }
+  const defDocRow = $('#defenseDocRow');
+  if (defDocRow) {
+    defDocRow.innerHTML = `<span class="muted" style="font-size:11px">駐防教條：</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        ${DOCTRINES.map(d => `<button type="button" class="btn-micro ${defDoc === d.id ? 'active-def-doc' : ''}" data-def-doc="${d.id}" title="點擊設定天梯駐防 AI 教條：${esc(d.desc)}" style="${defDoc === d.id ? 'border-color:var(--cyan);color:var(--cyan);background:rgba(61,224,255,.15);font-weight:800' : 'opacity:.75'}">${d.icon} ${esc(d.name)}</button>`).join('')}
+      </div>`;
   }
 
   // 2. 渲染 Top 30 單列階梯天梯榜
@@ -2351,7 +2391,7 @@ function renderLadderRosterTable() {
         <span style="font-size:18px">${u.flag}</span>
         <div class="r-name-block">
           <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b></span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · <span style="color:var(--cyan);font-size:10.5px" title="駐防戰術教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span></span>
         </div>
       </div>
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
@@ -2363,6 +2403,19 @@ function renderLadderRosterTable() {
 
 // 天梯操作事件代理
 $('#viewLadder')?.addEventListener('click', e => {
+  // 0. 切換天梯駐防 AI 戰術教條
+  const defDocBtn = e.target.closest('[data-def-doc]');
+  if (defDocBtn) {
+    const newDoc = defDocBtn.dataset.defDoc;
+    const lState = LadderEngine.getState();
+    const curDeck = lState.player.defenseDeck || (state.deck.every(Boolean) ? state.deck : ['F16V', 'M1A2', 'NASAMS', 'TJ', 'TB2']);
+    LadderEngine.setDefenseFleet(curDeck, newDoc);
+    renderLadderView();
+    const dObj = DOCTRINES.find(d => d.id === newDoc);
+    toast(`🛡️ 已將天梯駐防 AI 戰術教條切換為：【${dObj ? dObj.icon + ' ' + dObj.name : newDoc}】！`);
+    return;
+  }
+
   // 1. 同步當前陣容為防守部隊
   if (e.target.closest('#btnSyncDefense')) {
     if (!state.deck.every(Boolean)) {
@@ -2698,8 +2751,11 @@ function runSandbox() {
     return;
   }
 
-  // 1. 取得對手風格群
-  const archs = state.sandEnemy === 'random' ? ARCHETYPES : [ARCHETYPES.find(a => a.id === state.sandEnemy)].filter(Boolean);
+  // 1. 取得對手風格群（支援指定對戰敵方陣容 custom_enemy）
+  const isCustomEnemy = state.sandEnemy === 'custom_enemy' && state.customSandEnemy && Array.isArray(state.customSandEnemy.deck);
+  const archs = isCustomEnemy
+    ? [{ id: 'custom_enemy', name: `指定敵陣 (${state.customSandEnemy.name})`, customDeck: state.customSandEnemy.deck, customDoc: state.customSandEnemy.doc }]
+    : (state.sandEnemy === 'random' ? ARCHETYPES : [ARCHETYPES.find(a => a.id === state.sandEnemy)].filter(Boolean));
   const targetRuns = 300;
   const per = Math.ceil(targetRuns / archs.length);
 
@@ -2724,9 +2780,10 @@ function runSandbox() {
   const baseSeed = (Date.now() ^ (Math.random() * 4294967296)) >>> 0;
 
   archs.forEach((a, k) => {
-    const enemyDeck = buildFromPlan(a.plan, mulberry32(baseSeed + k * 17 + 3));
+    const enemyDeck = a.customDeck ? a.customDeck.slice() : buildFromPlan(a.plan, mulberry32(baseSeed + k * 17 + 3));
     const r = simulate(deck, enemyDeck, per, {
       docA: state.doctrine,
+      docB: a.customDoc || null,
       seed: (baseSeed + k * 997) >>> 0,
       event: state.sandEvent === 'all' ? null : EVENTS.find(e => e.id === state.sandEvent)
     });
@@ -4539,6 +4596,7 @@ function showResult(res, bo3Custom) {
       ${bo3Custom ? `<button class="btn amber" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary aar-btn-main" id="rRematch">🔥 ${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
       <button class="btn ghost" id="rReview">🔍 檢視戰場情形</button>
       <button class="btn ghost" id="rShareReplay" title="複製一鍵重播網址，戰友點擊即可完整重現本場推演">🎬 分享重播連結</button>
+      <button class="btn ghost" id="rLoadEnemySandbox" title="將本場敵方陣容與教條載入沙盒，針對性模擬 300 場測試反制配裝">🧪 載入敵陣至沙盒</button>
       <button class="btn ghost" id="rShareDebrief" title="複製精美戰報至剪貼簿">📋 複製戰報代碼</button>
       <button class="btn ghost" id="rEdit">⚙️ 返回編輯陣容</button>
     </div>
@@ -4569,6 +4627,24 @@ function showResult(res, bo3Custom) {
       const url = buildReplayShareUrl(res);
       copyText(url);
       toast('🎬 已複製一鍵戰鬥重播網址！分享給好友即可100%重現本場交火動畫！');
+    };
+  }
+
+  // 一鍵將本場敵方陣容載入沙盒演練
+  if ($('#rLoadEnemySandbox')) {
+    $('#rLoadEnemySandbox').onclick = () => {
+      const enemyIds = (res.final && res.final.B) ? res.final.B.map(u => u.id) : state.enemy.slice();
+      const enemyDoc = (res.docs && res.docs.B) ? res.docs.B : (state.enemyDoc || 'defense');
+      state.customSandEnemy = {
+        name: state.enemyName || '對戰敵方特遣隊',
+        deck: enemyIds,
+        doc: enemyDoc
+      };
+      state.sandEnemy = 'custom_enemy';
+      $('#resultModal').hidden = true;
+      closeBattle();
+      setMode('sandbox');
+      toast('🧪 已將本場敵方陣容載入沙盒假想敵！可自由調整配裝並點擊「開始 300 場模擬」測試反制勝率！');
     };
   }
 
@@ -5450,13 +5526,38 @@ function renderTourneyHeader(t, isOnline = false) {
         fightBtnText = `⚔️ 迎戰 ${oppFlag} ${esc(oppTitle)} (出擊)`;
       }
 
+      const waitPct = Math.max(0, Math.min(100, Math.round((secLeft / 60) * 100)));
+      const waitProgressHtml = isIReady ? `
+        <div class="tourney-wait-bar-wrap" id="tourneyWaitBarWrap" data-deadline="${myMatch.deadline || (Date.now() + 60000)}">
+          <div class="tourney-wait-bar-track"><div class="tourney-wait-bar-fill" id="tourneyWaitBarFill" style="width:${waitPct}%"></div></div>
+          <span class="tourney-wait-status" id="tourneyWaitStatus">📡 對手正在調配戰術陣容 · 倒數 <b>${secLeft}s</b> 後自動由 AI 特遣隊接管開戰</span>
+        </div>
+      ` : '';
       actBox.innerHTML = `
         <button class="btn amber sm" id="btnTourneyGoFight" style="font-weight:800;animation:pulseGoldBorder 1.5s infinite">
           ${fightBtnText}
         </button>
         <button class="btn ghost sm" id="btnTourneyTuneDeck" title="調整當前作戰陣容">🛠️ 調配陣容</button>
         ${isOnline ? '<button class="btn ghost sm" id="btnTourneyLeaveOnline" style="color:var(--red);border-color:rgba(255,93,110,.3)">退出房間 ✕</button>' : '<button class="btn ghost sm" id="btnTourneyResetAll" style="color:var(--red);border-color:rgba(255,93,110,.3)">重置錦標賽 ✕</button>'}
+        ${waitProgressHtml}
       `;
+      if (window.__tourneyWaitTicker) clearInterval(window.__tourneyWaitTicker);
+      if (isIReady && myMatch.deadline) {
+        window.__tourneyWaitTicker = setInterval(() => {
+          const wrap = document.getElementById('tourneyWaitBarWrap');
+          if (!wrap) { clearInterval(window.__tourneyWaitTicker); return; }
+          const dl = Number(wrap.dataset.deadline) || 0;
+          const rem = Math.max(0, Math.ceil((dl - Date.now()) / 1000));
+          const pct = Math.max(0, Math.min(100, Math.round((rem / 60) * 100)));
+          const fillEl = document.getElementById('tourneyWaitBarFill');
+          const statEl = document.getElementById('tourneyWaitStatus');
+          const btnEl = document.getElementById('btnTourneyGoFight');
+          if (fillEl) fillEl.style.width = pct + '%';
+          if (statEl) statEl.innerHTML = `📡 對手正在調配戰術陣容 · 倒數 <b>${rem}s</b> 後自動由 AI 特遣隊接管開戰`;
+          if (btnEl) btnEl.textContent = `⏳ 陣容已鎖定 · 等對手出擊 (${rem}s)...`;
+          if (rem <= 0) clearInterval(window.__tourneyWaitTicker);
+        }, 1000);
+      }
     } else {
       actBox.innerHTML = `
         <span class="muted" style="font-size:12px;margin-right:6px">點選樹狀圖任一場次即可觀摩推演</span>
@@ -6792,9 +6893,7 @@ if (replayParam) {
 
 if (!LS.get('db15_seen', 0) && !replayParam && !tourneyParam && !roomParam) showHelp();
 
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
-}
+// Service Worker 由 index.html 與 armory.html 統一註冊
 
 window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile, buildReplayShareUrl };
 })();

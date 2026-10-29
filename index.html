@@ -254,6 +254,7 @@
           <button class="btn-micro" id="btnSyncDefense">更新為當前陣容</button>
         </div>
         <div class="defense-deck-preview" id="defenseDeckPreview"></div>
+        <div class="defense-doc-row" id="defenseDocRow" style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;font-size:11.5px"></div>
       </div>
     </div>
   </div>
@@ -693,6 +694,10 @@
     <div class="sheet-head">
       <h3>戰術司令部配置</h3>
       <button class="sheet-close" id="btnDeckSheetClose">✕</button>
+    </div>
+    <div class="sheet-section">
+      <div class="sheet-label">聯合作戰羈絆與戰術診斷 (點擊標籤查看詳情)</div>
+      <div id="sheetSynergyBox" class="deck-synergy-bar" style="flex-wrap:wrap;max-width:100%;gap:6px"></div>
     </div>
     <div class="sheet-section">
       <div class="sheet-label">選擇戰術教條</div>

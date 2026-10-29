@@ -330,28 +330,55 @@ const SYNERGIES = [
     icon: '📡',
     name: '協同接戰網 (CEC)',
     desc: '高階電戰預警機 (EW≥50) ＋ 遠程防空／神盾艦：電戰 +12、防空命中 +6%',
-    check: units => units.some(u => (u.ew || 0) >= 50) && units.some(u => (u.traits || []).includes('AEGIS') || (u.traits || []).includes('AA_LONG'))
+    check: units => units.some(u => (u.ew || 0) >= 50) && units.some(u => (u.traits || []).includes('AEGIS') || (u.traits || []).includes('AA_LONG')),
+    partial: units => {
+      const hasEw = units.some(u => (u.ew || 0) >= 50);
+      const hasAa = units.some(u => (u.traits || []).includes('AEGIS') || (u.traits || []).includes('AA_LONG'));
+      if (hasEw && !hasAa) return '已備妥預警機，再選【遠程防空或神盾艦】即可啟動：電戰 +12、防空命中 +6%';
+      if (!hasEw && hasAa) return '已備妥神盾/長程防空，再選【$5 高階預警機 (EW≥50)】即可啟動：電戰 +12、防空命中 +6%';
+      return null;
+    }
   },
   {
     id: 'mumt',
     icon: '🛸',
     name: '有人無人協同 (MUM-T)',
     desc: '$5 五代空優戰機 ＋ 無人機／巡飛彈／無人艇：支援與無人單位傷害 +15%、全體隱匿 +5',
-    check: units => units.some(u => u.cat === 'air' && u.cost === 5) && units.some(u => DRONE_IDS.has(u.id) || (u.traits || []).includes('SWARM'))
+    check: units => units.some(u => u.cat === 'air' && u.cost === 5) && units.some(u => DRONE_IDS.has(u.id) || (u.traits || []).includes('SWARM')),
+    partial: units => {
+      const has5th = units.some(u => u.cat === 'air' && u.cost === 5);
+      const hasDrone = units.some(u => DRONE_IDS.has(u.id) || (u.traits || []).includes('SWARM'));
+      if (has5th && !hasDrone) return '已備妥 $5 五代戰機，再選【無人機／巡飛彈／無人快艇】即可啟動：無人與支援傷害 +15%、全體隱匿 +5';
+      if (!has5th && hasDrone) return '已備妥無人作戰單位，再選【$5 五代空優戰機】即可啟動：無人與支援傷害 +15%、全體隱匿 +5';
+      return null;
+    }
   },
   {
     id: 'asw_net',
     icon: '🌊',
     name: '立體海空獵殺網 (ASW Net)',
     desc: '反潛艦／潛艦 ＋ 電戰／校射偵蒐 (EW≥15 或 SPOT)：制海命中 +6%、海軍傷害 +12%',
-    check: units => units.some(u => (u.traits || []).includes('ASW') || (u.traits || []).includes('SUB')) && units.some(u => (u.ew || 0) >= 15 || (u.traits || []).includes('SPOT'))
+    check: units => units.some(u => (u.traits || []).includes('ASW') || (u.traits || []).includes('SUB')) && units.some(u => (u.ew || 0) >= 15 || (u.traits || []).includes('SPOT')),
+    partial: units => {
+      const hasNav = units.some(u => (u.traits || []).includes('ASW') || (u.traits || []).includes('SUB'));
+      const hasSpot = units.some(u => (u.ew || 0) >= 15 || (u.traits || []).includes('SPOT'));
+      if (hasNav && !hasSpot) return '已備妥反潛艦／潛艦，再選【電戰或校射偵蒐單位 (EW≥15 / SPOT)】即可啟動：制海命中 +6%、海軍傷害 +12%';
+      return null;
+    }
   },
   {
     id: 'iron_fist',
     icon: '⚙',
     name: '步坦砲協同鐵拳 (Land Force)',
     desc: '重裝甲／主動防護戰車 ＋ 自走砲／校射支援：階段三裝甲與火砲傷害 +10%',
-    check: units => units.some(u => (u.traits || []).includes('HEAVY') || (u.traits || []).includes('APS')) && units.some(u => (u.traits || []).includes('ARTY') || (u.traits || []).includes('SPOT'))
+    check: units => units.some(u => (u.traits || []).includes('HEAVY') || (u.traits || []).includes('APS')) && units.some(u => (u.traits || []).includes('ARTY') || (u.traits || []).includes('SPOT')),
+    partial: units => {
+      const hasTank = units.some(u => (u.traits || []).includes('HEAVY') || (u.traits || []).includes('APS'));
+      const hasArty = units.some(u => (u.traits || []).includes('ARTY') || (u.traits || []).includes('SPOT'));
+      if (hasTank && !hasArty) return '已備妥重裝主戰坦克，再選【自走砲／火箭砲／前觀校射】即可啟動：階段三裝甲與火砲傷害 +10%';
+      if (!hasTank && hasArty) return '已備妥火砲／校射支援，再選【重裝甲／APS主動防護戰車】即可啟動：階段三裝甲與火砲傷害 +10%';
+      return null;
+    }
   }
 ];
 
@@ -359,6 +386,19 @@ function getDeckSynergies(idsOrUnits) {
   const units = (idsOrUnits || []).map(x => (typeof x === 'string' ? UNIT_MAP[x] : x)).filter(Boolean);
   if (units.length < 2) return [];
   return SYNERGIES.filter(syn => syn.check(units));
+}
+
+function getPartialDeckSynergies(idsOrUnits) {
+  const units = (idsOrUnits || []).map(x => (typeof x === 'string' ? UNIT_MAP[x] : x)).filter(Boolean);
+  if (units.length === 0 || units.length >= 5) return [];
+  const out = [];
+  for (const syn of SYNERGIES) {
+    if (!syn.check(units) && typeof syn.partial === 'function') {
+      const hint = syn.partial(units);
+      if (hint) out.push({ id: syn.id, icon: syn.icon, name: syn.name, hint });
+    }
+  }
+  return out;
 }
 const MAX_HP = Math.max(...UNITS.map(u => u.hp));
 const MAX_ATK = Math.max(...UNITS.map(u => u.atk));

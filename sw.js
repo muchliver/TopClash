@@ -1,4 +1,4 @@
-const CACHE_NAME = 'topclash-v4.0';
+const CACHE_NAME = 'topclash-v4.1';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -39,7 +39,7 @@ self.addEventListener('fetch', (event) => {
   // Cache-first for unit artwork images
   if (url.pathname.includes('/assets/units/')) {
     event.respondWith(
-      caches.match(req).then((cached) => {
+      caches.match(req, { ignoreSearch: true }).then((cached) => {
         if (cached) return cached;
         return fetch(req).then((res) => {
           if (res && res.status === 200) {
@@ -53,7 +53,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML/CSS/JS so updates take effect immediately
+  // Network-first for HTML/CSS/JS so updates take effect immediately, with ignoreSearch fallback offline
   event.respondWith(
     fetch(req)
       .then((res) => {
@@ -63,7 +63,6 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req))
+      .catch(() => caches.match(req, { ignoreSearch: true }))
   );
 });
-
