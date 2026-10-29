@@ -308,6 +308,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .m-info-btn{width: 19px; height: 19px; border-radius: 50%; background: rgba(255, 255, 255, .08); color: var(--muted); display: none; place-items: center; font-size: 11px; font-family: serif; font-weight: 700; border: 1px solid var(--line); transition: .15s; cursor: pointer; flex: none;}
 .m-info-btn:hover{background: rgba(61, 224, 255, .2); color: var(--cyan); border-color: var(--cyan);}
 .mobile-more-btn{display: none !important;}
+@media (min-width: 769px) { .mobile-more-btn { display: none !important; } }
 .mobile-cat-nav{display: none;}
 
 .m-bot{display: flex; align-items: center; justify-content: space-between; gap: 4px; margin-top: 2px; font-size: 9.5px; color: var(--muted); font-family: var(--mono);}
@@ -376,8 +377,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 }
 
 /* ---------- 底部常駐指揮台 (Command Deck: 穩健 CSS Grid 3 欄佈局，徹底防重疊) ---------- */
-.command-deck{position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--deck-bg);border-top:1px solid var(--line2);backdrop-filter:blur(16px);z-index:40;display:grid;grid-template-columns:210px 1fr 260px;align-items:center;padding:0 20px;gap:14px;box-shadow:0 -8px 30px rgba(0,0,0,.7);box-sizing:border-box;overflow:hidden}
-.deck-left{display:flex;align-items:center;gap:12px;min-width:0;overflow:hidden}
+.command-deck{position:fixed;bottom:0;left:0;right:0;height:68px;background:var(--deck-bg);border-top:1px solid var(--line2);backdrop-filter:blur(16px);z-index:40;display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:0 10px;gap:8px;box-shadow:0 -8px 30px rgba(0,0,0,.7);box-sizing:border-box;overflow:visible}
+.deck-left{display:flex;align-items:center;gap:10px;flex:none;overflow:visible}
 
 /* A/B 雙陣容快速切換開關 */
 .deck-ab-toggle{display:flex;flex-direction:row;gap:3px;background:rgba(255,255,255,.04);padding:3px;border-radius:7px;border:1px solid var(--line);flex:none}
@@ -411,13 +412,13 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .deck-slots{display:none!important}
 
 /* 中欄：戰術教條與快捷輔助工具 (彈性自適應，不折行不碰撞) */
-.deck-mid{display:flex;align-items:center;gap:12px;justify-content:center;min-width:0;overflow:hidden}
+.deck-mid{display:flex;align-items:center;gap:12px;justify-content:flex-start;min-width:0;overflow:visible}
 .doc-group{display:flex;align-items:center;gap:8px;flex:none}
 .deck-label-split{display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--head);font-size:12px;font-weight:800;line-height:1.15;letter-spacing:.08em;color:var(--muted);white-space:nowrap;flex:none}
 .deck-label-split span{display:block}
 .doc-toggles{display:flex;gap:4px;background:rgba(255,255,255,.04);padding:3px 5px;border-radius:8px;border:1px solid var(--line);flex:none}
 [data-theme="light"] .doc-toggles{background:rgba(15,23,42,.04);border-color:rgba(15,23,42,.12)}
-.doc-btn{padding:7px 12px;height:34px;border-radius:6px;font-size:13px;font-weight:700;color:var(--muted);transition:.2s;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;box-sizing:border-box}
+.doc-btn{padding:5px 9px;height:32px;border-radius:6px;font-size:12px;font-weight:700;color:var(--muted);transition:.2s;display:flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer;box-sizing:border-box}
 .doc-btn:hover{color:var(--text);background:rgba(255,255,255,.06)}
 .doc-btn.on{background:linear-gradient(135deg,rgba(255,179,64,.24),rgba(255,179,64,.1));color:var(--amber);box-shadow:0 0 0 1px rgba(255,179,64,.5) inset}
 [data-theme="light"] .doc-btn.on{background:linear-gradient(135deg,#fef3c7,#fde68a);color:#b45309;box-shadow:0 1px 4px rgba(180,83,9,.2)}
@@ -431,7 +432,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 [data-theme="light"] kbd{background:rgba(15,23,42,.06);border-color:rgba(15,23,42,.12);color:var(--muted)}
 
 .dropdown-wrap{position:relative}
-.dropdown-menu{position:absolute;bottom:100%;left:0;margin-bottom:8px;background:#0d1624;border:1px solid var(--line2);border-radius:10px;padding:6px;display:grid;gap:4px;min-width:180px;box-shadow:0 10px 30px rgba(0,0,0,.7);z-index:60}
+.dropdown-menu{position:absolute;bottom:calc(100% + 10px);right:0;left:auto;margin-bottom:0;z-index:100;background:#0d1624;border:1px solid var(--line2);border-radius:10px;padding:6px;display:grid;gap:4px;min-width:180px;box-shadow:0 10px 30px rgba(0,0,0,.7);z-index:60}
 [data-theme="light"] .dropdown-menu{background:#ffffff;border-color:rgba(15,23,42,.15);box-shadow:0 8px 24px rgba(15,23,42,.12)}
 .menu-item{text-align:left;padding:8px 12px;border-radius:6px;font-size:12.5px;color:var(--text);transition:.15s;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
 .menu-item:hover{background:rgba(61,224,255,.12);color:var(--cyan)}
@@ -439,10 +440,10 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .menu-item small{color:var(--amber);font-family:var(--head);font-weight:700}
 
 /* 右欄：作戰開戰指令大按鈕 (左右視覺均衡對稱，左側圖章與右側箭頭雙翼佈局) */
-.deck-right{display:flex;align-items:center;justify-content:flex-end;width:100%;min-width:0}
+.deck-right{display:flex;align-items:center;justify-content:flex-end;flex:none;min-width:0}
 .deck-hint{display:none!important}
 
-.mega-launch-btn{
+.mega-launch-btn{ min-width: 190px !important; width: auto !important; 
   width:260px;min-width:250px;max-width:270px;height:50px;
   padding:0 14px 0 12px;border-radius:11px;white-space:nowrap;
   display:inline-flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1887,7 +1888,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     width:100%!important;display:flex!important;align-items:center!important;justify-content:center!important;
   }
   .deck-hint{display:none!important}
-  .mega-launch-btn{
+  .mega-launch-btn{ min-width: 190px !important; width: auto !important; 
     width:100%!important;max-width:100%!important;min-width:0!important;
     height:44px!important;padding:0 12px!important;border-radius:9px!important;
   }
@@ -5818,6 +5819,8 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 
 /* 1. 指揮台聯合作戰羈絆與盲點診斷條 (#deckSynergyBar) */
 .deck-synergy-bar {
+  flex: none !important;
+  max-width: none !important;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -6059,7 +6062,9 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
    5. 全方位行動裝置與平板 RWD 深度優化 (Mobile & Tablet Responsive)
    ===================================================== */
 @media (max-width: 1080px) {
-  .deck-synergy-bar { max-width: 260px; }
+  .deck-synergy-bar {
+  flex: none !important;
+  max-width: none !important; max-width: 260px; }
 }
 
 @media (max-width: 768px) {
@@ -6432,7 +6437,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 .ladder-dual-grid {
   display: grid;
-  grid-template-columns: 460px 1fr;
+  grid-template-columns: 500px 1fr;
   gap: 16px;
   height: 100%;
   min-height: 0;
@@ -6440,7 +6445,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 @media (max-width: 1160px) {
   .ladder-dual-grid {
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 460px 1fr;
     gap: 12px;
   }
 }
@@ -6646,30 +6651,47 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 .ladder-col-command .stat-pill {
   min-width: 0 !important;
-  padding: 4px 6px !important;
-  border-radius: 6px !important;
+  padding: 6px 10px !important;
+  border-radius: 8px !important;
 }
 .ladder-col-command .stat-pill .lbl {
-  font-size: 9.5px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
 }
 .ladder-col-command .stat-pill .val {
-  font-size: 14.5px !important;
+  font-size: 20px !important;
+  line-height: 1.15 !important;
 }
 .ladder-col-command .my-defense-col {
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  padding: 6px 8px !important;
-  gap: 4px !important;
-  border-radius: 6px !important;
+  padding: 10px 12px !important;
+  gap: 8px !important;
+  border-radius: 8px !important;
 }
 .ladder-col-command .defense-deck-preview {
   display: flex !important;
-  gap: 4px !important;
+  gap: 6px !important;
 }
 .ladder-col-command .defense-deck-preview .mini-unit-chip {
-  width: 32px !important;
-  height: 32px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 6px !important;
+}
+.ladder-col-command .defense-title {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+}
+#btnGoBuildFromLadder, #btnSyncDefense {
+  height: 28px !important;
+  font-size: 12px !important;
+  padding: 3px 10px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
 }
 .ladder-col-command .ladder-theater-strip {
   padding: 6px 10px !important;
@@ -6892,4 +6914,314 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   font-size: 10px !important;
   padding: 2px 6px !important;
   white-space: nowrap !important;
+}
+
+
+/* =====================================================
+   🎖️ 現代軍事化左欄HUD與常駐戰況指示燈強化 (v4.2.6)
+   ===================================================== */
+/* 1. 駐防 AI 戰術教條三等分軍規分段切換器 */
+.doc-segmented-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+.doc-seg-label {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+.doc-seg-hint {
+  font-size: 10.5px;
+  color: #64748b;
+}
+.doc-segmented-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+.doc-seg-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.doc-seg-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(56, 189, 248, 0.4);
+}
+.doc-seg-btn.active-def-doc {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(56, 189, 248, 0.08));
+  border-color: var(--cyan);
+  color: var(--cyan);
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25), inset 0 0 6px rgba(56, 189, 248, 0.15);
+}
+[data-theme="light"] .doc-seg-btn {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #475569;
+}
+[data-theme="light"] .doc-seg-btn.active-def-doc {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.2);
+}
+
+/* 2. 輕量化階梯守則三聯戰術徽章 */
+.ladder-rules-strip .rules-desc {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+}
+.rule-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+}
+[data-theme="light"] .rule-chip {
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.08);
+  color: #334155;
+}
+
+/* 3. 底欄常駐聯合作戰指示燈槽 (Fixed Tactical Indicator Dock) - 徹底防跳動 */
+.indicators-dock-wrap {
+  max-width: 260px;
+  gap: 2px !important;
+  padding: 2px 3px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2px 5px;
+  border-radius: 8px;
+  height: 36px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+.syn-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  height: 26px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--head);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+[data-theme="light"] .indicators-dock-wrap {
+  max-width: 260px;
+  gap: 2px !important;
+  padding: 2px 3px !important;
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+.syn-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  height: 26px;
+  border-radius: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: var(--head);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+.syn-indicator.idle {
+  color: rgba(148, 163, 184, 0.45);
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  filter: grayscale(0.8);
+}
+[data-theme="light"] .syn-indicator.idle {
+  color: rgba(100, 116, 139, 0.45);
+  border-color: rgba(15, 23, 42, 0.12);
+}
+.syn-indicator.lit {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+  filter: none;
+}
+.syn-indicator.lit .ind-dot {
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+.syn-indicator.ew-ind.warn {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+}
+.syn-indicator.ew-ind.warn .ind-dot {
+  background: #fbbf24;
+  box-shadow: 0 0 6px #fbbf24;
+}
+.syn-indicator.ew-ind.strong {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.6);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+}
+.syn-indicator.ew-ind.strong .ind-dot {
+  background: #34d399;
+  box-shadow: 0 0 6px #34d399;
+}
+.ind-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 4. 底欄編制整備工具組 (冷色調科技藍包覆，與暖金色教條鮮明對比) */
+.tools-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(14, 165, 233, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  padding: 3px 5px;
+  border-radius: 8px;
+}
+[data-theme="light"] .tools-btn-group {
+  background: rgba(2, 132, 199, 0.05);
+  border-color: rgba(2, 132, 199, 0.22);
+}
+.tool-btn {
+  height: 34px !important;
+  font-size: 13px !important;
+  padding: 5px 9px !important; height: 32px !important; font-size: 12px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+.tool-btn-icon {
+  font-size: 14px;
+}
+
+#btnDeckMore {
+  display: none !important;
+}
+@media (max-width: 768px) {
+  #btnDeckMore {
+    display: inline-flex !important;
+  }
+}
+
+/* =====================================================
+   🎯 底欄常駐指令台自適應寬度流動排版 (Command Deck Sizing)
+   ===================================================== */
+.deck-label-split {
+  display: none !important;
+}
+.doc-toggles {
+  gap: 3px !important;
+  padding: 2px 3px !important;
+}
+.doc-btn {
+  padding: 4px 8px !important;
+  height: 30px !important;
+  font-size: 11.5px !important;
+}
+.deck-synergy-bar {
+  flex: none !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+.indicators-dock-wrap {
+  height: 30px !important;
+  padding: 1px 3px !important;
+  gap: 2px !important;
+}
+.syn-indicator {
+  padding: 1px 4px !important;
+  height: 24px !important;
+  font-size: 10.5px !important;
+  gap: 2px !important;
+}
+.deck-tools {
+  padding-left: 6px !important;
+  border-left: none !important;
+}
+.tools-btn-group {
+  padding: 1px 3px !important;
+  gap: 3px !important;
+}
+.tool-btn {
+  padding: 4px 8px !important;
+  height: 30px !important;
+  font-size: 11.5px !important;
+  gap: 3px !important;
+}
+.tool-btn kbd {
+  display: none !important;
+}
+.mega-launch-btn {
+  min-width: 170px !important;
+  padding: 6px 14px !important;
+}
+
+.deck-right {
+  width: auto !important;
+  min-width: 0 !important;
+  flex: none !important;
+}
+.mega-launch-btn {
+  width: 190px !important;
+  min-width: 190px !important;
+  max-width: 190px !important;
+  padding: 6px 10px !important;
+}
+.indicators-dock-wrap {
+  gap: 1px !important;
+  padding: 1px 2px !important;
+}
+.syn-indicator {
+  padding: 1px 3px !important;
+  gap: 1px !important;
+  font-size: 10px !important;
+}
+.doc-btn {
+  padding: 3px 6px !important;
+  font-size: 11px !important;
+}
+.tool-btn {
+  padding: 3px 6px !important;
+  font-size: 11px !important;
 }

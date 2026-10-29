@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=4.2.5">
+<link rel="stylesheet" href="style.css?v=4.2.6">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -98,11 +98,12 @@
     </div>
     <div class="deck-synergy-bar" id="deckSynergyBar" aria-live="polite"></div>
     <div class="deck-tools">
-      <button class="tool-btn" id="btnRand" title="隨機組建剩餘或全部槽位 [快捷鍵 R]">隨機補滿 <kbd>R</kbd></button>
-      <button class="tool-btn" id="btnClear" title="清空全部槽位 [快捷鍵 C]">清空 <kbd>C</kbd></button>
-      <div class="dropdown-wrap" id="codeDropdownWrap">
-        <button class="tool-btn" id="btnCodeToggle">編制 / 代碼 ▾</button>
-        <div class="dropdown-menu" id="codeMenu" hidden>
+      <div class="tools-btn-group">
+        <button class="tool-btn" id="btnRand" title="隨機組建剩餘或全部槽位 [快捷鍵 R]"><span class="tool-btn-icon">🎲</span> 隨機補滿 <kbd>R</kbd></button>
+        <button class="tool-btn" id="btnClear" title="清空全部槽位 [快捷鍵 C]"><span class="tool-btn-icon">🗑️</span> 清空 <kbd>C</kbd></button>
+        <div class="dropdown-wrap" id="codeDropdownWrap">
+          <button class="tool-btn" id="btnCodeToggle"><span class="tool-btn-icon">📋</span> 編制 / 代碼 ▾</button>
+          <div class="dropdown-menu" id="codeMenu" hidden>
           <button class="menu-item" id="btnCopyCode">📋 複製當前陣容代碼</button>
           <button class="menu-item" id="btnImportCode">📥 匯入他人分享代碼</button>
           <div class="menu-divider"></div>
@@ -113,7 +114,8 @@
           <div id="templatePresetsMenuBox"></div>
         </div>
       </div>
-      <button class="tool-btn mobile-more-btn" id="btnDeckMore" title="展開戰術司令部配置 (教條/編制/代碼/清空)">戰術 ☰</button>
+      </div>
+      <button class="mobile-more-btn" id="btnDeckMore" title="展開戰術司令部配置 (教條/編制/代碼/清空)">戰術 ☰</button>
     </div>
   </div>
 
@@ -261,7 +263,7 @@
             </div>
           </div>
           <div class="defense-deck-preview" id="defenseDeckPreview"></div>
-          <div class="defense-doc-row" id="defenseDocRow" style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;font-size:11.5px"></div>
+          <div class="defense-doc-row" id="defenseDocRow" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
         </div>
       </div>
 
@@ -282,13 +284,13 @@
         </div>
       </div>
 
-      <!-- 🎖️ 階梯交戰守則與篡位晉級說明 -->
+      <!-- 🎖️ 階梯交戰守則 (輕量化戰術要點條) -->
       <div class="ladder-rules-strip">
         <div class="rules-tag">🎖️ 階梯交戰守則</div>
         <div class="rules-desc">
-          <span>⚔️ <b>精準推進</b>：僅可挑戰前方最近 <b>5 名以內</b> 之目標（直接點擊右側名冊席位之 <b>⚔️ 挑戰</b> 按鈕）。</span>
-          <span>💥 <b>終結者功勳</b>：擊墜連續霸榜 <b>≥3 天</b> 目標額外奪取 <b>+15 RP</b> 功勳！</span>
-          <span>🚀 <b>階梯篡位</b>：戰勝立即超車晉級該名次！每日擁有 <b>5 次</b> 作戰派遣令。</span>
+          <div class="rule-chip"><span>⚔️ <b>精準推進</b>：前方 5 名以內</span></div>
+          <div class="rule-chip"><span>💥 <b>終結功勳</b>：連霸≥3天奪 +15RP</span></div>
+          <div class="rule-chip"><span>🚀 <b>階梯篡位</b>：勝者晉級 (日派5次)</span></div>
         </div>
       </div>
     </div>
@@ -750,16 +752,16 @@
 <div class="toast" id="toast" role="status"></div>
 
 <script src="js/data.js"></script>
-<script src="js/ladder-data.js?v=4.2.5"></script>
-<script src="js/ladder.js?v=4.2.5"></script>
-<script src="js/engine.js?v=4.2.5"></script>
+<script src="js/ladder-data.js?v=4.2.6"></script>
+<script src="js/ladder.js?v=4.2.6"></script>
+<script src="js/engine.js?v=4.2.6"></script>
 <!-- Firebase 雲端多人錦標賽模組 (Compat SDK) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="js/firebase-tourney.js?v=4.2.5"></script>
-<script src="js/tournament.js?v=4.2.5"></script>
-<script src="js/online-pvp.js?v=4.2.5"></script>
-<script src="js/app.js?v=4.2.5"></script>
+<script src="js/firebase-tourney.js?v=4.2.6"></script>
+<script src="js/tournament.js?v=4.2.6"></script>
+<script src="js/online-pvp.js?v=4.2.6"></script>
+<script src="js/app.js?v=4.2.6"></script>
 <script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}</script>
 </body>
 </html>

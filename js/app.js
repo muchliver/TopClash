@@ -1388,37 +1388,63 @@ function renderCommandDeck() {
       <span>${d.icon}</span> <span>${esc(d.name)}</span>
     </button>`).join('');
 
-  // 聯合作戰體系羈絆與戰術盲點即時診斷列
+  // 聯合作戰體系羈絆常駐亮燈指示槽 (Fixed Tactical Indicator Dock)
   const synBar = $('#deckSynergyBar');
   if (synBar) {
     const pickedUnits = state.deck.map(id => id ? UNIT_MAP[id] : null).filter(Boolean);
     const activeSyns = (typeof getDeckSynergies === 'function') ? getDeckSynergies(pickedUnits) : [];
-    const badges = [];
-    activeSyns.forEach(s => {
-      const tip = `【${s.icon} ${s.name} 已啟動】${s.desc}`;
-      badges.push(`<span class="syn-chip active" data-syn-tip="${esc(tip)}" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`);
-    });
-    // 徹底移除底欄任何未成型之組合提示按鈕 (1/2 進度)，組合指引全面回歸至卡片 Tooltip、詳細抽屜與說明手冊
+    const activeSynMap = new Set(activeSyns.map(s => s.id));
+
+    // 4 大核心體系常駐指示燈定義 (未激活時暗淡線框，達成時瞬間點亮發光)
+    const INDICATOR_DEFS = [
+      { id: 'cec', icon: '📡', code: 'CEC', name: '協同接戰', req: '$5高階預警機 ＋ 遠程防空/神盾艦' },
+      { id: 'mumt', icon: '🛸', code: 'MUM-T', name: '有人無人', req: '$5五代空優 ＋ 無人機/巡飛彈/快艇' },
+      { id: 'asw_net', icon: '🌊', code: 'ASW', name: '海空獵殺', req: '反潛艦/潛艦 ＋ 電戰/前觀校射' },
+      { id: 'iron_fist', icon: '⚙️', code: 'LAND', name: '步坦鐵拳', req: '重裝坦克 ＋ 自走砲/前觀校射' }
+    ];
+
+    const indicatorsHtml = INDICATOR_DEFS.map(ind => {
+      const isLit = activeSynMap.has(ind.id);
+      const synObj = activeSyns.find(s => s.id === ind.id);
+      const tip = isLit
+        ? `【${ind.icon} ${ind.name} (已啟動)】${synObj ? synObj.desc : '體系加成生效中'}`
+        : `【${ind.icon} ${ind.name} (待命中)】啟動條件：${ind.req}`;
+      return `<div class="syn-indicator ${isLit ? 'lit' : 'idle'}" data-syn-tip="${esc(tip)}" title="${esc(tip)}">
+        <span class="ind-icon">${ind.icon}</span>
+        <span class="ind-code">${ind.code}</span>
+        <i class="ind-dot"></i>
+      </div>`;
+    }).join('');
+
+    // 電磁戰力常駐平衡指示
+    const baseEw = pickedUnits.reduce((acc, u) => acc + (u.ew || 0), 0) + (activeSynMap.has('cec') ? 12 : 0);
+    const effEw = Math.round(baseEw * (state.doctrine === 'deception' ? 1.5 : 1));
+    let ewClass = 'idle';
+    let ewText = `EW ${effEw}`;
+    let ewTip = `【📡 電磁戰況】全隊電戰值 ${effEw}`;
     if (pickedUnits.length >= 3) {
-      const baseEw = pickedUnits.reduce((acc, u) => acc + (u.ew || 0), 0) + (activeSyns.some(s => s.id === 'cec') ? 12 : 0);
-      const effEw = Math.round(baseEw * (state.doctrine === 'deception' ? 1.5 : 1));
       if (effEw < 10) {
-        const tip = `【⚠ 電戰偏弱】全隊有效電戰值僅 ${effEw}，面對電戰流對手易遭壓制命中率（最高 -15%）`;
-        badges.push(`<span class="syn-chip warn" data-syn-tip="${esc(tip)}" title="${esc(tip)}">⚠ 電戰偏弱 (EW ${effEw})</span>`);
+        ewClass = 'warn';
+        ewTip = `【⚠ 電戰偏弱】全隊電戰值僅 ${effEw}，面對電戰流易遭壓制`;
       } else {
-        const tip = `【📡 電磁戰力】全隊有效電戰值 ${effEw}（每領先對手 10 點可壓制敵命中並提升己方火力）`;
-        badges.push(`<span class="syn-chip info" data-syn-tip="${esc(tip)}" title="${esc(tip)}">📡 電戰值 ${effEw}</span>`);
-      }
-      const hasAntiArmor = pickedUnits.some(u => (u.traits || []).includes('TRUE_AT') || (u.traits || []).includes('CAS') || (u.traits || []).includes('ARTY') || (u.cat === 'armor' && u.atk >= 90));
-      if (!hasAntiArmor) {
-        const tip = '【⚠ 缺破甲手段】缺乏真實破甲 (TRUE_AT)、空中密接 (CAS) 或重火砲，面對重裝甲主戰坦克易陷入苦戰';
-        badges.push(`<span class="syn-chip warn" data-syn-tip="${esc(tip)}" title="${esc(tip)}">⚠ 缺破甲手段</span>`);
+        ewClass = 'strong';
+        ewTip = `【⚡ 電磁強勢】全隊電戰值 ${effEw}，可壓制敵方命中並增益火力`;
       }
     }
-    const htmlStr = badges.join('');
-    synBar.innerHTML = htmlStr;
+    const ewHtml = `<div class="syn-indicator ew-ind ${ewClass}" data-syn-tip="${esc(ewTip)}" title="${esc(ewTip)}">
+      <span class="ind-icon">${ewClass === 'warn' ? '⚠' : '⚡'}</span>
+      <span class="ind-code">${ewText}</span>
+      <i class="ind-dot"></i>
+    </div>`;
+
+    synBar.innerHTML = `<div class="indicators-dock-wrap">${indicatorsHtml}${ewHtml}</div>`;
+
     const sheetSyn = $('#sheetSynergyBox');
-    if (sheetSyn) sheetSyn.innerHTML = htmlStr || '<span class="syn-chip muted">請先選取裝備以檢視羈絆與戰術診斷</span>';
+    if (sheetSyn) {
+      sheetSyn.innerHTML = activeSyns.length > 0
+        ? activeSyns.map(s => `<span class="syn-chip active" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`).join('')
+        : '<span class="syn-chip muted">請選取裝備以啟動聯合作戰體系羈絆</span>';
+    }
   }
 
   renderPresetsMenus();
@@ -2413,9 +2439,19 @@ function renderLadderView() {
   }
   const defDocRow = $('#defenseDocRow');
   if (defDocRow) {
-    defDocRow.innerHTML = `<span class="muted" style="font-size:11px">駐防教條：</span>
-      <div style="display:flex;gap:4px;flex-wrap:wrap">
-        ${DOCTRINES.map(d => `<button type="button" class="btn-micro ${defDoc === d.id ? 'active-def-doc' : ''}" data-def-doc="${d.id}" title="點擊設定天梯駐防 AI 教條：${esc(d.desc)}" style="${defDoc === d.id ? 'border-color:var(--cyan);color:var(--cyan);background:rgba(61,224,255,.15);font-weight:800' : 'opacity:.75'}">${d.icon} ${esc(d.name)}</button>`).join('')}
+    defDocRow.innerHTML = `
+      <div class="doc-segmented-head">
+        <span class="doc-seg-label" style="white-space:nowrap">駐防 AI 戰術教條</span>
+        <span class="doc-seg-hint">（防守時自動執行）</span>
+      </div>
+      <div class="doc-segmented-grid">
+        ${DOCTRINES.map(d => {
+          const isActive = defDoc === d.id;
+          return `<button type="button" class="doc-seg-btn ${isActive ? 'active-def-doc' : ''}" data-def-doc="${d.id}" title="點擊切換駐防教條：${esc(d.desc)}">
+            <span class="doc-seg-icon">${d.icon}</span>
+            <span class="doc-seg-name">${esc(d.name)}</span>
+          </button>`;
+        }).join('')}
       </div>`;
   }
 
