@@ -4546,26 +4546,30 @@ function showResult(res, bo3Custom) {
       const renderSideDmg = (units, sideLabel, sideClass) => {
         const totalDmg = Math.max(1, units.reduce((acc, u) => acc + Math.round(u.dmgDone || 0), 0));
         const maxDmg = Math.max(1, ...units.map(u => Math.round(u.dmgDone || 0)));
-        const sorted = units.slice().sort((a, b) => (b.dmgDone || 0) - (a.dmgDone || 0));
+        // 保持與對戰畫面一致的槽位順序 (Slot 1 AIR -> Slot 2 ARM -> Slot 3 ADS -> Slot 4 NAV -> Slot 5 ISR)
         return `<div class="dmg-side-col ${sideClass}">
           <div class="dmg-side-head">
             <span>${sideLabel}</span>
             <small>總輸出 <b>${totalDmg}</b></small>
           </div>
           <div class="dmg-unit-list">
-            ${sorted.map(u => {
+            ${units.map((u, idx) => {
               const d = Math.round(u.dmgDone || 0);
               const barPct = Math.round((d / maxDmg) * 100);
               const sharePct = Math.round((d / totalDmg) * 100);
               const hpPct = Math.max(0, Math.round((u.hp / u.hpMax) * 100));
               const uMeta = UNIT_MAP[u.id] || {};
+              const catInfo = CATS[u.cat] || {};
               return `<div class="dmg-unit-row ${u.alive ? '' : 'is-dead'}">
                 <div class="dmg-u-info">
-                  <span class="dmg-u-name">${uMeta.flag || ''} <b>${esc(u.name)}</b> <small>$${u.cost}</small></span>
+                  <span class="dmg-u-name">
+                    <span style="font-family:var(--mono);font-size:10px;color:${catInfo.color || 'var(--muted)'};font-weight:700;margin-right:3px">${catInfo.short || `#${idx+1}`}</span>
+                    ${uMeta.flag || ''} <b>${esc(u.name)}</b> <small>$${u.cost}</small>
+                  </span>
                   <span class="dmg-u-stat">${d} 傷害 <small>(${sharePct}%)</small> · <i class="${u.alive ? 'alive' : 'dead'}">${u.alive ? `存活 ${hpPct}%` : '陣亡'}</i></span>
                 </div>
                 <div class="dmg-bar-track">
-                  <div class="dmg-bar-fill" style="width:${barPct}%;background:${CATS[u.cat]?.color || 'var(--cyan)'}"></div>
+                  <div class="dmg-bar-fill" style="width:${barPct}%;background:${catInfo.color || 'var(--cyan)'}"></div>
                 </div>
               </div>`;
             }).join('')}
