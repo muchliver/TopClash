@@ -316,7 +316,7 @@
     <div class="tourney-panel" id="panelTourneySolo">
       <div class="lobby-settings-grid">
         <div class="setting-group">
-          <label class="setting-lbl">參賽規模 (BRACKET SIZE)</label>
+          <label class="setting-lbl">賽事規模 (BRACKET SIZE)</label>
           <div class="btn-group-pill" id="tourneySizeSelector">
             <button class="pill-btn" data-size="4">4 強 (2輪)</button>
             <button class="pill-btn" data-size="8">8 強 (3輪)</button>
@@ -354,7 +354,7 @@
       <div id="privateLobbyEntrance">
         <div class="lobby-settings-grid">
           <div class="setting-group">
-            <label class="setting-lbl">私人賽事規模 (ROOM SIZE)</label>
+            <label class="setting-lbl">賽事規模 (BRACKET SIZE)</label>
             <div class="btn-group-pill" id="privateSizeSelector">
               <button class="pill-btn active" data-size="4">4 強 (2輪)</button>
               <button class="pill-btn" data-size="8">8 強 (3輪)</button>
@@ -370,16 +370,21 @@
               <button class="pill-btn" data-format="bo3">⚔️ 大師征服 (全程 BO3)</button>
             </div>
           </div>
-          <div class="setting-group" style="grid-column: 1 / -1; margin-top: 4px;">
-            <label class="setting-lbl">加入好友房間 (ENTER ROOM CODE)</label>
-            <div style="display:flex;gap:8px">
-              <input type="text" id="inputJoinTourneyCode" placeholder="輸入 6 位房間碼 (如 8M2K9A)" maxlength="8" style="flex:1;padding:7px 12px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:6px;color:var(--text);font-family:var(--mono);text-transform:uppercase;font-weight:700">
-              <button class="btn primary sm" id="btnJoinTourneyRoom">加入房間 ➔</button>
-            </div>
-          </div>
         </div>
-        <div class="lobby-actions">
+
+        <div class="lobby-actions" style="margin-bottom:12px">
           <button class="btn primary lg block" id="btnCreatePrivateRoom" style="font-weight:900">👑 建立私人對戰房間 (取得邀請碼與分享連結)</button>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px dashed var(--line);border-radius:8px">
+          <div>
+            <div style="font-weight:700;font-size:13.5px;color:var(--text)">🔑 加入現有好友房間</div>
+            <div class="muted" style="font-size:11.5px;margin-top:2px">輸入好友提供的 6 位專屬房間代碼，即刻入隊共同參賽！</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="inputJoinTourneyCode" placeholder="輸入 6 位房間碼 (如 8M2K9A)" maxlength="8" style="width:200px;padding:7px 12px;background:rgba(0,0,0,.3);border:1px solid var(--line);border-radius:6px;color:var(--text);font-family:var(--mono);text-transform:uppercase;font-weight:700;font-size:13px">
+            <button class="btn primary sm" id="btnJoinTourneyRoom" style="white-space:nowrap;padding:7px 14px;font-weight:700">加入房間 ➔</button>
+          </div>
         </div>
       </div>
 
@@ -417,7 +422,7 @@
     <div class="tourney-panel" id="panelTourneyPublic" hidden>
       <div class="lobby-settings-grid">
         <div class="setting-group">
-          <label class="setting-lbl">公開賽事規模 (ROOM SIZE)</label>
+          <label class="setting-lbl">賽事規模 (BRACKET SIZE)</label>
           <div class="btn-group-pill" id="publicSizeSelector">
             <button class="pill-btn active" data-size="4">4 強 (2輪)</button>
             <button class="pill-btn" data-size="8">8 強 (3輪)</button>
