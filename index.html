@@ -254,8 +254,11 @@
         </div>
         <div class="my-defense-col">
           <div class="defense-title">
-            <span>🛡️ 當前防禦陣容</span>
-            <button class="btn-micro" id="btnSyncDefense">更新為當前陣容</button>
+            <span>🛡️ 當前特遣編制 (攻守常備)</span>
+            <div style="display:flex;gap:4px">
+              <button class="btn-micro" id="btnGoBuildFromLadder" type="button" title="一鍵跳轉至戰備指揮所調整出征與防守軍武">🛠️ 調整編制</button>
+              <button class="btn-micro" id="btnSyncDefense" type="button" title="將快速對戰現役陣容同步為天梯常備特遣部隊">🔄 同步現役</button>
+            </div>
           </div>
           <div class="defense-deck-preview" id="defenseDeckPreview"></div>
           <div class="defense-doc-row" id="defenseDocRow" style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;font-size:11.5px"></div>
@@ -318,6 +321,7 @@
         <span class="tourney-badge" id="tourneyBadge">🏆 2026 軍武世界盃淘汰錦標賽</span>
         <span class="tourney-status-tag" id="tourneyStatusTag">🟢 激戰進行中</span>
         <span class="tourney-round-pill" id="tourneyRoundPill">第 1 輪 · 淘汰賽</span>
+        <button class="btn-micro" id="btnGoBuildFromTourney" type="button" style="border-color:var(--amber);color:var(--amber);font-weight:800;margin-left:auto" title="一鍵跳轉至戰備指揮所調整出征部隊編制">🛠️ 調整出征編制</button>
       </div>
       <div class="tourney-meta-row">
         <span class="muted">你的狀態：</span>

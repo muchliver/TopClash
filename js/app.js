@@ -2536,6 +2536,14 @@ function renderLadderRosterTable() {
 }
 
 // 天梯操作事件代理
+// 淘汰錦標賽點擊事件
+document.addEventListener('click', e => {
+  if (e.target.closest('#btnGoBuildFromTourney')) {
+    setMode('battle');
+    toast('🛠️ 已切換至戰備指揮所！調整完成後點擊頂部【🥇 淘汰錦標賽】即可即時參賽！');
+  }
+});
+
 $('#viewLadder')?.addEventListener('click', e => {
   // 0. 切換天梯駐防 AI 戰術教條
   const defDocBtn = e.target.closest('[data-def-doc]');
@@ -2550,7 +2558,14 @@ $('#viewLadder')?.addEventListener('click', e => {
     return;
   }
 
-  // 1. 同步當前陣容為防守部隊
+  // 0.5 一鍵跳轉至戰備指揮所 (快速對戰編制區)
+  if (e.target.closest('#btnGoBuildFromLadder')) {
+    setMode('battle');
+    toast('🛠️ 已切換至戰備指揮所！調整完成後點擊頂部【🏆 天梯競技】即可即時出征！');
+    return;
+  }
+
+  // 1. 同步當前陣容為特遣部隊
   if (e.target.closest('#btnSyncDefense')) {
     if (!state.deck.every(Boolean)) {
       toast('請先在快速對戰模式配置滿 5 個槽位再同步防守！');
