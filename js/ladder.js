@@ -291,6 +291,24 @@ const LadderEngine = (function() {
       .sort((a, b) => a.rank - b.rank);
   }
 
+  /* 取得今日全服統一戰區環境（根據當前日期種子計算，每日 00:00 自動輪替） */
+  function getDailyTheater() {
+    const today = new Date().toISOString().slice(0, 10);
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) {
+      hash = (hash * 31 + today.charCodeAt(i)) >>> 0;
+    }
+    const eventList = (typeof EVENTS !== 'undefined' && EVENTS.length) ? EVENTS : [
+      { id: 'plain',  icon: '🏜', name: '荒漠平原', desc: '地面開闊：裝甲火力 +20%，艦艇火力 −30%。', mod: { armorDmg: 1.2, navalDmg: 0.7 } },
+      { id: 'strait', icon: '🌊', name: '島嶼海峽', desc: '海空主導：艦艇火力 +25%，裝甲火力 −15%。', mod: { navalDmg: 1.25, armorDmg: 0.85 } },
+      { id: 'storm',  icon: '⛈', name: '暴雨雷暴', desc: '能見度低：空中命中率 −15%，無人機傷害 −25%。', mod: { airHit: -0.15, droneDmg: 0.75 } },
+      { id: 'urban',  icon: '🏙', name: '都會巷戰', desc: '重砲受限：火砲 −25%、裝甲 −10%，無人機 +30%。', mod: { artyDmg: 0.75, droneDmg: 1.3, armorDmg: 0.9 } },
+      { id: 'em',     icon: '⚡', name: '電磁風暴', desc: '電戰效果 ×1.6；全體隱匿 +10。', mod: { ewMult: 1.6, stealthAdd: 10 } },
+      { id: 'clear',  icon: '☀', name: '晴朗無風', desc: '標準環境，無任何修正。', mod: {} }
+    ];
+    return eventList[hash % eventList.length];
+  }
+
   /* 挑選 3 名具備挑戰梯度的候選對手 (附帶戰術偵察迷霧) */
   function getMatchCandidates() {
     sortAndReindex();
@@ -571,6 +589,7 @@ const LadderEngine = (function() {
     canChallengeRank,
     getChallengeableTargets,
     getRosterZone,
+    getDailyTheater,
     getMatchCandidates,
     resolveMatch,
     setDefenseFleet,

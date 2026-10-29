@@ -2287,7 +2287,8 @@ function renderLadderTargetsTray() {
 
     const deckChipsHtml = (u.deck || []).map((id, slotIdx) => {
       const unit = UNIT_MAP[id];
-      const isMasked = (player.rank - u.rank >= 3) && (slotIdx === 1 || slotIdx === 2);
+      // 戰術電戰迷霧：僅公開第 1 槽（旗艦），後 4 槽完全受密電遮蔽
+      const isMasked = slotIdx >= 1;
       if (isMasked) {
         return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
           <span style="font-size:10px">📡</span>
@@ -2313,7 +2314,7 @@ function renderLadderTargetsTray() {
         <div class="t-commander-meta">
           <span style="color:${tier.color};font-weight:700">${tier.name}</span>
           <span>${u.rp.toLocaleString()} RP</span>
-          <span style="color:var(--cyan);font-size:10.5px" title="駐防教條：${docObj.name}">${docObj.icon}</span>
+          <span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="該指揮官啟用了戰略保密教條，進場交戰時方能偵知">🔒 密電保密</span>
         </div>
         <div class="t-deck-chips">${deckChipsHtml}</div>
       </div>
@@ -2414,6 +2415,17 @@ function renderLadderView() {
       </div>`;
   }
 
+  // 1.5 渲染今日天梯戰區天候橫幅
+  const dailyTheater = (LadderEngine.getDailyTheater && LadderEngine.getDailyTheater()) || (typeof EVENTS !== 'undefined' && EVENTS[0]);
+  if (dailyTheater) {
+    const tIcon = $('#theaterIcon');
+    if (tIcon) tIcon.textContent = dailyTheater.icon || '⚡';
+    const tName = $('#theaterName');
+    if (tName) tName.textContent = dailyTheater.name || '戰區環境';
+    const tDesc = $('#theaterDesc');
+    if (tDesc) tDesc.textContent = `${dailyTheater.desc}（今日全服天梯攻防對局均在此環境下推演！）`;
+  }
+
   // 2. 渲染上方可挑戰目標托盤
   renderLadderTargetsTray();
 
@@ -2469,11 +2481,11 @@ function renderLadderRosterTable() {
       streakBadgeHtml = `<span class="r-streak-tag new">🔥 今日新晉</span>`;
     }
 
-    // 防守陣容預覽 (若為可挑戰的高位對手，中間部分槽位受電戰迷霧遮蔽增添策略性)
-    const deckChipsHtml = (u.deck || []).map((id, slotIdx) => {
+    // 防守陣容預覽 (非我方對手僅公開 Slot 0 旗艦機，後 4 槽全部密電遮蔽；我方席位完整顯示自身防禦陣容)
+    const userDeck = u.deck || u.defenseDeck || (isMe ? (player.defenseDeck || state.deck) : []);
+    const deckChipsHtml = (userDeck || []).map((id, slotIdx) => {
       const unit = UNIT_MAP[id];
-      // 距離 3~5 名之對手中間 2 槽受迷霧遮蔽
-      const isMasked = canEngage && (player.rank - rankNo >= 3) && (slotIdx === 1 || slotIdx === 2);
+      const isMasked = !isMe && slotIdx >= 1;
       if (isMasked) {
         return `<div class="r-deck-chip masked" title="受電戰迷霧遮蔽：未知裝備">
           <span style="font-size:10px">📡</span>
@@ -2509,7 +2521,7 @@ function renderLadderRosterTable() {
         <span style="font-size:18px">${u.flag}</span>
         <div class="r-name-block">
           <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · <span style="color:var(--cyan);font-size:10.5px" title="駐防戰術教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span></span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="該指揮官啟用了戰略保密教條，進場交戰時方能偵知">🔒 密電保密</span>`}</span>
         </div>
       </div>
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
@@ -2635,13 +2647,13 @@ $('#viewLadder')?.addEventListener('click', e => {
     state.ladderEnemy = targetUser;
     state.enemy = targetUser.deck.slice();
     state.enemyName = `${targetUser.flag} ${targetUser.name}`;
-    state.enemyDoc = targetUser.doc || 'defense';
-    state.event = pick(EVENTS);
+    state.enemyDoc = targetUser.defenseDoc || targetUser.doc || 'defense';
+    state.event = (LadderEngine.getDailyTheater && LadderEngine.getDailyTheater()) || pick(EVENTS);
 
     // 關閉天梯視圖，切換至對戰視圖開始推演
     $('#viewLadder').hidden = true;
     startBattle();
-    toast(`⚔️ 已派出聯合作戰群，向第 #${targetUser.rank} 名【${targetUser.name}】發起階梯突擊！`);
+    toast(`⚔️ 已向第 #${targetUser.rank} 名【${targetUser.name}】發起突擊！戰區：【${state.event.icon} ${state.event.name}】`);
     return;
   }
 

@@ -6311,3 +6311,88 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     max-width: 108px !important;
   }
 }
+
+/* 今日天梯戰區天候橫幅 */
+.ladder-theater-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-left: 4px solid var(--cyan);
+  border-radius: 8px;
+  padding: 10px 16px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+[data-theme="light"] .ladder-theater-strip {
+  background: linear-gradient(90deg, #f0f9ff, #ffffff);
+  border-color: rgba(2, 132, 199, 0.3);
+  border-left-color: #0284c7;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.05);
+}
+.theater-badge-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.theater-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
+}
+.theater-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+.theater-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--cyan);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.theater-name {
+  font-size: 15px;
+  font-weight: 900;
+  color: #f8fafc;
+}
+[data-theme="light"] .theater-name {
+  color: #0f172a;
+}
+.theater-desc-wrap {
+  flex: 1;
+  min-width: 260px;
+}
+.theater-desc {
+  font-size: 12.5px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+[data-theme="light"] .theater-desc {
+  color: #475569;
+}
+.theater-meta-tag {
+  font-size: 11px;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  white-space: nowrap;
+}
+[data-theme="light"] .theater-meta-tag {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+.doctrine-secret {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-theme="light"] .doctrine-secret {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.08);
+}
