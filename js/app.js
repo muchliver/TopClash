@@ -1003,43 +1003,45 @@ function renderMissionBar() {
     const isGhost = (state.quickSubMode === 'ghost');
     const t = state.ghostTarget;
 
-    h = `<span class="mission-tag">RAPID BATTLE · 快速交鋒</span>
-      <!-- 對手類型二維切換膠囊 -->
-      <div class="btn-group-pill quick-submode-pill" style="display:inline-flex;margin:0 4px">
+    h = `<span class="mission-tag">⚡ 快速交鋒</span>
+      <!-- 對手類型二維切換膠囊 (保證單行水平排列) -->
+      <div class="quick-submode-pill">
         <button class="pill-btn sm ${!isGhost ? 'active' : ''}" data-submode="ai" title="切換為電腦即時演算法對手">🤖 AI 演習</button>
         <button class="pill-btn sm ${isGhost ? 'active' : ''}" data-submode="ghost" title="切換為全球名將與真實玩家影子部隊">🌐 全球幽靈</button>
       </div>
 
       <div class="mission-item">
-        <span style="font-size:18px">${state.event.icon}</span>
-        <div><b>${esc(state.event.name)}</b> <span class="muted" style="font-size:11.5px">(${esc(state.event.desc)})</span></div>
+        <span style="font-size:16px">${state.event.icon}</span>
+        <div><b>${esc(state.event.name)}</b> <span class="muted" style="font-size:11px">(${esc(state.event.desc)})</span></div>
       </div>`;
 
     if (!isGhost) {
       h += `
-        <div class="mission-item" style="margin-left:8px">
-          <span class="muted">AI 風格：</span>
-          <select class="select sm" id="aiSel" style="padding:3px 8px;width:auto;font-size:12px">
+        <div class="mission-item" style="margin-left:6px">
+          <span class="badge" style="background:rgba(56,189,248,.15);color:#38bdf8;border:1px solid rgba(56,189,248,.35);font-size:10px;font-weight:700">🤖 AI 對手</span>
+          <span class="muted" style="margin-left:4px">教條：</span>
+          <select class="select sm" id="aiSel" style="padding:2px 6px;width:auto;font-size:11.5px">
             <option value="random">隨機對手</option>
             ${ARCHETYPES.map(a => `<option value="${a.id}" ${state.aiArch === a.id ? 'selected' : ''}>${a.name}</option>`).join('')}
           </select>
         </div>
-        <label class="check" style="margin-left:8px;font-size:12px">
+        <label class="check" style="margin-left:6px;font-size:11.5px">
           <input type="checkbox" id="scoutChk" ${state.scout ? 'checked' : ''}>
-          <span>情報偵察 (預算 −$1)</span>
+          <span>偵察 (−$1)</span>
         </label>
         ${state.scout ? `<span class="mission-tag" style="color:var(--amber);border-color:rgba(255,179,64,.3)">偵得：${esc(state.enemyName)} · ${esc(UNIT_MAP[state.enemy[state.scoutIdx]].name)}</span>` : ''}`;
     } else {
       if (t) {
         h += `
-          <div class="mission-item" style="margin-left:8px">
-            <b>${esc(t.callsign)}</b>
-            <span class="ghost-rank" style="font-size:11px;padding:1px 6px">${t.title} · ${t.rating} RP</span>
-            <span class="muted" style="font-size:11.5px">戰績: ${t.wins}勝 ${t.losses}負 · 「${esc(t.motto)}」</span>
+          <div class="mission-item enemy-target-card" style="margin-left:6px">
+            <span class="badge enemy-tag-badge" style="background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.4);font-size:10px;font-weight:800;padding:1px 5px">🎯 當前假想敵</span>
+            <b style="color:var(--text)">${esc(t.callsign)}</b>
+            <span class="ghost-rank" style="font-size:10.5px;padding:1px 5px">${t.title} · ${t.rating} RP</span>
+            <span class="muted" style="font-size:11px">防守戰績: ${t.wins}勝 ${t.losses}負 · 「${esc(t.motto)}」</span>
           </div>
           <div class="mission-actions">
-            <button class="btn ghost sm" id="btnRerollGhost" title="隨機換一位幽靈名將對手">換一位名將 🔄</button>
-            <button class="btn amber sm" id="btnDeployGhost" title="上傳當前陣容為世界影子防禦部隊">部署防禦部隊 🌐</button>
+            <button class="btn ghost sm" id="btnRerollGhost" title="隨機換一位幽靈名將對手">換對手 🔄</button>
+            <button class="btn amber sm" id="btnDeployGhost" title="上傳當前陣容為世界影子防禦部隊">部署防禦 🌐</button>
           </div>`;
       }
     }
@@ -1518,7 +1520,18 @@ function renderCommandDeck() {
 }
 
 function renderHud() {
-  $('#hudStats').innerHTML = `<span class="chip-stat">場次 <b>${stats.played}</b></span><span class="chip-stat">勝率 <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b></span><span class="chip-stat">連勝 <b>${stats.streak}</b></span><span class="chip-stat" title="非同步天梯軍銜">天梯 <b>${playerGhost.rankTitle}</b></span>`;
+  const p = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState().player : null;
+  const myName = p?.name ? esc(p.name.split(' ')[0]) : '我方指揮官';
+  const myFlag = p?.flag || '🇹🇼';
+  $('#hudStats').innerHTML = `
+    <span class="chip-stat player-stat-badge" title="你的個人指揮官呼號與天梯軍階 (點擊前往天梯可自訂)">
+      <span style="font-weight:800;color:var(--cyan)">${myFlag} 我方：${myName}</span>
+      <span class="badge" style="font-size:10px;padding:1px 5px;background:rgba(61,224,255,.15);color:var(--cyan);border:1px solid rgba(61,224,255,.3)">${playerGhost.rankTitle}</span>
+    </span>
+    <span class="chip-stat" title="你累計的總對戰場次">場次 <b>${stats.played}</b></span>
+    <span class="chip-stat" title="你的個人總勝率">勝率 <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b></span>
+    <span class="chip-stat" title="你的當前連勝場數">連勝 <b>${stats.streak}</b></span>
+  `;
 }
 
 function renderAll() {
