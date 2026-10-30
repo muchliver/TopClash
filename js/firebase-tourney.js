@@ -65,10 +65,18 @@ const FirebaseTourneyEngine = (function() {
   }
 
   function getRequiredWinsForMatch(match, format, totalRounds) {
-    if (format === 'bo1') return 1;
-    if (format === 'bo3') return 2;
+    const isFinalOrBronze = (match.round === totalRounds || match.isBronze);
+    // 1. ⚡ 極速單淘汰：決賽前為 BO1 (1勝)，決賽/季軍賽為 BO3 (2勝)
+    if (format === 'bo1') {
+      return isFinalOrBronze ? 2 : 1;
+    }
+    // 2. ⭐ 決賽升級制：四強前為 BO3 (2勝)，決賽/季軍賽為 BO5 (3勝)
     if (format === 'hybrid') {
-      return (match.round === totalRounds || match.isBronze) ? 2 : 1;
+      return isFinalOrBronze ? 3 : 2;
+    }
+    // 3. ⚔️ 大師征服：全程 BO5 (3勝)
+    if (format === 'bo3' || format === 'bo5') {
+      return 3;
     }
     return 1;
   }

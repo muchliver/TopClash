@@ -3500,6 +3500,14 @@ async function showBattle(res, opts = {}) {
     metaHtml += `<span class="chip-stat">我方教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">敵方教條 <b>${dn(res.docs.B)}</b></span>`;
     if (state.mode === 'bo3') {
       metaHtml = `<span class="chip-stat" style="color:var(--amber)">BO5 第 ${state.bo3.round}/5 局 (${state.bo3.winsA} - ${state.bo3.winsB})</span>` + metaHtml;
+    } else if (state.mode === 'tournament' && typeof TournamentEngine !== 'undefined') {
+      const myMatch = TournamentEngine.getMyMatch();
+      if (myMatch) {
+        const curRound = myMatch.history.length + 1;
+        const reqWins = TournamentEngine.getRequiredWins(myMatch);
+        const fmtStr = reqWins === 3 ? 'BO5' : (reqWins === 2 ? 'BO3' : 'BO1');
+        metaHtml = `<span class="chip-stat" style="color:var(--amber)">🏆 淘汰錦標賽 · ${fmtStr} 第 ${curRound} 局 (比分 ${myMatch.scoreA} - ${myMatch.scoreB})</span>` + metaHtml;
+      }
     }
   }
   $('#battleMeta').innerHTML = metaHtml;
@@ -5877,9 +5885,10 @@ function renderTourneyHeader(t, isOnline = false) {
   };
 
   const formatNames = {
-    bo1: '⚡ 全程 BO1 單淘汰',
-    hybrid: '⭐ 四強前 BO1 · 決賽圈 BO3',
-    bo3: '⚔️ 全程 BO3 征服反制'
+    bo1: '⚡ 極速單淘汰 (全程 BO1·決賽BO3)',
+    hybrid: '⭐ 決賽升級制 (四強前BO3·決賽BO5)',
+    bo3: '⚔️ 大師征服 (全程 BO5)',
+    bo5: '⚔️ 大師征服 (全程 BO5)'
   };
 
   const prof = getTournamentPlayerProfile();
@@ -6092,9 +6101,9 @@ function renderTourneyLobby(t, isOnline = false) {
 }
 
 function getFormatNameShort(fmt) {
-  if (fmt === 'bo1') return '⚡ 全程 BO1';
-  if (fmt === 'bo3') return '⚔️ 全程 BO3';
-  return '⭐ 決賽升級制';
+  if (fmt === 'bo1') return '⚡ 極速單淘汰 (BO1/BO3)';
+  if (fmt === 'bo3' || fmt === 'bo5') return '⚔️ 大師征服 (BO5)';
+  return '⭐ 決賽升級制 (BO3/BO5)';
 }
 
 function updateTourneyLobbyBadge() {
@@ -6689,7 +6698,7 @@ function openTournamentSpectatorModal(matchId) {
   card.innerHTML = `
     <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
       <div style="font-family:var(--head);font-size:16px;font-weight:800;color:var(--amber)">
-        🏆 戰況情報所 · 場次 ${snap.matchId} (${reqWins > 1 ? 'BO3 三局兩勝制' : 'BO1 單淘汰'})
+        🏆 戰況情報所 · 場次 ${snap.matchId} (${reqWins === 3 ? 'BO5 五局三勝制' : (reqWins === 2 ? 'BO3 三局兩勝制' : 'BO1 單場淘汰')})
       </div>
       <button class="btn ghost sm" id="btnTourneySpecClose">關閉 ✕</button>
     </div>
@@ -6809,9 +6818,10 @@ function handleTournamentRoundEnd(res) {
       }
     });
   } else {
-    // BO3 還沒打完
+    const reqWins = TournamentEngine.getRequiredWins(myMatch);
+    const fmtStr = reqWins === 3 ? 'BO5' : (reqWins === 2 ? 'BO3' : 'BO1');
     showResult(res, {
-      bo3NextText: `進入第 ${myMatch.history.length + 1} 局 (比分 ${out.currentScore[0]} - ${out.currentScore[1]})`,
+      bo3NextText: `進入 ${fmtStr} 第 ${myMatch.history.length + 1} 局 (比分 ${out.currentScore[0]} - ${out.currentScore[1]})`,
       bo3Callback: () => {
         closeBattle();
         setMode('tournament');

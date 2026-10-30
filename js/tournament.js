@@ -83,7 +83,7 @@ const TournamentEngine = (() => {
     tourney = {
       id: 'TOURNEY-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
       size,
-      matchType, // 'bo1' (全程單場淘汰), 'hybrid' (四強前BO1，四強與決賽BO3), 'bo3' (全程BO3)
+      matchType, // 'bo1' (⚡ 極速單淘汰: 全程 BO1·決賽BO3), 'hybrid' (⭐ 決賽升級制: 四強前BO3·決賽BO5), 'bo3' (⚔️ 大師征服: 全程 BO5)
       currentRound: 1, // 1: 32強, 2: 16強, 3: 8強, 4: 準決賽(4強), 5: 決賽
       totalRounds: Math.log2(size), // 4強:2輪, 8強:3輪, 16強:4輪, 32強:5輪
       status: 'registration', // 'registration' -> 'in_progress' -> 'completed'
@@ -258,12 +258,19 @@ const TournamentEngine = (() => {
    * 獲取當前所需要的獲勝局數 (BO1=1勝, BO3=2勝)
    */
   function getRequiredWinsForMatch(match) {
-    if (tourney.matchType === 'bo1') return 1;
-    if (tourney.matchType === 'bo3') return 2;
-    // hybrid 模式：準決賽 (round === totalRounds - 1) 與決賽 (round === totalRounds) 採 BO3
+    if (!tourney) return 1;
+    const isFinalOrBronze = (match.round === tourney.totalRounds || match.id === tourney.finalMatchId || match.id === tourney.bronzeMatchId);
+    // 1. ⚡ 極速單淘汰：決賽前為 BO1 (1勝)，冠軍決賽與季軍戰升級為 BO3 (2勝)
+    if (tourney.matchType === 'bo1') {
+      return isFinalOrBronze ? 2 : 1;
+    }
+    // 2. ⭐ 決賽升級制：四強前 (包含四強準決賽及更早) 為 BO3 (2勝)，冠軍決賽與季軍戰升級為 BO5 (3勝)
     if (tourney.matchType === 'hybrid') {
-      if (match.round >= tourney.totalRounds - 1) return 2;
-      return 1;
+      return isFinalOrBronze ? 3 : 2;
+    }
+    // 3. ⚔️ 大師征服：全程所有輪次均為 BO5 (3勝)
+    if (tourney.matchType === 'bo3' || tourney.matchType === 'bo5') {
+      return 3;
     }
     return 1;
   }
