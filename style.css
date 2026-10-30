@@ -667,13 +667,14 @@ body:has(.battle:not([hidden])) .command-deck,
 .bu.destroyed-badge::after{content:'💥 DESTROYED';position:absolute;right:8px;bottom:5px;font-family:var(--head);font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--red);background:rgba(255,93,110,.14);border:1px solid rgba(255,93,110,.4);padding:1px 6px;border-radius:4px}
 
 /* 戰術實體武器與物理彈道特效 (7-Archetype Weapon SVG & Ballistic FX) */
-.fx-projectile{position:absolute;top:0;left:0;pointer-events:none;z-index:36;display:flex;align-items:center;margin-top:-10px;margin-left:-24px;will-change:transform}
-.fx-weapon-svg{display:block;overflow:visible;filter:drop-shadow(0 0 8px rgba(255,255,255,.75))}
-.fx-side-a .fx-weapon-svg{filter:drop-shadow(0 0 10px rgba(61,224,255,.85))}
-.fx-side-b .fx-weapon-svg{filter:drop-shadow(0 0 10px rgba(255,93,110,.85))}
-.fx-w-sabot .fx-weapon-svg{filter:drop-shadow(0 0 14px #fbbf24) drop-shadow(0 0 24px #f59e0b)}
-.fx-w-salvo .fx-weapon-svg{filter:drop-shadow(0 0 12px #f97316)}
-.fx-w-torpedo .fx-weapon-svg{filter:drop-shadow(0 0 12px #06b6d4)}
+.fx-projectile{position:absolute;top:0;left:0;pointer-events:none;z-index:36;display:flex;align-items:center;margin-top:-14px;margin-left:-40px;will-change:transform}
+.fx-weapon-svg{display:block;overflow:visible;filter:drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 14px rgba(255,255,255,.85))}
+.fx-side-a .fx-weapon-svg{filter:drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 14px rgba(61,224,255,.95)) drop-shadow(0 0 28px rgba(56,189,248,.75))}
+.fx-side-b .fx-weapon-svg{filter:drop-shadow(0 0 4px #ffffff) drop-shadow(0 0 14px rgba(255,93,110,.95)) drop-shadow(0 0 28px rgba(244,63,94,.75))}
+.fx-w-sabot .fx-weapon-svg{filter:drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 16px #fbbf24) drop-shadow(0 0 32px #f59e0b) !important}
+.fx-w-salvo .fx-weapon-svg{filter:drop-shadow(0 0 5px #fef08a) drop-shadow(0 0 18px #f97316) drop-shadow(0 0 30px #ea580c) !important}
+.fx-w-torpedo .fx-weapon-svg{filter:drop-shadow(0 0 6px #cffafe) drop-shadow(0 0 18px #06b6d4) drop-shadow(0 0 28px #0891b2) !important}
+.fx-w-swarm .fx-weapon-svg{filter:drop-shadow(0 0 5px rgba(255,255,255,.8)) drop-shadow(0 0 16px rgba(56,189,248,.85)) !important}
 
 /* 翼穩脫殼穿甲彈超音速音爆束線 (APFSDS Mach Vapor Trail) */
 .fx-sabot-beam{position:absolute;height:3px;margin-top:-1.5px;transform-origin:0 50%;pointer-events:none;z-index:35;background:linear-gradient(90deg,transparent 0%,rgba(251,191,36,.35) 25%,rgba(254,240,138,.95) 80%,#ffffff 100%);box-shadow:0 0 16px #fbbf24,0 0 30px #f59e0b;animation:sabotBeamFade .24s ease-out forwards}
@@ -7786,18 +7787,18 @@ body:has(.battle:not([hidden])) .command-deck,
   color: #fde047 !important;
 }
 
-/* 右側：三層高密度 C4ISR 資訊艙 */
+/* 右側：三層解耦高密度 C4ISR 戰術艙 */
 .bu-body {
   flex: 1 1 auto !important;
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
-  gap: 2.5px !important;
+  gap: 2px !important;
   height: 100% !important;
 }
 
-/* 第一層：國旗 + 名稱 + 型號 + 戰術標語/主武裝 */
+/* 第一層：軍武識別 (國旗 + 軍武全名[不截斷] + 改裝型號 + 戰術定位) */
 .bu-row-top {
   display: flex !important;
   align-items: center !important;
@@ -7810,7 +7811,7 @@ body:has(.battle:not([hidden])) .command-deck,
   align-items: center !important;
   gap: 5px !important;
   min-width: 0 !important;
-  flex: 0 1 auto !important;
+  flex: 1 1 auto !important;
   overflow: hidden !important;
 }
 .bu-flag {
@@ -7819,7 +7820,7 @@ body:has(.battle:not([hidden])) .command-deck,
   flex: none !important;
 }
 .bu-name-txt {
-  font-size: 13.5px !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
   white-space: nowrap !important;
@@ -7830,68 +7831,114 @@ body:has(.battle:not([hidden])) .command-deck,
 [data-theme="light"] .bu-name-txt {
   color: #0f172a !important;
 }
+.bu-tag-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex: 0 0 auto !important;
+}
 .bu-v-badge {
   font-family: var(--mono) !important;
   font-size: 9.5px !important;
   font-weight: 800 !important;
-  padding: 1px 5px !important;
+  padding: 1px 4px !important;
   border-radius: 4px !important;
   background: rgba(56, 189, 248, 0.15) !important;
   color: var(--cyan) !important;
   border: 1px solid rgba(56, 189, 248, 0.38) !important;
   line-height: 1.1 !important;
-  flex: none !important;
 }
 [data-theme="light"] .bu-v-badge {
   background: rgba(2, 132, 199, 0.1) !important;
   color: #0284c7 !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
 }
-.bu-sub-group {
-  font-size: 10.5px !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  flex: 1 1 auto !important;
-  text-align: right !important;
-  min-width: 0 !important;
-  line-height: 1.2 !important;
-}
 .bu-role-tag {
+  font-size: 10.5px !important;
   font-weight: 700 !important;
-}
-.bu-wpn-txt {
-  color: var(--muted) !important;
-  opacity: 0.9 !important;
-  margin-left: 3px !important;
-  font-weight: 500 !important;
+  white-space: nowrap !important;
+  line-height: 1.15 !important;
 }
 
-/* 第二層：軍規核心戰力參數 (ATK / STH / EW) + 戰術特性徽章 */
-.bu-row-mid {
+/* 第二層：專屬主戰武裝 (🎯 武器型號完整露出) + 戰術特性徽章 */
+.bu-row-wpn {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 6px !important;
   min-width: 0 !important;
+  line-height: 1.2 !important;
+}
+.bu-wpn-icon {
+  font-size: 10px !important;
+  flex: none !important;
+  opacity: 0.9 !important;
+}
+.bu-wpn-txt {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  color: #94a3b8 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin-left: 1px !important;
+}
+[data-theme="light"] .bu-wpn-txt {
+  color: #475569 !important;
+}
+.bu-traits-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  overflow: hidden !important;
+  justify-content: flex-end !important;
+  flex: 0 0 auto !important;
+}
+.bu-trait-pill {
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #e2e8f0 !important;
+  white-space: nowrap !important;
+  line-height: 1.15 !important;
+}
+[data-theme="light"] .bu-trait-pill {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border-color: rgba(2, 132, 199, 0.22) !important;
+  color: #1e293b !important;
+}
+
+/* 第三層：軍規戰力參數 (ATK / STH / EW) + 裝甲血條即時同行並排 */
+.bu-row-btm {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  margin-top: 1px !important;
 }
 .bu-metrics {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
-  flex: none !important;
+  gap: 3px !important;
+  flex: 0 0 auto !important;
 }
 .bu-m-pill {
   display: inline-flex !important;
   align-items: center !important;
   gap: 2px !important;
   font-family: var(--mono) !important;
-  font-size: 10px !important;
+  font-size: 9.5px !important;
   font-weight: 700 !important;
-  padding: 1px 5px !important;
+  padding: 1px 4px !important;
   border-radius: 4px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: var(--muted) !important;
   line-height: 1.15 !important;
@@ -7923,59 +7970,36 @@ body:has(.battle:not([hidden])) .command-deck,
 [data-theme="light"] .bu-m-pill.ew b {
   color: #7c3aed !important;
 }
-.bu-traits-wrap {
+
+.bu-hp-col {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
-  overflow: hidden !important;
-  justify-content: flex-end !important;
-  min-width: 0 !important;
-}
-.bu-trait-pill {
-  font-size: 10px !important;
-  font-weight: 700 !important;
-  padding: 1px 6px !important;
-  border-radius: 4px !important;
-  background: rgba(56, 189, 248, 0.1) !important;
-  border: 1px solid rgba(56, 189, 248, 0.25) !important;
-  color: #e2e8f0 !important;
-  white-space: nowrap !important;
-  line-height: 1.15 !important;
-}
-[data-theme="light"] .bu-trait-pill {
-  background: rgba(2, 132, 199, 0.08) !important;
-  border-color: rgba(2, 132, 199, 0.22) !important;
-  color: #1e293b !important;
-}
-
-/* 第三層：整合式同行裝甲血條 + 即時數值 */
-.bu-row-btm {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  width: 100% !important;
-  margin-top: 1px !important;
-}
-.bu-row-btm .hpbar {
+  gap: 6px !important;
   flex: 1 1 auto !important;
-  height: 6.5px !important;
+  min-width: 0 !important;
+  justify-content: flex-end !important;
+}
+.bu-hp-col .hpbar {
+  flex: 1 1 auto !important;
+  max-width: 80px !important;
+  height: 6px !important;
   margin: 0 !important;
   border-radius: 4px !important;
   overflow: hidden !important;
 }
-.bu-row-btm .bu-hp {
+.bu-hp-col .bu-hp {
   flex: 0 0 auto !important;
   font-family: var(--mono) !important;
-  font-size: 10.5px !important;
+  font-size: 10px !important;
   font-weight: 800 !important;
   color: var(--muted) !important;
   margin: 0 !important;
-  min-width: 58px !important;
+  min-width: 52px !important;
   text-align: right !important;
   line-height: 1 !important;
   visibility: visible !important;
 }
-.bu.dead .bu-row-btm .bu-hp {
+.bu.dead .bu-hp-col .bu-hp {
   visibility: hidden !important;
 }
 

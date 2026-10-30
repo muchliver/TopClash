@@ -3400,25 +3400,28 @@ function teamHtml(units, side) {
         <div class="bu-row-top">
           <div class="bu-title-group">
             <span class="bu-flag">${uData.flag || ''}</span>
-            <span class="bu-name-txt">${esc(u.name)}</span>
-            ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
+            <span class="bu-name-txt" title="${esc(u.name)}">${esc(u.name)}</span>
           </div>
-          <div class="bu-sub-group" title="${esc(tagTxt)}${wpnTxt ? ' · ' + esc(wpnTxt) : ''}">
+          <div class="bu-tag-group">
+            ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
             <span class="bu-role-tag" style="color:${catObj.color}">${esc(tagTxt)}</span>
-            ${wpnTxt ? `<span class="bu-wpn-txt">· ${esc(wpnTxt)}</span>` : ''}
           </div>
         </div>
-        <div class="bu-row-mid">
+        <div class="bu-row-wpn" title="${wpnTxt ? '主戰武裝：' + esc(wpnTxt) : ''}">
+          <span class="bu-wpn-icon">🎯</span>
+          <span class="bu-wpn-txt">${esc(wpnTxt || tagTxt)}</span>
+          <div class="bu-traits-wrap">${traitsHtml}</div>
+        </div>
+        <div class="bu-row-btm">
           <div class="bu-metrics">
             <span class="bu-m-pill atk" title="攻擊火力 (ATK)">⚔️<b>${atkVal}</b></span>
             <span class="bu-m-pill sth" title="匿蹤與閃避 (STH)">🛡️<b>${stVal}</b></span>
             ${ewVal > 0 ? `<span class="bu-m-pill ew" title="電子戰強度 (EW)">📡<b>${ewVal}</b></span>` : ''}
           </div>
-          <div class="bu-traits-wrap">${traitsHtml}</div>
-        </div>
-        <div class="bu-row-btm">
-          <div class="hpbar"><u id="hp-${u.uid}"></u></div>
-          <div class="bu-hp" id="hpt-${u.uid}">${u.hpMax} / ${u.hpMax}</div>
+          <div class="bu-hp-col">
+            <div class="hpbar"><u id="hp-${u.uid}"></u></div>
+            <div class="bu-hp" id="hpt-${u.uid}">${u.hpMax} / ${u.hpMax}</div>
+          </div>
         </div>
       </div>
     </div>`;
@@ -3887,74 +3890,118 @@ function playFx(ln) {
     triggerImpact();
   }
 
-  // 生成各兵種專屬高精細 SVG 武器實體圖形
+  // 生成各兵種專屬高精細 SVG 武器實體圖形 (大幅放大立體尺寸與強光尾焰)
   function getWeaponSvgHtml(type, side) {
     const accent = side === 'A' ? '#3de0ff' : '#ff5d6e';
+    const flameColor = side === 'A' ? '#38bdf8' : '#f43f5e';
     if (type === 'sabot') {
-      // 翼穩脫殼穿甲彈 (APFSDS Fin-Stabilized Tungsten Dart + Plasma Cone)
-      return `<svg class="fx-weapon-svg sabot-svg" viewBox="0 0 64 20" width="58" height="18">
+      // 翼穩脫殼穿甲彈 (APFSDS Fin-Stabilized Tungsten Dart + Super-Sonic Shock Cone, 放大至 92x24)
+      return `<svg class="fx-weapon-svg sabot-svg" viewBox="0 0 96 26" width="92" height="24">
         <defs>
           <linearGradient id="sabotGrad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0%" stop-color="transparent"/>
-            <stop offset="45%" stop-color="#f59e0b"/>
+            <stop offset="35%" stop-color="rgba(245,158,11,0.4)"/>
+            <stop offset="70%" stop-color="#f59e0b"/>
+            <stop offset="90%" stop-color="#fef08a"/>
+            <stop offset="100%" stop-color="#ffffff"/>
+          </linearGradient>
+          <filter id="sabotGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+        </defs>
+        <!-- 超音速尾部燃燒光柱 -->
+        <polygon points="0,11 68,11.5 68,14.5 0,15" fill="url(#sabotGrad)" filter="url(#sabotGlow)"/>
+        <!-- 脫殼瓣尾部穩定翼片 -->
+        <polygon points="26,4 40,11.5 26,11.5" fill="#f59e0b"/>
+        <polygon points="26,22 40,14.5 26,14.5" fill="#f59e0b"/>
+        <!-- 鎢合金箭身與高密度針狀穿桿 -->
+        <polygon points="36,11 84,11 96,13 84,15 36,15" fill="#ffffff"/>
+        <!-- 穿甲箭前緣高溫等離子電漿光團 -->
+        <ellipse cx="86" cy="13" rx="14" ry="5.5" fill="#fef08a" opacity="0.85"/>
+        <circle cx="94" cy="13" r="3" fill="#ffffff"/>
+      </svg>`;
+    } else if (type === 'autocannon') {
+      // 30mm 高爆曳光穿甲彈鏈 (密集高速彈幕, 放大至 62x16)
+      return `<svg class="fx-weapon-svg cannon-svg" viewBox="0 0 66 18" width="62" height="16">
+        <defs>
+          <linearGradient id="cannonGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="transparent"/>
+            <stop offset="50%" stop-color="#ea580c"/>
             <stop offset="85%" stop-color="#fef08a"/>
             <stop offset="100%" stop-color="#ffffff"/>
           </linearGradient>
         </defs>
-        <polygon points="0,8 46,9 46,11 0,12" fill="url(#sabotGrad)"/>
-        <polygon points="14,4 22,9 14,9" fill="#fbbf24"/>
-        <polygon points="14,16 22,11 14,11" fill="#fbbf24"/>
-        <polygon points="22,8.5 56,8.5 64,10 56,11.5 22,11.5" fill="#ffffff"/>
-        <ellipse cx="54" cy="10" rx="10" ry="3.5" fill="#fef08a" opacity="0.75"/>
-      </svg>`;
-    } else if (type === 'autocannon') {
-      // 30mm 高爆曳光穿甲彈鏈
-      return `<svg class="fx-weapon-svg cannon-svg" viewBox="0 0 42 12" width="38" height="10">
-        <polygon points="0,4 30,3.5 30,8.5 0,8" fill="#f97316" opacity="0.85"/>
-        <polygon points="24,3 42,6 24,9" fill="#fef08a"/>
+        <polygon points="0,6 48,5.5 48,12.5 0,12" fill="url(#cannonGrad)"/>
+        <polygon points="38,4 66,9 38,14" fill="#ffffff"/>
+        <ellipse cx="44" cy="9" rx="10" ry="4" fill="#fef08a" opacity="0.9"/>
       </svg>`;
     } else if (type === 'salvo') {
-      // 多管重型火箭彈 / 巡弋飛彈實體
-      return `<svg class="fx-weapon-svg salvo-svg" viewBox="0 0 56 22" width="48" height="20">
-        <ellipse cx="12" cy="11" rx="12" ry="4.5" fill="#f97316" opacity="0.9"/>
-        <ellipse cx="16" cy="11" rx="7" ry="2.5" fill="#fef08a"/>
-        <polygon points="18,5 25,8 18,8" fill="#94a3b8"/>
-        <polygon points="18,17 25,14 18,14" fill="#94a3b8"/>
-        <rect x="20" y="8" width="22" height="6" rx="1" fill="#e2e8f0" stroke="#475569" stroke-width="0.8"/>
-        <rect x="33" y="8" width="4" height="6" fill="#ef4444"/>
-        <polygon points="42,8 54,11 42,14" fill="#cbd5e1" stroke="#475569" stroke-width="0.8"/>
+      // 多管重型火箭彈 / 巡弋飛彈實體 (Heavy Rocket/Cruise Missile with roaring plume, 放大至 82x26)
+      return `<svg class="fx-weapon-svg salvo-svg" viewBox="0 0 86 28" width="82" height="26">
+        <!-- 推進器猛烈尾焰噴流 -->
+        <ellipse cx="14" cy="14" rx="16" ry="6.5" fill="#ea580c" opacity="0.95"/>
+        <ellipse cx="20" cy="14" rx="10" ry="3.8" fill="#fef08a"/>
+        <circle cx="25" cy="14" r="2.5" fill="#ffffff"/>
+        <!-- 摺疊尾翼 -->
+        <polygon points="26,6 38,10.5 26,10.5" fill="#64748b"/>
+        <polygon points="26,22 38,17.5 26,17.5" fill="#64748b"/>
+        <!-- 火箭/巡弋導彈圓柱彈體 -->
+        <rect x="30" y="10" width="34" height="8" rx="2" fill="#e2e8f0" stroke="#334155" stroke-width="1"/>
+        <!-- 戰術高爆引信標記環 -->
+        <rect x="52" y="10" width="6" height="8" fill="#ef4444"/>
+        <!-- 流線型雷達導引頭前錐 -->
+        <polygon points="64,10 84,14 64,18" fill="#cbd5e1" stroke="#334155" stroke-width="1"/>
+        <polygon points="46,5 54,10 46,10" fill="#94a3b8"/>
+        <polygon points="46,23 54,18 46,18" fill="#94a3b8"/>
       </svg>`;
     } else if (type === 'torpedo') {
-      // 重型魚雷 / 掠海反艦彈體 (帶氣泡尾流與十字舵)
-      return `<svg class="fx-weapon-svg torpedo-svg" viewBox="0 0 56 22" width="48" height="20">
-        <circle cx="8" cy="11" r="4" fill="#67e8f9" opacity="0.75"/>
-        <circle cx="15" cy="9" r="2.5" fill="#cffafe" opacity="0.85"/>
-        <circle cx="15" cy="13" r="2.5" fill="#cffafe" opacity="0.85"/>
-        <polygon points="18,5 24,8 18,8" fill="#0891b2"/>
-        <polygon points="18,17 24,14 18,14" fill="#0891b2"/>
-        <rect x="20" y="7.5" width="24" height="7" rx="2" fill="#0e7490" stroke="#67e8f9" stroke-width="1"/>
-        <path d="M44,7.5 C52,7.5 54,11 54,11 C54,11 52,14.5 44,14.5 Z" fill="#22d3ee"/>
+      // 重型魚雷 / 掠海反艦彈體 (帶氣泡尾流與空泡推進環, 放大至 78x26)
+      return `<svg class="fx-weapon-svg torpedo-svg" viewBox="0 0 82 28" width="78" height="26">
+        <!-- 螺旋槳水下微空泡流 -->
+        <circle cx="10" cy="14" r="5.5" fill="#67e8f9" opacity="0.75"/>
+        <circle cx="20" cy="11" r="3.5" fill="#cffafe" opacity="0.85"/>
+        <circle cx="20" cy="17" r="3.5" fill="#cffafe" opacity="0.85"/>
+        <!-- 十字尾舵 -->
+        <polygon points="24,6 34,10 24,10" fill="#0891b2"/>
+        <polygon points="24,22 34,18 24,18" fill="#0891b2"/>
+        <!-- 魚雷主耐壓艙身 -->
+        <rect x="28" y="9.5" width="36" height="9" rx="3" fill="#0e7490" stroke="#67e8f9" stroke-width="1.2"/>
+        <!-- 聲納尋標聲學圓頭 -->
+        <path d="M64,9.5 C76,9.5 80,14 80,14 C80,14 76,18.5 64,18.5 Z" fill="#22d3ee"/>
       </svg>`;
     } else if (type === 'swarm') {
-      // 三角翼自殺無人機 / 巡飛彈 (Loitering Munition Delta-Wing SVG)
-      return `<svg class="fx-weapon-svg swarm-svg" viewBox="0 0 36 28" width="32" height="24">
-        <polygon points="6,2 28,14 6,26 12,14" fill="#334155" stroke="${accent}" stroke-width="1.3"/>
-        <polygon points="12,11 34,14 12,17" fill="#cbd5e1"/>
-        <circle cx="29" cy="14" r="2.2" fill="#ff2a4b"/>
-        <ellipse cx="7" cy="14" rx="5" ry="2" fill="${accent}" opacity="0.85"/>
+      // 三角翼自殺無人機 / 巡飛彈 (Loitering Munition Delta-Wing, 放大至 54x38)
+      return `<svg class="fx-weapon-svg swarm-svg" viewBox="0 0 58 42" width="54" height="38">
+        <!-- 機翼輪廓與高對比陣營飾線 -->
+        <polygon points="8,4 46,21 8,38 18,21" fill="#1e293b" stroke="${accent}" stroke-width="2"/>
+        <!-- 中央機身與機背電子艙 -->
+        <polygon points="18,17 54,21 18,25" fill="#94a3b8"/>
+        <!-- 機鼻微型光電紅外尋標頭 -->
+        <circle cx="47" cy="21" r="3.5" fill="#ff2a4b"/>
+        <circle cx="48" cy="21" r="1.5" fill="#ffffff"/>
+        <!-- 尾部推進螺旋槳高亮光錐 -->
+        <ellipse cx="10" cy="21" rx="8" ry="3.5" fill="${flameColor}" opacity="0.9"/>
       </svg>`;
     } else {
-      // 超音速防空 / 空對空飛彈 (Supersonic AAM/SAM with fins & dual afterburner)
-      return `<svg class="fx-weapon-svg missile-svg" viewBox="0 0 58 22" width="50" height="20">
-        <ellipse cx="11" cy="11" rx="11" ry="4" fill="${accent}" opacity="0.85"/>
-        <ellipse cx="16" cy="11" rx="6" ry="2.2" fill="#ffffff"/>
-        <polygon points="19,4 25,8.5 19,8.5" fill="#64748b"/>
-        <polygon points="19,18 25,13.5 19,13.5" fill="#64748b"/>
-        <polygon points="33,6 38,8.5 33,8.5" fill="#475569"/>
-        <polygon points="33,16 38,13.5 33,13.5" fill="#475569"/>
-        <rect x="20" y="8.5" width="24" height="5" fill="#f8fafc" stroke="#475569" stroke-width="0.7"/>
-        <rect x="36" y="8.5" width="3.5" height="5" fill="${accent}"/>
-        <polygon points="44,8.5 56,11 44,13.5" fill="#e2e8f0" stroke="#475569" stroke-width="0.7"/>
+      // 超音速防空 / 空對空飛彈 (Supersonic Dual-Stage Missile with high-thrust afterburner, 放大至 84x28)
+      return `<svg class="fx-weapon-svg missile-svg" viewBox="0 0 88 30" width="84" height="28">
+        <!-- 雙脈衝火箭引擎強力離子噴流 -->
+        <ellipse cx="15" cy="15" rx="16" ry="6" fill="${flameColor}" opacity="0.9"/>
+        <ellipse cx="22" cy="15" rx="9" ry="3.2" fill="#ffffff"/>
+        <!-- 尾部控制翼面 (4片十字舵) -->
+        <polygon points="26,5 36,11.5 26,11.5" fill="#475569"/>
+        <polygon points="26,25 36,18.5 26,18.5" fill="#475569"/>
+        <!-- 彈體中部雙三角穩定翼片 -->
+        <polygon points="46,7 54,11.5 46,11.5" fill="#334155"/>
+        <polygon points="46,23 54,18.5 46,18.5" fill="#334155"/>
+        <!-- 飛彈長柱主體 -->
+        <rect x="28" y="11.5" width="38" height="7" fill="#f8fafc" stroke="#334155" stroke-width="1"/>
+        <!-- 陣營識別導引色帶 -->
+        <rect x="52" y="11.5" width="5.5" height="7" fill="${accent}"/>
+        <!-- 尖銳超音速雷達尋標鼻錐 -->
+        <polygon points="66,11.5 86,15 66,18.5" fill="#e2e8f0" stroke="#334155" stroke-width="1"/>
+        <circle cx="82" cy="15" r="1.5" fill="#ffffff"/>
       </svg>`;
     }
   }
