@@ -7217,24 +7217,27 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-sizing: border-box !important;
   }
 
-  /* 1. 左欄：A/B 切換 + 精簡作戰預算儀表 (寬度緊湊固定，絕不被擠壓) */
+  /* 1. 左欄：A/B 切換 + 精簡作戰預算儀表 (字體飽滿、模組間距呼吸感充足) */
   .deck-left {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 15px !important;
     flex: none !important;
     width: auto !important;
   }
   .deck-ab-toggle {
     display: flex !important;
-    gap: 2px !important;
-    padding: 2px !important;
+    gap: 3px !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
     flex: none !important;
   }
   .ab-btn {
-    padding: 6px 10px !important;
-    font-size: 12.5px !important;
-    font-weight: 700 !important;
+    padding: 6px 12px !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    border-radius: 6px !important;
+    line-height: 1 !important;
   }
   .budget-badge {
     width: 72px !important;
@@ -7503,21 +7506,23 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.6) !important;
   }
 
-  /* 上層左側：A/B 開關 + 預算數字 */
+  /* 上層左側：A/B 開關 + 預算數字 (間距與字體同步微調) */
   .deck-left {
     grid-area: left !important;
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
+    gap: 10px !important;
     min-width: 0 !important;
   }
   .deck-ab-toggle {
     display: flex !important;
     gap: 2px !important;
+    padding: 2px !important;
   }
   .ab-btn {
-    padding: 5px 8px !important;
-    font-size: 11.5px !important;
+    padding: 5px 9px !important;
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
   }
   .budget-badge {
     display: flex !important;
