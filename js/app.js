@@ -2488,8 +2488,8 @@ function renderLadderRosterTable() {
     const streak = u.streakDays || 1;
 
     // 挑戰規則判定：只能挑戰比自己高、且在前方 5 名以內之對手 (例如排名 25 只能挑戰 20~24 名)
-    const canEngage = isLive && (rankNo < player.rank) && (rankNo >= player.rank - 5);
-    const isOverRank = isLive && (rankNo < player.rank - 5); // 跨級鎖定
+    const canEngage = isLive && (rankNo < player.rank) && (rankNo >= player.rank - 2);
+    const isOverRank = isLive && (rankNo < player.rank - 2); // 跨級鎖定
     const isBeaten = isLive && (rankNo > player.rank); // 已超越名次
 
     // 排名趨勢
@@ -2539,7 +2539,7 @@ function renderLadderRosterTable() {
         ${streak >= 3 ? '<b class="breaker-dot" title="終結者加成目標">+15</b>' : ''}
       </button>`;
     } else if (isOverRank) {
-      actionColHtml = `<span class="r-action-pill locked" title="階梯限制：僅可挑戰前方 5 名內之目標">🔒 跨級鎖定</span>`;
+      actionColHtml = `<span class="r-action-pill locked" title="階梯限制：僅可挑戰前方 2 名內之目標">🔒 跨級鎖定</span>`;
     } else if (isBeaten) {
       actionColHtml = `<span class="r-action-pill beaten">✓ 已超越</span>`;
     }

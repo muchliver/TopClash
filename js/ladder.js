@@ -289,7 +289,7 @@ const LadderEngine = (function() {
   function canChallengeRank(targetRank) {
     const pRank = state.player.rank;
     // 只能挑戰比自己高、且距離在 5 名以內之對手 (例如排名 25 只能挑戰 20, 21, 22, 23, 24)
-    return targetRank < pRank && targetRank >= pRank - 5;
+    return targetRank < pRank && targetRank >= pRank - 2;
   }
 
   /* 取得當前可挑戰的目標清單（前方最近 5 名以內之對手） */
@@ -298,7 +298,7 @@ const LadderEngine = (function() {
     const pRank = state.player.rank;
     if (pRank <= 1) return [];
     // 依名次從近到遠排序（例如 #24, #23, #22, #21, #20）
-    return state.roster.filter(u => u.id !== state.player.id && u.rank < pRank && u.rank >= pRank - 5)
+    return state.roster.filter(u => u.id !== state.player.id && u.rank < pRank && u.rank >= pRank - 2)
       .sort((a, b) => b.rank - a.rank);
   }
 
