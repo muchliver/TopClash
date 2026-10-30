@@ -2127,28 +2127,38 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 .m-card-photo {
   position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 46%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100% !important;
+  height: 100% !important;
   object-fit: cover;
-  opacity: 0.16;
-  mask-image: linear-gradient(to left, rgba(0,0,0,0.92) 20%, transparent 98%);
-  -webkit-mask-image: linear-gradient(to left, rgba(0,0,0,0.92) 20%, transparent 98%);
+  object-position: center 32%;
+  opacity: 0.24;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,1) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,1) 100%);
   pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 0;
 }
 .m-card:hover .m-card-photo {
-  opacity: 0.45;
-  transform: scale(1.08) translateX(-2px);
+  opacity: 0.62;
+  transform: scale(1.04);
 }
 .m-card.sel .m-card-photo {
-  opacity: 0.38;
+  opacity: 0.50;
 }
 [data-theme="light"] .m-card-photo {
-  opacity: 0.18;
+  opacity: 0.22;
+  mask-image: linear-gradient(90deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.80) 50%, rgba(0,0,0,1) 100%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.80) 50%, rgba(0,0,0,1) 100%);
 }
 [data-theme="light"] .m-card:hover .m-card-photo {
-  opacity: 0.48;
+  opacity: 0.58;
+}
+[data-theme="light"] .m-card.sel .m-card-photo {
+  opacity: 0.46;
 }
 .m-top, .m-bot {
   position: relative;
