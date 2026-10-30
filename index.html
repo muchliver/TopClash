@@ -69,51 +69,53 @@
 
 <!-- 底部常駐作戰指揮台 (Fixed Bottom Command Deck) -->
 <footer class="command-deck" id="commandDeck">
+  <!-- 1. 左側區塊：軍武組合提示 (四大聯合作戰體系 + 電戰指示燈艙) -->
   <div class="deck-left">
-    <!-- A/B 陣容槽位已簡化移除，陣容儲存由【編制/代碼】統一管理 -->
-    <div class="budget-badge">
-      <div class="budget-top-row">
-        <span class="budget-label">作戰預算</span>
-      </div>
-      <div class="budget-main-row">
-        <div class="budget-digits"><b id="budgetUsed">0</b><span> / </span><span id="budgetMax">15</span></div>
-      </div>
-      <!-- 移除進度條小圓點，留空避免重疊 -->
-    </div>
+    <div class="deck-synergy-bar" id="deckSynergyBar" aria-live="polite"></div>
   </div>
 
+  <!-- 2. 中間區塊：戰術教條 + 編制工具組 -->
   <div class="deck-mid">
-    <div class="doc-group">
+    <div class="doc-group" id="docGroup">
       <div class="deck-label-split">
         <span>戰術</span>
         <span>教條</span>
       </div>
       <div class="doc-toggles" id="docToggles"></div>
     </div>
-    <div class="deck-synergy-bar" id="deckSynergyBar" aria-live="polite"></div>
-    <div class="deck-tools">
+    <div class="deck-tools" id="deckTools">
       <div class="tools-btn-group">
         <button class="tool-btn" id="btnRand" title="隨機組建剩餘或全部槽位 [快捷鍵 R]"><span class="tool-btn-icon">🎲</span> 隨機補滿 <kbd>R</kbd></button>
         <button class="tool-btn" id="btnClear" title="清空全部槽位 [快捷鍵 C]"><span class="tool-btn-icon">🗑️</span> 清空 <kbd>C</kbd></button>
         <div class="dropdown-wrap" id="codeDropdownWrap">
           <button class="tool-btn" id="btnCodeToggle"><span class="tool-btn-icon">📋</span> 編制 / 代碼 ▾</button>
           <div class="dropdown-menu" id="codeMenu" hidden>
-          <button class="menu-item" id="btnCopyCode">📋 複製當前陣容代碼</button>
-          <button class="menu-item" id="btnImportCode">📥 匯入他人分享代碼</button>
-          <div class="menu-divider"></div>
-          <div class="menu-subhead">💾 自訂常用編制 (點擊套用 / 儲存)</div>
-          <div id="customPresetsMenuBox"></div>
-          <div class="menu-divider"></div>
-          <div class="menu-subhead">⚡ 參謀部推薦陣容 (一鍵套用)</div>
-          <div id="templatePresetsMenuBox"></div>
+            <button class="menu-item" id="btnCopyCode">📋 複製當前陣容代碼</button>
+            <button class="menu-item" id="btnImportCode">📥 匯入他人分享代碼</button>
+            <div class="menu-divider"></div>
+            <div class="menu-subhead">💾 自訂常用編制 (點擊套用 / 儲存)</div>
+            <div id="customPresetsMenuBox"></div>
+            <div class="menu-divider"></div>
+            <div class="menu-subhead">⚡ 參謀部推薦陣容 (一鍵套用)</div>
+            <div id="templatePresetsMenuBox"></div>
+          </div>
         </div>
-      </div>
       </div>
       <button class="mobile-more-btn" id="btnDeckMore" title="展開戰術司令部配置 (教條/編制/代碼/清空)">戰術 ☰</button>
     </div>
   </div>
 
+  <!-- 3. 右側區塊：出擊指揮島 (作戰預算儀表緊貼在開始作戰按鈕左邊) -->
   <div class="deck-right">
+    <div class="budget-badge" id="budgetBadge">
+      <div class="budget-top-row">
+        <span class="budget-label">作戰預算</span>
+      </div>
+      <div class="budget-main-row">
+        <div class="budget-digits"><b id="budgetUsed">0</b><span> / </span><span id="budgetMax">15</span></div>
+      </div>
+    </div>
+
     <button class="btn primary launch-btn mega-launch-btn" id="btnGo" disabled title="發起戰鬥 [快捷鍵 Space 或 Enter]">
       <span class="launch-icon" id="launchIcon">⏳</span>
       <div class="launch-texts">

@@ -7205,6 +7205,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 
 /* =====================================================
    💻 桌機與筆電端大氣自適應排版 (min-width: 769px)
+   自左向右：軍武組合提示 ➔ 戰術教條 ➔ 工具組 ➔ 作戰預算 + 開始作戰
    ===================================================== */
 @media (min-width: 769px) {
   .command-deck {
@@ -7217,60 +7218,53 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-sizing: border-box !important;
   }
 
-  /* 1. 左欄：純粹作戰預算儀表 (移除 A/B 槽位，版面純淨高科技儀表感) */
+  /* 1. 左欄：軍武組合提示 (四大聯合作戰體系 + 電戰指示燈艙) */
   .deck-left {
     display: flex !important;
     align-items: center !important;
-    flex: none !important;
+    flex: 0 0 auto !important;
     width: auto !important;
+    overflow: visible !important;
   }
   .deck-ab-toggle, #deckAbToggle {
     display: none !important;
   }
-  .budget-badge {
-    width: auto !important;
-    min-width: 78px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    padding: 4px 10px !important;
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 8px !important;
+  .deck-synergy-bar {
+    display: inline-flex !important;
+    align-items: center !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  .indicators-dock-wrap {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 42px !important;
+    padding: 2px 6px !important;
+    gap: 4px !important;
+    max-width: none !important;
+    border-radius: 9px !important;
     box-sizing: border-box !important;
-    flex: none !important;
+    flex-shrink: 0 !important;
   }
-  [data-theme="light"] .budget-badge {
-    background: rgba(15, 23, 42, 0.03) !important;
-    border-color: rgba(15, 23, 42, 0.08) !important;
-  }
-  .budget-top-row {
-    margin-bottom: 1px !important;
-  }
-  .budget-label {
-    font-family: var(--head) !important;
-    font-size: 11px !important;
+  .syn-indicator {
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 34px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
-    letter-spacing: .06em !important;
-    color: var(--muted) !important;
-    line-height: 1 !important;
-  }
-  .budget-digits {
-    font-family: var(--head) !important;
-    font-size: 22px !important;
-    font-weight: 800 !important;
-    line-height: 1 !important;
+    border-radius: 6px !important;
+    gap: 4px !important;
     white-space: nowrap !important;
+    box-sizing: border-box !important;
   }
-  .budget-digits b {
-    color: var(--cyan) !important;
-  }
-  .budget-mini-bar {
-    margin-top: 3px !important;
-    height: 3.5px !important;
+  .ind-dot {
+    width: 6px !important;
+    height: 6px !important;
   }
 
-  /* 2. 中欄：三大卡片艙 (大氣飽滿 40px 高度，flex-shrink 自動彈性收放，絕不向外衝撞溢出) */
+  /* 2. 中欄：戰術教條與編制工具組 (彈性收放，保證自適應) */
   .deck-mid {
     display: flex !important;
     align-items: center !important;
@@ -7293,15 +7287,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   .doc-toggles {
     display: inline-flex !important;
     align-items: center !important;
-    height: 40px !important;
-    padding: 2px 4px !important;
+    height: 42px !important;
+    padding: 2px 5px !important;
     gap: 3px !important;
-    border-radius: 8px !important;
+    border-radius: 9px !important;
     box-sizing: border-box !important;
   }
   .doc-btn {
     height: 34px !important;
-    padding: 0 8px !important;
+    padding: 0 9px !important;
     font-size: 12.5px !important;
     font-weight: 700 !important;
     border-radius: 6px !important;
@@ -7312,43 +7306,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-sizing: border-box !important;
   }
 
-  /* (B) 四大聯合作戰體系與電戰指示燈艙 */
-  .deck-synergy-bar {
-    display: inline-flex !important;
-    align-items: center !important;
-    flex: 0 1 auto !important;
-    max-width: none !important;
-    overflow: visible !important;
-  }
-  .indicators-dock-wrap {
-    display: inline-flex !important;
-    align-items: center !important;
-    height: 40px !important;
-    padding: 2px 5px !important;
-    gap: 3px !important;
-    max-width: none !important;
-    border-radius: 8px !important;
-    box-sizing: border-box !important;
-    flex-shrink: 0 !important;
-  }
-  .syn-indicator {
-    display: inline-flex !important;
-    align-items: center !important;
-    height: 32px !important;
-    padding: 0 7px !important;
-    font-size: 11.5px !important;
-    font-weight: 700 !important;
-    border-radius: 5px !important;
-    gap: 3px !important;
-    white-space: nowrap !important;
-    box-sizing: border-box !important;
-  }
-  .ind-dot {
-    width: 5.5px !important;
-    height: 5.5px !important;
-  }
-
-  /* (C) 編制整備工具卡片組 */
+  /* (B) 編制整備工具卡片組 */
   .deck-tools {
     display: inline-flex !important;
     align-items: center !important;
@@ -7359,15 +7317,15 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   .tools-btn-group {
     display: inline-flex !important;
     align-items: center !important;
-    height: 40px !important;
-    padding: 2px 4px !important;
+    height: 42px !important;
+    padding: 2px 5px !important;
     gap: 3px !important;
-    border-radius: 8px !important;
+    border-radius: 9px !important;
     box-sizing: border-box !important;
   }
   .tool-btn {
     height: 34px !important;
-    padding: 0 9px !important;
+    padding: 0 10px !important;
     font-size: 12.5px !important;
     font-weight: 700 !important;
     border-radius: 6px !important;
@@ -7387,18 +7345,63 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     border-radius: 3px !important;
   }
 
-  /* 3. 右欄：開始戰鬥大按鈕 (寬度適中堅固，絕不截斷，絕不遮擋中欄工具) */
+  /* 3. 右欄：作戰出擊管制島 (作戰預算緊鄰在開戰按鈕左邊，並列呼應) */
   .deck-right {
     display: flex !important;
     align-items: center !important;
     justify-content: flex-end !important;
-    flex: none !important;
+    gap: 10px !important;
+    flex: 0 0 auto !important;
     width: auto !important;
   }
-  .mega-launch-btn {
-    min-width: 265px !important;
+
+  .budget-badge {
     width: auto !important;
-    max-width: 295px !important;
+    min-width: 82px !important;
+    height: 50px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 4px 12px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 11px !important;
+    box-sizing: border-box !important;
+    flex: none !important;
+  }
+  [data-theme="light"] .budget-badge {
+    background: rgba(15, 23, 42, 0.04) !important;
+    border-color: rgba(15, 23, 42, 0.1) !important;
+  }
+  .budget-top-row {
+    margin-bottom: 2px !important;
+  }
+  .budget-label {
+    font-family: var(--head) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .06em !important;
+    color: var(--muted) !important;
+    line-height: 1 !important;
+  }
+  .budget-digits {
+    font-family: var(--head) !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+  }
+  .budget-digits b {
+    color: var(--cyan) !important;
+  }
+  .budget-mini-bar {
+    display: none !important;
+  }
+
+  .mega-launch-btn {
+    min-width: 255px !important;
+    width: auto !important;
+    max-width: 290px !important;
     height: 50px !important;
     padding: 0 16px !important;
     border-radius: 11px !important;
@@ -7448,18 +7451,32 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   }
 }
 
-/* 筆電端響應式微調 (1200px ~ 1320px) */
+/* 筆電端響應式微調 (1024px ~ 1360px) */
 @media (min-width: 769px) and (max-width: 1360px) {
+  .command-deck {
+    gap: 6px !important;
+    padding: 0 10px !important;
+  }
+  .deck-right {
+    gap: 6px !important;
+  }
+  .budget-badge {
+    min-width: 74px !important;
+    padding: 4px 8px !important;
+  }
+  .budget-digits {
+    font-size: 19px !important;
+  }
   .mega-launch-btn {
-    min-width: 235px !important;
-    max-width: 260px !important;
-    padding: 0 12px !important;
+    min-width: 215px !important;
+    max-width: 245px !important;
+    padding: 0 10px !important;
   }
   .mega-launch-btn .launch-title {
-    font-size: 14.5px !important;
+    font-size: 14px !important;
   }
   .mega-launch-btn .launch-sub {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
   }
   .tool-btn kbd {
     display: none !important;
@@ -7473,17 +7490,17 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     font-size: 11px !important;
   }
   .tool-btn {
-    padding: 0 7px !important;
+    padding: 0 6px !important;
     font-size: 12px !important;
   }
   .deck-mid {
-    gap: 5px !important;
+    gap: 4px !important;
   }
 }
 
 /* =====================================================
    📱 手機端專屬 RWD 行動指揮佈局 (max-width: 768px)
-   雙層結構：上層 [A/B + 預算] [隨機 + 戰術☰]、下層滿版開戰大按鈕
+   雙層結構：上層 [預算] [隨機 + 戰術☰]、下層滿版開戰大按鈕
    ===================================================== */
 @media (max-width: 768px) {
   .command-deck:not([hidden]) {
@@ -7503,23 +7520,29 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
     box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.6) !important;
   }
 
-  /* 上層左側：純粹作戰預算儀表 */
+  /* 左側容器在手機端隱藏 (軍武提示已收納) */
   .deck-left {
-    grid-area: left !important;
-    display: flex !important;
-    align-items: center !important;
-    min-width: 0 !important;
-  }
-  .deck-ab-toggle, #deckAbToggle {
     display: none !important;
   }
+
+  /* 右側容器使用 display: contents，使預算與按鈕各自成為 grid 子項目 */
+  .deck-right {
+    display: contents !important;
+  }
+
+  /* 上層左側：純粹作戰預算儀表 */
   .budget-badge {
+    grid-area: left !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: baseline !important;
     gap: 4px !important;
     width: auto !important;
     min-width: 0 !important;
+    height: auto !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
   }
   .budget-top-row {
     display: inline-block !important;
@@ -7591,14 +7614,8 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   }
 
   /* 下層：100% 滿版開戰大按鈕 */
-  .deck-right {
-    grid-area: right !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-  }
   .mega-launch-btn {
+    grid-area: right !important;
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
