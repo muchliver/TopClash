@@ -623,7 +623,11 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   color: var(--cyan) !important;
 }
 
-/* 當對戰介面啟用 (未 hidden) 時，強制所有其他同層級主視圖絕對隱藏，徹底防止錦標賽等出現在下方或觸發捲軸 */
+/* 當對戰介面啟用 (未 hidden) 時，強制底欄與所有其他同層級主視圖絕對隱藏，徹底防止出現在下方遮擋第 5 槽卡片或觸發捲軸 */
+body:has(#viewBattle:not([hidden])) #commandDeck,
+body:has(.battle:not([hidden])) .command-deck,
+#commandDeck[hidden],
+.command-deck[hidden],
 .battle:not([hidden]) ~ .tournament-layout,
 .battle:not([hidden]) ~ .ladder-layout,
 .battle:not([hidden]) ~ .matrix-layout,
@@ -7208,7 +7212,10 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
    自左向右：軍武組合提示 ➔ 戰術教條 ➔ 工具組 ➔ 作戰預算 + 開始作戰
    ===================================================== */
 @media (min-width: 769px) {
-  .command-deck {
+  .command-deck[hidden] {
+    display: none !important;
+  }
+  .command-deck:not([hidden]) {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -7651,7 +7658,11 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
    ===================================================== */
 @media (min-width: 769px) {
   .battle {
-    padding: 4px 18px 6px !important;
+    padding: 4px 18px 8px !important;
+    height: calc(100vh - 54px) !important;
+    max-height: calc(100vh - 54px) !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
   .battle-top {
     margin-bottom: 4px !important;

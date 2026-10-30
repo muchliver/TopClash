@@ -6,6 +6,19 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.6.3] - 2026-10-30
+#### 對戰推演畫面第 5 槽卡片遮擋截斷終極根治 (Battle View 5th Slot Truncation Ultimate Fix)
+- **底欄 Command Deck 在戰鬥中強制隱藏**：
+  - 排查發現：在桌機模式（`@media (min-width: 769px)`）下，先前 `.command-deck` 被賦予了無條件的 `display: flex !important;`，強行覆蓋了 JS 的 `commandDeck.hidden = true`。
+  - 導致整個戰鬥過程中，高度 68px 的底部操作列依然浮在畫面最下方，硬生生遮擋住我敵雙方第 5 槽卡片（如「民用無人機校射組」、「FPV 自殺無人機組」）的下半部！
+  - 修正為 `.command-deck:not([hidden])` 與 `.command-deck[hidden] { display: none !important; }`。
+  - 增加現代 CSS `body:has(#viewBattle:not([hidden])) #commandDeck` 雙重防禦保險，確保只要進入戰鬥推演，底欄 100% 依法隱藏。
+- **釋放底部 68px 巨大視野，第 5 槽 100% 完整無截斷**：
+  - 底欄隱藏後瞬間解放 68px 垂直高度，我敵雙方第 5 槽軍武卡片、HP 血條、裝備數值與邊框完全露出，底端具備舒適安全留白。
+- **快取升級**：更新 Service Worker 快取至 `topclash-v4.6.3`。
+
+---
+
 ### [v4.6.2] - 2026-10-30
 #### 線上真人開房對戰加入連線重大修復 (Online PvP Join Room & Firebase Relay Critical Fix)
 - **Firebase Realtime Database 雲端中繼核心修復**：
