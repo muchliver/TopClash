@@ -1356,7 +1356,7 @@ function renderCommandDeck() {
   $('#budgetUsed').textContent = used;
   $('#budgetMax').textContent = lim;
   $('.budget-digits').classList.toggle('over', used > lim);
-  $('#budgetMiniBar').innerHTML = Array.from({ length: lim }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
+  const bmb = $('#budgetMiniBar'); if (bmb) bmb.innerHTML = Array.from({ length: lim }, (_, i) => `<i class="${i < used ? 'on' : ''}"></i>`).join('');
 
   // A/B 雙陣容按鈕狀態
   $('#btnDeckA')?.classList.toggle('active', state.deckSlot === 'A');

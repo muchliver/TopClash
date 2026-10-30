@@ -176,6 +176,11 @@ TopClash/
 
 > 完整詳細之功能迭代、修復紀錄與架構更新請參閱 📄 [**CHANGELOG.md**](CHANGELOG.md)。
 
+- **v4.3.3 (2026-10-30) — 預算小圓點進度條移除與開戰按鈕旗艦級拓寬 (Budget Mini-bar Removal & Launch Button Expansion)**
+  - **移除進度條小圓點**：清除預算下方 15 顆小圓點 (#budgetMiniBar)，消除「...」殘留視覺感。
+  - **開戰按鈕旗艦拓寬**：左欄收緊至 72px，多出的版面讓渡給右側開戰按鈕，拓寬至 265~295px，主副標題字體與圖標同步升級。
+  - **快取升級**：更新 Service Worker 快取至 `topclash-v4.3.3`。
+
 - **v4.3.2 (2026-10-30) — 手機端 RWD 行動結構隔離與響應式雙端架構加固 (Mobile RWD Isolation & Dual Layout Hardening)**
   - **雙端嚴格隔離**：桌機端大氣排版封裝於 `min-width: 769px`，手機端繼承雙層行動指揮架構。
   - **手機版極致體驗**：上層預算與隨機/抽屜按鈕精確對齊，下層 100% 滿版開戰大按鈕，杜絕橫向溢出。
