@@ -8303,11 +8303,16 @@ body:has(.battle:not([hidden])) .command-deck,
     flex: 1 1 0 !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
-    padding: 14px 16px !important;
-    gap: 12px !important;
+    justify-content: flex-start !important;
+    padding: 12px 16px !important;
+    gap: 10px !important;
     min-height: 0 !important;
     margin: 0 !important;
+  }
+
+  .ladder-col-command .my-info-col {
+    flex: 0 0 auto !important;
+    width: 100% !important;
   }
 
   .ladder-col-command .my-defense-col {
@@ -8316,7 +8321,7 @@ body:has(.battle:not([hidden])) .command-deck,
     flex-direction: column !important;
     justify-content: space-between !important;
     padding: 12px 14px !important;
-    gap: 10px !important;
+    gap: 8px !important;
     min-height: 0 !important;
   }
 
@@ -8567,4 +8572,223 @@ body:has(.battle:not([hidden])) .command-deck,
   padding: 5px 12px !important;
   font-size: 12px !important;
   border-radius: 6px !important;
+}
+
+/* =====================================================
+   🎯 v4.9.4 左欄駐防立繪與編成評估列 (左欄建議 A) + 右欄公開旗艦與偵察特徵欄 (右欄建議 2)
+   ===================================================== */
+
+/* 左欄：消除 .my-info-col 強制延伸造成的空白斷層 */
+.ladder-col-command .my-info-col {
+  flex: 0 0 auto !important;
+}
+
+/* 左欄：5 張駐防軍武卡左上角兵種標籤 */
+.ladder-col-command .defense-deck-preview .mini-unit-chip .cat-mini-tag {
+  position: absolute !important;
+  top: 4px !important;
+  left: 4px !important;
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  color: #020617 !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.03em !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45) !important;
+  z-index: 2 !important;
+}
+
+/* 左欄：駐防編成戰力與羈絆評估列 (.defense-eval-bar) */
+.defense-eval-bar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+  border-radius: 7px !important;
+  background: rgba(56, 189, 248, 0.08) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  flex-shrink: 0 !important;
+}
+[data-theme="light"] .defense-eval-bar {
+  background: #e0f2fe !important;
+  border-color: rgba(2, 132, 199, 0.28) !important;
+}
+.def-eval-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+.def-eval-arch {
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  color: var(--cyan) !important;
+  white-space: nowrap !important;
+}
+[data-theme="light"] .def-eval-arch {
+  color: #0369a1 !important;
+}
+.def-eval-syn {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 999px !important;
+  background: rgba(16, 185, 129, 0.16) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  white-space: nowrap !important;
+}
+[data-theme="light"] .def-eval-syn {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+.def-eval-syn.neutral {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: var(--muted) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+[data-theme="light"] .def-eval-syn.neutral {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+.def-eval-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+.def-eval-metric {
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  white-space: nowrap !important;
+}
+.def-eval-metric b {
+  color: var(--text) !important;
+  font-weight: 800 !important;
+}
+
+/* 右欄：收攏 .r-commander 過寬空白，新增中間「公開旗艦＆偵察特徵欄 (.r-recon-intel)」 */
+.roster-row .r-commander {
+  flex: 0 1 255px !important;
+  min-width: 195px !important;
+}
+
+.r-recon-intel {
+  flex: 1 1 210px !important;
+  min-width: 170px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  background: rgba(15, 23, 42, 0.45) !important;
+  border: 1px solid rgba(56, 189, 248, 0.18) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+[data-theme="light"] .r-recon-intel {
+  background: #f8fafc !important;
+  border-color: rgba(2, 132, 199, 0.18) !important;
+}
+
+.roster-row.is-me .r-recon-intel {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.35) !important;
+}
+
+[data-theme="light"] .roster-row.is-me .r-recon-intel {
+  background: #e0f2fe !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+}
+
+.recon-intel-main {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+}
+
+.recon-intel-tag {
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+  flex-shrink: 0 !important;
+}
+
+[data-theme="light"] .recon-intel-tag {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fcd34d !important;
+}
+
+.recon-intel-tag.mine {
+  background: rgba(56, 189, 248, 0.18) !important;
+  color: var(--cyan) !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+[data-theme="light"] .recon-intel-tag.mine {
+  background: #bae6fd !important;
+  color: #0369a1 !important;
+  border-color: #7dd3fc !important;
+}
+
+.recon-intel-unit {
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.recon-intel-unit small {
+  font-family: var(--mono) !important;
+  font-size: 11px !important;
+  color: var(--amber) !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="light"] .recon-intel-unit small {
+  color: #d97706 !important;
+}
+
+.recon-intel-sub {
+  font-size: 10.5px !important;
+  color: var(--muted) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.recon-intel-sub b {
+  color: var(--cyan) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="light"] .recon-intel-sub b {
+  color: #0284c7 !important;
+}
+
+@media (max-width: 1180px) {
+  .r-recon-intel {
+    display: none !important;
+  }
+  .roster-row .r-commander {
+    flex: 1 1 180px !important;
+  }
 }

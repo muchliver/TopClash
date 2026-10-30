@@ -2423,12 +2423,35 @@ function renderLadderView() {
       const u = UNIT_MAP[id];
       if (!u) return '<div class="mini-unit-chip"></div>';
       const shortName = u.name.split(' ')[0];
+      const catObj = CATS[u.cat] || { short: 'UNIT', color: '#38bdf8' };
       return `<div class="mini-unit-chip" title="${esc(u.name)} ($${u.cost})">
         <img src="${u.img || `assets/units/${u.id}.jpg`}" alt="${esc(u.name)}" onerror="this.style.display='none'"/>
+        <span class="cat-mini-tag" style="background:${catObj.color}">${catObj.short}</span>
         <span class="cost-tag">$${u.cost}</span>
         <span class="unit-mini-name">${esc(shortName)}</span>
       </div>`;
     }).join('');
+  }
+  const defEvalRow = $('#defenseEvalRow');
+  if (defEvalRow) {
+    const defUnits = defDeck.map(id => UNIT_MAP[id]).filter(Boolean);
+    const totalCost = defUnits.reduce((s, u) => s + (u.cost || 0), 0);
+    const arch = typeof analyzeDeckArchetype === 'function' ? analyzeDeckArchetype(defDeck) : { icon: '🎖️', name: '均衡聯合作戰流' };
+    const syns = typeof getDeckSynergies === 'function' ? getDeckSynergies(defUnits) : [];
+    const baseEw = defUnits.reduce((s, u) => s + (u.ew || 0), 0) + (syns.some(x => x.id === 'cec') ? 12 : 0);
+    const effEw = Math.round(baseEw * (defDoc === 'deception' ? 1.5 : 1));
+    defEvalRow.innerHTML = `
+      <div class="def-eval-left">
+        <span class="def-eval-arch">${arch.icon} ${esc(arch.name)}</span>
+        ${syns.length > 0
+          ? syns.slice(0, 2).map(s => `<span class="def-eval-syn" title="${esc(s.desc)}">${s.icon} ${esc(s.name)}</span>`).join('')
+          : `<span class="def-eval-syn neutral">🛡️ 五域聯防就緒</span>`}
+      </div>
+      <div class="def-eval-right">
+        <span class="def-eval-metric">預算 <b>$${totalCost}/$15</b></span>
+        <span class="def-eval-metric">電戰 <b>EW ${effEw}</b></span>
+      </div>
+    `;
   }
   const defDocRow = $('#defenseDocRow');
   if (defDocRow) {
@@ -2546,6 +2569,22 @@ function renderLadderRosterTable() {
       actionColHtml = `<span class="r-action-pill beaten">✓ 已超越</span>`;
     }
 
+    // 對手公開旗艦與部隊特徵偵察情報 (右欄建議 2)
+    const flagshipUnit = UNIT_MAP[(userDeck || [])[0]];
+    const rowArch = typeof analyzeDeckArchetype === 'function'
+      ? analyzeDeckArchetype(userDeck || [])
+      : { icon: '🎖️', name: '均衡聯合作戰流' };
+    const reconIntelHtml = `
+      <div class="r-recon-intel">
+        <div class="recon-intel-main">
+          <span class="recon-intel-tag ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 公開旗艦'}</span>
+          <strong class="recon-intel-unit">${flagshipUnit ? `${esc(flagshipUnit.name)} <small>($${flagshipUnit.cost})</small>` : '未知旗艦'}</strong>
+        </div>
+        <div class="recon-intel-sub">
+          <span>📡 偵察特徵：<b>${rowArch.icon} ${esc(rowArch.name)}</b></span>
+        </div>
+      </div>`;
+
     return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass} ${canEngage ? 'engageable' : ''}">
       <div class="r-rank">${rankNo <= 3 ? ['🥇','🥈','🥉'][rankNo - 1] : '#' + rankNo}</div>
       <div class="r-trend">${trendHtml}</div>
@@ -2557,6 +2596,7 @@ function renderLadderRosterTable() {
           <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="敵方駐防戰術教條（先發制人 / 縱深防禦 / 電子欺敵）保密中，進場推演時解密">🔒 戰術保密</span>`}</span>
         </div>
       </div>
+      ${reconIntelHtml}
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
       <div class="r-deck-preview">${deckChipsHtml}</div>
       <div class="r-action">${actionColHtml}</div>
@@ -2675,8 +2715,8 @@ $('#viewLadder')?.addEventListener('click', e => {
       toast('⚠️ 該名次低於或等於我方當前排名，無需重複挑戰！');
       return;
     }
-    if (pRank - targetUser.rank > 5) {
-      toast('🔒 階梯交戰守則：不可跨級挑戰！僅可挑戰前方最近 5 名以內之對手。');
+    if (pRank - targetUser.rank > 2) {
+      toast('🔒 階梯交戰守則：不可跨級挑戰！僅可挑戰前方最近 2 名以內之對手。');
       return;
     }
 
