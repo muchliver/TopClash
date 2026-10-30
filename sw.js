@@ -1,4 +1,4 @@
-const CACHE_NAME = 'topclash-v4.9.9';
+const CACHE_NAME = 'topclash-v5.0.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -6,9 +6,9 @@ const CORE_ASSETS = [
   './style.css',
   './manifest.json',
   './js/data.js',
+  './js/ladder-data.js',
   './js/engine.js',
   './js/cloud-sync.js',
-  './js/sound.js',
   './js/ladder.js',
   './js/tournament.js',
   './js/firebase-tourney.js',
@@ -19,7 +19,9 @@ const CORE_ASSETS = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then((cache) => Promise.allSettled(CORE_ASSETS.map((url) => cache.add(url))))
+      .then(() => self.skipWaiting())
   );
 });
 
@@ -54,9 +56,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML/CSS/JS so updates take effect immediately, with ignoreSearch fallback offline
+  // Network-first (bypassing stale HTTP browser cache) for HTML/CSS/JS so updates take effect immediately
   event.respondWith(
-    fetch(req)
+    fetch(req, { cache: 'no-cache' })
       .then((res) => {
         if (res && res.status === 200) {
           const copy = res.clone();

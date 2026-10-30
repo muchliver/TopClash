@@ -6,6 +6,20 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v5.0.0] - 2026-10-31
+#### 天梯名冊方案 A：CSS Grid 嚴格等距網格 ＋ 頂部戰情表頭列 ＋ 雙欄去前綴零截斷重構 (Ladder Roster CSS Grid Uniform Spacing & Header Overhaul)
+- **改用 `CSS Grid` 固定 7 欄軌道 ＋ 統一 `10px` 欄距，徹底根除欄位間隔不一問題**：
+  - 廢除舊版 Flexbox 彈性伸縮與浮動留白造成的「左擠右空、每列間距忽大忽小」現象。
+  - `.roster-header-row` 與 `.roster-row` 共享完全相同的 7 欄 Grid 軌道（`28px 74px minmax(0, 1.35fr) minmax(0, 0.94fr) minmax(0, 0.92fr) 64px 82px`），搭配指揮官欄右側微光分隔線與 100% 滿寬膠囊，確保每一欄左右邊界與欄距 **100% 絕對均等對齊**。
+- **新增頂部「戰情表頭列 (`.roster-header-row`)」並移除每列重複贅字**：
+  - 頂部常駐表頭：`名次` ｜ `駐榜狀態` ｜ `戰區指揮官` ｜ `🎯 公開主力旗艦` ｜ `📡 偵察戰術流派` ｜ `戰略勝點` ｜ `作戰行動`。
+  - 底下 10 列全面移除重複印出 10 次的「`🎯 公開旗艦`」與「`📡 偵察特徵：`」前綴字眼，並自動濾除軍武名稱括號內冗長英文補充（如 `陣風 F4 (Rafale F4)` ➔ **`陣風 F4`**、`F-22A 猛禽 (Block 35)` ➔ **`F-22A 猛禽`**），滑鼠移上仍提供完整原廠型號 Tooltip。
+- **修復 Service Worker 快取更新機制 (`sw.js`)**：
+  - 移除 `CORE_ASSETS` 中已廢棄之 `./js/sound.js`（避免 404 阻斷新 Service Worker 安裝），補齊 `./js/ladder-data.js`，並改用 `Promise.allSettled` 與 `fetch(req, { cache: 'no-cache' })` 確保新版發布後瀏覽器即時生效。
+- **快取升級**：更新 Service Worker 快取版本與 `index.html` 靜態資源版本參數至 `topclash-v5.0.0`。
+
+---
+
 ### [v4.9.9] - 2026-10-31
 #### 天梯名冊方案 A 雙欄解耦獨立化（旗艦裝備艙與戰術流派膠囊獨立展現）(Ladder Roster Dual-Column Decoupling & Archetype Capsule)
 - **解耦旗艦縮圖與衛星偵察流派，消解堆疊擁擠感**：

@@ -9445,32 +9445,131 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 
 /* =====================================================
-   🏆 天梯競技右欄名冊「方案 A：圖文整合精銳版」防截斷重構 (v4.9.8)
-   1. 移除冗餘 [- 持平] 趨勢欄 (.r-trend) 與戰術保密標籤
-   2. 移除後方 4 格重複 [?][?][?][?] 問號陣容欄 (.r-deck-preview)
-   3. 將旗艦軍武縮圖 ($費用) 直接嵌入公開旗艦情報卡 (.r-recon-intel)
-   4. 確保指揮官全名、旗艦全名與最右側「⚔️ 挑戰」按鈕 100% 完整顯示不截斷
+   🏆 天梯競技右欄名冊「方案 A：CSS Grid 嚴格等距網格 ＋ 頂部表頭列 ＋ 雙欄去前綴精簡版」 (v5.0.0)
+   1. 採用 CSS Grid 固定 7 欄軌道 + 統一 12px 欄距，徹底消除欄位間距不一與浮動空白
+   2. 新增頂部戰情表頭列 (.roster-header-row)，移除每列重複 10 次之「公開旗艦」「偵察特徵」前綴
+   3. 旗艦裝備艙 (.r-flagship-col) 與偵察流派艙 (.r-archetype-col) 雙欄等距對齊，濾除冗長英文括號零截斷
    ===================================================== */
-.roster-row {
-  gap: 8px !important;
-  padding: 5px 12px !important;
+
+.roster-header-row {
+  display: none;
 }
 
-.roster-row .r-rank {
-  width: 32px !important;
-  flex: 0 0 32px !important;
-}
+@media (min-width: 769px) {
+  .ladder-dual-grid {
+    grid-template-columns: clamp(410px, 32vw, 455px) minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
 
-.roster-row .r-streak {
-  width: 76px !important;
-  flex: 0 0 76px !important;
-}
+  .roster-header-row {
+    display: grid !important;
+    grid-template-columns: 28px 74px minmax(0, 1.35fr) minmax(0, 0.94fr) minmax(0, 0.92fr) 64px 82px !important;
+    column-gap: 10px !important;
+    align-items: center !important;
+    padding: 0 10px !important;
+    height: 28px !important;
+    flex: 0 0 28px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    background: rgba(15, 23, 42, 0.72) !important;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.24) !important;
+  }
 
-.roster-row .r-commander {
-  flex: 1 1 155px !important;
-  min-width: 125px !important;
-  max-width: 205px !important;
-  overflow: hidden !important;
+  [data-theme="light"] .roster-header-row {
+    background: #f1f5f9 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  .roster-header-row .rh-col {
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.02em !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    min-width: 0 !important;
+  }
+
+  [data-theme="light"] .roster-header-row .rh-col {
+    color: #475569 !important;
+  }
+
+  .roster-header-row .rh-streak,
+  .roster-header-row .rh-archetype,
+  .roster-header-row .rh-action {
+    justify-content: center !important;
+  }
+
+  .roster-header-row .rh-rp {
+    justify-content: flex-end !important;
+  }
+
+  .roster-header-row .rh-flagship {
+    color: #fbbf24 !important;
+  }
+
+  [data-theme="light"] .roster-header-row .rh-flagship {
+    color: #b45309 !important;
+  }
+
+  .roster-header-row .rh-archetype {
+    color: #38bdf8 !important;
+  }
+
+  [data-theme="light"] .roster-header-row .rh-archetype {
+    color: #0284c7 !important;
+  }
+
+  .roster-row {
+    display: grid !important;
+    grid-template-columns: 28px 74px minmax(0, 1.35fr) minmax(0, 0.94fr) minmax(0, 0.92fr) 64px 82px !important;
+    column-gap: 10px !important;
+    align-items: center !important;
+    padding: 3px 10px !important;
+    min-height: 38px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .roster-row > .r-rank,
+  .roster-row > .r-streak,
+  .roster-row > .r-commander,
+  .roster-row > .r-flagship-col,
+  .roster-row > .r-archetype-col,
+  .roster-row > .r-rp,
+  .roster-row > .r-action {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .roster-row .r-streak-tag {
+    width: 100% !important;
+    text-align: center !important;
+    display: block !important;
+    box-sizing: border-box !important;
+    padding: 2px 2px !important;
+    font-size: 9.5px !important;
+  }
+
+  .roster-row .r-my-tag {
+    font-size: 9.5px !important;
+    padding: 0 4px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .roster-row .r-commander {
+    overflow: hidden !important;
+    border-right: 1px solid rgba(148, 163, 184, 0.16) !important;
+    padding-right: 6px !important;
+  }
+
+  [data-theme="light"] .roster-row .r-commander {
+    border-right-color: rgba(148, 163, 184, 0.28) !important;
+  }
 }
 
 .roster-row .r-name-block {
@@ -9488,11 +9587,10 @@ body:has(.battle:not([hidden])) .command-deck,
   text-overflow: ellipsis !important;
 }
 
-/* 方案 A 升級：獨立旗艦裝備艙 (.r-flagship-col) 與戰術流派膠囊 (.r-archetype-col) */
 .recon-flagship-thumb {
-  width: 34px !important;
-  height: 34px !important;
-  flex: 0 0 34px !important;
+  width: 30px !important;
+  height: 30px !important;
+  flex: 0 0 30px !important;
   border-radius: 5px !important;
   position: relative !important;
   overflow: hidden !important;
@@ -9521,9 +9619,9 @@ body:has(.battle:not([hidden])) .command-deck,
   right: 1px !important;
   bottom: 1px !important;
   font-family: var(--mono) !important;
-  font-size: 9px !important;
+  font-size: 8.5px !important;
   font-weight: 900 !important;
-  padding: 0 3px !important;
+  padding: 0 2.5px !important;
   border-radius: 3px !important;
   background: rgba(2, 6, 23, 0.88) !important;
   color: #fbbf24 !important;
@@ -9535,40 +9633,35 @@ body:has(.battle:not([hidden])) .command-deck,
   .r-flagship-col {
     display: flex !important;
     align-items: center !important;
-    gap: 8px !important;
-    flex: 1.15 1 160px !important;
-    min-width: 130px !important;
-    max-width: 220px !important;
-    padding: 3px 8px 3px 5px !important;
+    gap: 7px !important;
+    height: 34px !important;
+    padding: 2px 8px 2px 4px !important;
     border-radius: 6px !important;
     background: rgba(15, 23, 42, 0.42) !important;
-    border: 1px solid rgba(56, 189, 248, 0.18) !important;
+    border: 1px solid rgba(56, 189, 248, 0.22) !important;
     box-sizing: border-box !important;
     overflow: hidden !important;
   }
 
   [data-theme="light"] .r-flagship-col {
     background: #f8fafc !important;
-    border-color: rgba(2, 132, 199, 0.18) !important;
+    border-color: rgba(2, 132, 199, 0.22) !important;
   }
 
   .roster-row.is-me .r-flagship-col {
-    background: rgba(56, 189, 248, 0.12) !important;
-    border-color: rgba(56, 189, 248, 0.35) !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
   }
 
   [data-theme="light"] .roster-row.is-me .r-flagship-col {
     background: #e0f2fe !important;
-    border-color: rgba(2, 132, 199, 0.35) !important;
+    border-color: rgba(2, 132, 199, 0.4) !important;
   }
 
   .r-archetype-col {
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-start !important;
-    flex: 1 1 145px !important;
-    min-width: 120px !important;
-    max-width: 180px !important;
+    justify-content: center !important;
     overflow: hidden !important;
   }
 }
@@ -9577,9 +9670,7 @@ body:has(.battle:not([hidden])) .command-deck,
   flex: 1 1 0 !important;
   min-width: 0 !important;
   display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  gap: 2px !important;
+  align-items: center !important;
   overflow: hidden !important;
 }
 
@@ -9593,35 +9684,16 @@ body:has(.battle:not([hidden])) .command-deck,
   line-height: 1.2 !important;
 }
 
-.flagship-role-label {
-  font-size: 9.5px !important;
-  font-weight: 700 !important;
-  color: #fbbf24 !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 3px !important;
-  line-height: 1 !important;
-}
-
-[data-theme="light"] .flagship-role-label {
-  color: #b45309 !important;
-}
-
-.flagship-role-label.mine {
-  color: var(--cyan) !important;
-}
-
-[data-theme="light"] .flagship-role-label.mine {
-  color: #0369a1 !important;
-}
-
-/* 戰術流派獨立彩色膠囊 (.archetype-pill) */
+/* 戰術流派獨立等寬膠囊 (.archetype-pill) */
 .archetype-pill {
   display: inline-flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 5px !important;
-  padding: 3px 9px !important;
-  border-radius: 999px !important;
+  width: 100% !important;
+  height: 30px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
   background: rgba(56, 189, 248, 0.08) !important;
   border: 1px solid rgba(56, 189, 248, 0.28) !important;
   color: #38bdf8 !important;
@@ -9630,21 +9702,19 @@ body:has(.battle:not([hidden])) .command-deck,
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 100% !important;
+  box-sizing: border-box !important;
   transition: all 0.2s ease !important;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
 }
 
 [data-theme="light"] .archetype-pill {
   background: #f0f9ff !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+  border-color: rgba(2, 132, 199, 0.28) !important;
   color: #0284c7 !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
 }
 
 .roster-row.is-me .archetype-pill {
-  background: rgba(245, 158, 11, 0.12) !important;
-  border-color: rgba(245, 158, 11, 0.35) !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
   color: #fbbf24 !important;
 }
 
@@ -9667,15 +9737,11 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 
 .roster-row .r-rp {
-  width: 74px !important;
-  flex: 0 0 74px !important;
   text-align: right !important;
   white-space: nowrap !important;
 }
 
 .roster-row .r-action {
-  width: 96px !important;
-  flex: 0 0 96px !important;
   display: flex !important;
   justify-content: flex-end !important;
   align-items: center !important;
@@ -9683,17 +9749,26 @@ body:has(.battle:not([hidden])) .command-deck,
 
 .roster-row .btn-ladder-engage,
 .roster-row .r-action-pill {
+  width: 100% !important;
+  justify-content: center !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
 }
 
 @media (max-width: 768px) {
+  .roster-header-row,
   .r-flagship-col,
   .r-archetype-col,
   .r-recon-intel {
     display: none !important;
   }
   .roster-row {
+    display: flex !important;
     gap: 5px !important;
     padding: 6px 8px !important;
   }

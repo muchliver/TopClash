@@ -2518,7 +2518,18 @@ function renderLadderRosterTable() {
     list = (LadderEngine.getRosterTop10 ? LadderEngine.getRosterTop10() : LadderEngine.getRosterTop30().slice(0, 10));
   }
 
-  tableBox.innerHTML = list.map((u, idx) => {
+  const headerRowHtml = `
+    <div class="roster-header-row">
+      <div class="rh-col rh-rank">名次</div>
+      <div class="rh-col rh-streak">駐榜狀態</div>
+      <div class="rh-col rh-commander">戰區指揮官</div>
+      <div class="rh-col rh-flagship">🎯 公開主力旗艦</div>
+      <div class="rh-col rh-archetype">📡 偵察戰術流派</div>
+      <div class="rh-col rh-rp">戰略勝點</div>
+      <div class="rh-col rh-action">作戰行動</div>
+    </div>`;
+
+  tableBox.innerHTML = headerRowHtml + list.map((u, idx) => {
     const isMe = u.id === player.id;
     const rankNo = u.rank || (idx + 1);
     const topClass = rankNo === 1 ? 'top-1' : rankNo === 2 ? 'top-2' : rankNo === 3 ? 'top-3' : '';
@@ -2529,14 +2540,6 @@ function renderLadderRosterTable() {
     const canEngage = isLive && (rankNo < player.rank) && (rankNo >= player.rank - 2);
     const isOverRank = isLive && (rankNo < player.rank - 2); // 跨級鎖定
     const isBeaten = isLive && (rankNo > player.rank); // 已超越名次
-
-    // 排名趨勢
-    let trendHtml = '<span class="r-trend flat">− 持平</span>';
-    if (isLive && u.yesterdayRank) {
-      const diff = u.yesterdayRank - rankNo;
-      if (diff > 0) trendHtml = `<span class="r-trend up">▲ +${diff}</span>`;
-      else if (diff < 0) trendHtml = `<span class="r-trend down">▼ ${diff}</span>`;
-    }
 
     // 連續維持該名次天數徽章
     let streakBadgeHtml = '';
@@ -2550,22 +2553,8 @@ function renderLadderRosterTable() {
       streakBadgeHtml = `<span class="r-streak-tag new">🔥 今日新晉</span>`;
     }
 
-    // 防守陣容預覽 (非我方對手僅公開 Slot 0 旗艦機，後 4 槽全部密電遮蔽；我方席位完整顯示自身防禦陣容)
+    // 防守陣容預覽
     const userDeck = u.deck || u.defenseDeck || (isMe ? (player.defenseDeck || state.deck) : []);
-    const deckChipsHtml = (userDeck || []).map((id, slotIdx) => {
-      const unit = UNIT_MAP[id];
-      const isMasked = !isMe && slotIdx >= 1;
-      if (isMasked) {
-        return `<div class="r-deck-chip masked" title="受戰術電戰迷霧遮蔽：未知武器裝備">
-          <span class="chip-mask-q">?</span>
-        </div>`;
-      }
-      if (!unit) return '<div class="r-deck-chip"></div>';
-      return `<div class="r-deck-chip" title="${esc(unit.name)} ($${unit.cost})">
-        <img src="${unit.img || `assets/units/${unit.id}.jpg`}" alt="${esc(unit.name)}" onerror="this.style.display='none'"/>
-        <span class="chip-cost">$${unit.cost}</span>
-      </div>`;
-    }).join('');
 
     // 右側動作狀態欄
     let actionColHtml = '';
@@ -2580,36 +2569,53 @@ function renderLadderRosterTable() {
       actionColHtml = `<span class="r-action-pill locked" title="階梯限制：僅可挑戰前方 2 名內之目標">🔒 跨級鎖定</span>`;
     } else if (isBeaten) {
       actionColHtml = `<span class="r-action-pill beaten">✓ 已超越</span>`;
+    } else {
+      actionColHtml = `<span class="r-action-pill locked">📜 榮譽封存</span>`;
     }
 
-    // 對手公開旗艦與部隊特徵偵察情報 (方案 A：圖文整合精銳版)
+    // 方案 A：CSS Grid 嚴格等距網格 ＋ 頂部表頭列 ＋ 雙欄去前綴與精簡括號
     const flagshipUnit = UNIT_MAP[(userDeck || [])[0]];
+    const rawFlagshipName = flagshipUnit ? flagshipUnit.name : '未知旗艦';
+    const cleanFlagshipName = rawFlagshipName
+      .replace(/\s*[\(（][^\)）]*[\)）]/g, '')
+      .replace(/\s+Block\s+\d+/gi, '')
+      .replace(/\s+NG$/i, '')
+      .replace(/\s+現代化改|\s+升級型/g, '')
+      .trim();
+
     const rowArch = typeof analyzeDeckArchetype === 'function'
       ? analyzeDeckArchetype(userDeck || [])
       : { icon: '🎖️', name: '均衡聯合作戰流' };
+
     const flagshipThumbHtml = flagshipUnit
-      ? `<div class="recon-flagship-thumb" title="${esc(flagshipUnit.name)} ($${flagshipUnit.cost})">
-           <img src="${flagshipUnit.img || `assets/units/${flagshipUnit.id}.jpg`}" alt="${esc(flagshipUnit.name)}" onerror="this.style.display='none'"/>
+      ? `<div class="recon-flagship-thumb" title="${esc(rawFlagshipName)} ($${flagshipUnit.cost})">
+           <img src="${flagshipUnit.img || `assets/units/${flagshipUnit.id}.jpg`}" alt="${esc(rawFlagshipName)}" onerror="this.style.display='none'"/>
            <span class="chip-cost">$${flagshipUnit.cost}</span>
          </div>`
       : `<div class="recon-flagship-thumb"><span class="chip-mask-q">?</span></div>`;
-    // 方案 A 升級：拆分為獨立的「旗艦裝備艙 (.r-flagship-col)」與「戰術流派膠囊 (.r-archetype-col)」
+
     const flagshipColHtml = `
-      <div class="r-flagship-col" title="${isMe ? '我方主力旗艦' : '對手公開旗艦'}：${flagshipUnit ? esc(flagshipUnit.name) : '未知'} ($${flagshipUnit ? flagshipUnit.cost : '?'})">
+      <div class="r-flagship-col" title="${isMe ? '我方主力旗艦' : '公開主力旗艦'}：${esc(rawFlagshipName)} ($${flagshipUnit ? flagshipUnit.cost : '?'})">
         ${flagshipThumbHtml}
         <div class="flagship-info-box">
-          <span class="flagship-name" title="${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}">${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}</span>
-          <span class="flagship-role-label ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 核心旗艦'}</span>
+          <span class="flagship-name">${esc(cleanFlagshipName)}</span>
         </div>
       </div>`;
 
     const archetypeColHtml = `
-      <div class="r-archetype-col" title="偵察推演流派：${esc(rowArch.name)}">
+      <div class="r-archetype-col" title="偵察戰術流派：${esc(rowArch.name)}">
         <span class="archetype-pill">
           <span class="arch-icon">${rowArch.icon}</span>
           <span class="arch-name">${esc(rowArch.name)}</span>
         </span>
       </div>`;
+
+    const cleanTitle = (u.title || '戰區指揮官')
+      .replace('戰備全域巡航防線', '全域巡航防線')
+      .replace('峽灣隱匿快速防衛', '峽灣隱匿防衛');
+    const subLineHtml = isMe
+      ? `<b style="color:${tier.color}">${tier.name}</b> · <span style="color:var(--cyan);font-weight:700" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>`
+      : `<b style="color:${tier.color}">${tier.name}</b> · <span>${esc(cleanTitle)}</span>`;
 
     return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass} ${canEngage ? 'engageable' : ''}">
       <div class="r-rank">${rankNo <= 3 ? ['🥇','🥈','🥉'][rankNo - 1] : '#' + rankNo}</div>
@@ -2617,8 +2623,8 @@ function renderLadderRosterTable() {
       <div class="r-commander">
         <span class="r-flag">${u.flag}</span>
         <div class="r-name-block">
-          <span class="r-name" title="${esc(u.name)}">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b>${isMe ? ` · <span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : ''}</span>
+          <span class="r-name" title="${esc(u.name)}">${esc(u.name)} ${isMe ? `<span class="r-my-tag" title="指揮官呼號 ${esc(u.uid || player.uid || 'CMD-7392')}">我方</span>` : ''}</span>
+          <span class="r-title-sub">${subLineHtml}</span>
         </div>
       </div>
       ${flagshipColHtml}
