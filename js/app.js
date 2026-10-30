@@ -6198,14 +6198,14 @@ function startListeningPublicRooms() {
         <div style="grid-column:1/-1;text-align:center;padding:30px;background:rgba(255,255,255,.02);border:1px dashed var(--line);border-radius:8px">
           <div style="font-size:24px;margin-bottom:6px">🌐</div>
           <div style="font-weight:700;color:var(--text);font-size:14px">目前沒有等待中的公開房間</div>
-          <div class="muted" style="font-size:12px;margin-top:4px">點擊上方【⚡ 一鍵快速匹配出擊】立即發起湊桌，60 秒 (1分鐘) 必開賽！</div>
+          <div class="muted" style="font-size:12px;margin-top:4px">點擊上方【⚡ 一鍵快速匹配出擊】立即發起湊桌，180 秒 (3 分鐘) 必開賽！</div>
         </div>
       `;
       return;
     }
 
     listEl.innerHTML = rooms.map(r => {
-      const remainingSec = r.countdownEnd ? Math.max(0, Math.floor((r.countdownEnd - Date.now()) / 1000)) : 60;
+      const remainingSec = r.countdownEnd ? Math.max(0, Math.floor((r.countdownEnd - Date.now()) / 1000)) : 180;
       return `<div class="room-live-card" data-code="${esc(r.code)}">
         <div class="r-top">
           <div class="r-name">${esc(r.name)}</div>
@@ -7075,7 +7075,7 @@ $('#btnQuickMatchTourney')?.addEventListener('click', async () => {
     toast(`⚡ 正在搜尋雲端最快開賽之 ${publicSelectedSize} 強公開房間...`);
     const res = await FirebaseTourneyEngine.quickMatch(prof, publicSelectedSize, publicSelectedFormat);
     if (res.isNew) {
-      toast(`👑 已為你發起 ${publicSelectedSize} 強公開湊桌房【${res.roomCode}】！60 秒自動倒數開賽！`);
+      toast(`👑 已為你發起 ${publicSelectedSize} 強公開湊桌房【${res.roomCode}】！180 秒自動倒數開賽！`);
     } else {
       toast(`🟢 已快速滑入公開房間【${res.roomCode}】！等待開賽！`);
     }
@@ -7096,7 +7096,7 @@ $('#btnCreatePublicRoom')?.addEventListener('click', async () => {
       isPublic: true,
       playerProfile: prof
     });
-    toast(`👑 成功建立公開房間【${res.roomCode}】！已發布至大廳清單，啟動 60 秒倒數！`);
+    toast(`👑 成功建立公開房間【${res.roomCode}】！已發布至大廳清單，啟動 180 秒倒數！`);
     renderTournamentView();
   } catch(err) {
     toast(`⚠️ 公開建房失敗：${err.message}`);

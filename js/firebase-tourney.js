@@ -4,7 +4,7 @@
    支援：
    1. 👤 單人世界盃闖關 (純本機零等待)
    2. 👥 私人好友開房 (6位軍規碼 / 邀請連結 / 未滿 AI 一鍵補位)
-   3. 🌐 公開大廳隨機匹配 (即時房間清單 / 快速入桌 / 60s (1分鐘) 熔斷開賽)
+   3. 🌐 公開大廳隨機匹配 (即時房間清單 / 快速入桌 / 180s (3分鐘) 熔斷開賽)
    4. 🛡️ 雙階段盲提防作弊 (Two-Phase Blind Commit)
    5. ⚡ 確定性推演同步 (Deterministic Engine Sync & Live Spectator)
    6. 🤖 斷線自動判定與 AI 託管 (onDisconnect Presence & AI Takeover)
@@ -228,7 +228,7 @@ const FirebaseTourneyEngine = (function() {
       hostFlag: playerProfile.flag || '🇹🇼',
       hostOnline: true,
       createdAt: now,
-      countdownEnd: isPublic ? (now + 60000) : null, // 公開房 60 秒 (1分鐘) 自動熔斷湊桌
+      countdownEnd: isPublic ? (now + 180000) : null, // 公開房 180 秒 (3分鐘) 自動熔斷湊桌
       currentRound: 1,
       totalRounds: Math.log2(size),
       participants,
