@@ -6,6 +6,17 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.3.1] - 2026-10-30
+#### 底部作戰指揮台精確幾何自適應排版修復 (Command Deck Geometry & Anti-Overlap Hotfix)
+- **徹底消除左右重疊與遮擋**：
+  - 改用 `display: flex; justify-content: space-between` 三段式堅固邊界架構，左欄、中欄、右欄嚴格隔離。
+  - 左欄預算儀表緊湊化（82px），徹底消除中欄向左撞擊「15/15」的視覺重疊。
+  - 右欄開戰按鈕黃金寬度精修至 215px~245px，保留充足標題空間（字樣 100% 完整露出且不截斷）同時絕不向左壓迫遮擋「編制/代碼」工具鈕。
+  - 中欄三大卡片艙（教條、指示燈、工具）採用 `flex: 1 1 auto` 幾何彈性縮放，內距與字體精準均衡，並新增 `< 1320px` 響應式優雅折疊規則。
+- **快取版本升級**：更新 Service Worker 快取至 `topclash-v4.3.1`。
+
+---
+
 ### [v4.3.0] - 2026-10-30
 #### 戰術指揮台大氣重構與頂部雙排導航全景升級 (Command Deck Grand Layout & Dual Header Elevation)
 - **底部指揮台左側預算儀表精簡**：

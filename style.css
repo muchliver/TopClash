@@ -7192,184 +7192,216 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 
 /* =====================================================
-   🎯 底欄常駐指令台自適應大氣排版 (Command Deck Grand Layout v4.3.0)
+   🎯 底欄常駐指令台精確幾何自適應排版 (Command Deck Balanced Layout v4.3.1)
+   完美杜絕左右重疊與遮擋，兼顧大氣飽滿與全解析度自適應
    ===================================================== */
+.command-deck {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 0 14px !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+/* 1. 左欄：A/B 切換 + 精簡作戰預算儀表 (寬度緊湊固定，絕不被擠壓) */
 .deck-left {
   display: flex !important;
   align-items: center !important;
-  gap: 12px !important;
+  gap: 8px !important;
   flex: none !important;
+  width: auto !important;
+}
+.deck-ab-toggle {
+  display: flex !important;
+  gap: 2px !important;
+  padding: 2px !important;
+  flex: none !important;
+}
+.ab-btn {
+  padding: 6px 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
 }
 .slots-pill, #slotsPill,
 .budget-eff-tag, #budgetEff {
   display: none !important;
 }
 .budget-badge {
-  width: 95px !important;
-  min-width: 95px !important;
+  width: 82px !important;
+  min-width: 82px !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
+  flex: none !important;
+}
+.budget-top-row {
+  margin-bottom: 1px !important;
 }
 .budget-label {
   font-family: var(--head) !important;
-  font-size: 11.5px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  letter-spacing: .08em !important;
+  letter-spacing: .06em !important;
   color: var(--muted) !important;
-  line-height: 1.1 !important;
-  margin-bottom: 2px !important;
+  line-height: 1 !important;
 }
 .budget-digits {
   font-family: var(--head) !important;
-  font-size: 26px !important;
+  font-size: 22px !important;
   font-weight: 800 !important;
   line-height: 1 !important;
+  white-space: nowrap !important;
 }
 .budget-digits b {
   color: var(--cyan) !important;
 }
 .budget-mini-bar {
-  margin-top: 4px !important;
-  height: 4px !important;
+  margin-top: 3px !important;
+  height: 3.5px !important;
 }
 
-/* 中欄：三大卡片按鈕群大氣飽滿展示 */
+/* 2. 中欄：三大卡片艙 (大氣飽滿 40px 高度，flex-shrink 自動彈性收放，絕不向外衝撞溢出) */
 .deck-mid {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 14px !important;
-  flex: 1 !important;
+  gap: 8px !important;
+  flex: 1 1 auto !important;
   min-width: 0 !important;
+  overflow: visible !important;
 }
 .deck-label-split {
   display: none !important;
 }
 
-/* 1. 戰術教條卡片組 */
+/* (A) 戰術教條卡片組 */
 .doc-group {
   display: flex !important;
   align-items: center !important;
-  flex: none !important;
+  flex: 0 1 auto !important;
 }
 .doc-toggles {
   display: inline-flex !important;
   align-items: center !important;
-  height: 44px !important;
-  padding: 3px 6px !important;
-  gap: 5px !important;
-  border-radius: 9px !important;
+  height: 40px !important;
+  padding: 2px 4px !important;
+  gap: 3px !important;
+  border-radius: 8px !important;
   box-sizing: border-box !important;
 }
 .doc-btn {
-  height: 36px !important;
-  padding: 0 12px !important;
-  font-size: 13.5px !important;
+  height: 34px !important;
+  padding: 0 8px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
-  border-radius: 7px !important;
+  border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
   box-sizing: border-box !important;
 }
 
-/* 2. 四大聯合作戰體系與電戰指示燈艙 */
+/* (B) 四大聯合作戰體系與電戰指示燈艙 */
 .deck-synergy-bar {
   display: inline-flex !important;
   align-items: center !important;
-  flex: none !important;
+  flex: 0 1 auto !important;
   max-width: none !important;
   overflow: visible !important;
 }
 .indicators-dock-wrap {
   display: inline-flex !important;
   align-items: center !important;
-  height: 44px !important;
-  padding: 3px 8px !important;
-  gap: 5px !important;
+  height: 40px !important;
+  padding: 2px 5px !important;
+  gap: 3px !important;
   max-width: none !important;
-  border-radius: 9px !important;
+  border-radius: 8px !important;
   box-sizing: border-box !important;
   flex-shrink: 0 !important;
 }
 .syn-indicator {
   display: inline-flex !important;
   align-items: center !important;
-  height: 34px !important;
-  padding: 0 10px !important;
-  font-size: 12.5px !important;
+  height: 32px !important;
+  padding: 0 7px !important;
+  font-size: 11.5px !important;
   font-weight: 700 !important;
-  border-radius: 6px !important;
-  gap: 5px !important;
+  border-radius: 5px !important;
+  gap: 3px !important;
+  white-space: nowrap !important;
   box-sizing: border-box !important;
 }
 .ind-dot {
-  width: 6.5px !important;
-  height: 6.5px !important;
+  width: 5.5px !important;
+  height: 5.5px !important;
 }
 
-/* 3. 編制整備工具卡片組 */
+/* (C) 編制整備工具卡片組 */
 .deck-tools {
   display: inline-flex !important;
   align-items: center !important;
   padding-left: 0 !important;
   border-left: none !important;
-  flex: none !important;
+  flex: 0 1 auto !important;
 }
 .tools-btn-group {
   display: inline-flex !important;
   align-items: center !important;
-  height: 44px !important;
-  padding: 3px 6px !important;
-  gap: 5px !important;
-  border-radius: 9px !important;
+  height: 40px !important;
+  padding: 2px 4px !important;
+  gap: 3px !important;
+  border-radius: 8px !important;
   box-sizing: border-box !important;
 }
 .tool-btn {
-  height: 36px !important;
-  padding: 0 12px !important;
-  font-size: 13.5px !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
-  border-radius: 7px !important;
+  border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
   box-sizing: border-box !important;
 }
 .tool-btn-icon {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 .tool-btn kbd {
   display: inline-block !important;
-  font-size: 10px !important;
-  padding: 1px 5px !important;
-  border-radius: 4px !important;
+  font-size: 9.5px !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
 }
 
-/* 右側：開始戰鬥大按鈕 100% 零截斷大氣展開 */
+/* 3. 右欄：開始戰鬥大按鈕 (寬度適中堅固，絕不截斷，絕不遮擋中欄工具) */
 .deck-right {
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
   flex: none !important;
   width: auto !important;
-  min-width: 0 !important;
 }
 .mega-launch-btn {
-  min-width: 270px !important;
+  min-width: 215px !important;
   width: auto !important;
-  max-width: 330px !important;
-  height: 52px !important;
-  padding: 0 16px !important;
-  border-radius: 12px !important;
-  gap: 12px !important;
+  max-width: 245px !important;
+  height: 48px !important;
+  padding: 0 12px !important;
+  border-radius: 10px !important;
+  gap: 8px !important;
   box-sizing: border-box !important;
+  flex: none !important;
 }
 .mega-launch-btn .launch-icon {
-  width: 34px !important;
-  height: 34px !important;
-  font-size: 18px !important;
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 16px !important;
   flex: none !important;
 }
 .mega-launch-btn .launch-texts {
@@ -7379,32 +7411,52 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   justify-content: center !important;
   flex: 1 1 auto !important;
   min-width: 0 !important;
-  overflow: visible !important;
-  gap: 2px !important;
+  overflow: hidden !important;
+  gap: 1px !important;
 }
 .mega-launch-btn .launch-title {
   font-family: var(--head) !important;
-  font-size: 16px !important;
+  font-size: 14.5px !important;
   font-weight: 800 !important;
-  letter-spacing: .06em !important;
-  line-height: 1.2 !important;
+  letter-spacing: .04em !important;
+  line-height: 1.15 !important;
   white-space: nowrap !important;
   overflow: visible !important;
-  text-overflow: clip !important;
 }
 .mega-launch-btn .launch-sub {
   font-family: var(--mono) !important;
-  font-size: 11px !important;
-  letter-spacing: .03em !important;
+  font-size: 10px !important;
+  letter-spacing: .02em !important;
   line-height: 1.1 !important;
   opacity: .9 !important;
   white-space: nowrap !important;
   overflow: visible !important;
-  text-overflow: clip !important;
 }
 .mega-launch-btn .launch-arrow {
-  width: 28px !important;
-  height: 28px !important;
-  font-size: 15px !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 13px !important;
   flex: none !important;
+}
+
+/* 4. 響應式微調：螢幕寬度較緊時 (< 1300px) 自動優雅收納 */
+@media (max-width: 1320px) {
+  .tool-btn kbd {
+    display: none !important;
+  }
+  .doc-btn {
+    padding: 0 6px !important;
+    font-size: 12px !important;
+  }
+  .syn-indicator {
+    padding: 0 5px !important;
+    font-size: 11px !important;
+  }
+  .tool-btn {
+    padding: 0 7px !important;
+    font-size: 12px !important;
+  }
+  .deck-mid {
+    gap: 6px !important;
+  }
 }
