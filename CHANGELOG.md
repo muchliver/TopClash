@@ -6,6 +6,22 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.9.0] - 2026-10-30
+#### A+C 雲端指揮官帳號與跨電腦免密書籤同步系統 (Commander Cloud Sync & Passwordless Bookmark Auth)
+- **A 方案：自選帳號 + 密碼（雙重英數規範保障）**：
+  - 指揮官代號限定為半形英數字且長度 $\ge$ 6 碼（不分大小寫），戰術密碼限定為半形英數字且長度 $\ge$ 4 碼。
+  - 客戶端採用 Web Crypto API 進行 SHA-256 密碼安全雜湊，絕不在雲端儲存任何明文密碼。
+  - 即時同步累計場次、獲勝率、當前連勝、天梯 RP 與階級、五槽位自選主力卡組與教條設定。
+- **C 方案：專屬安全 Token 免密書籤連結 (Ctrl+D / LINE Keep)**：
+  - 帳號綁定後系統自動簽發高強度隨機免密 Token，生成專屬登入 URL（`#cmd=xxx&token=yyy`）。
+  - 玩家加入瀏覽器「我的最愛」或傳至 LINE，下次開啟直接 0 秒登入並自動載入雲端戰績。
+- **開機 URL 辨識與戰後背景非同步備份**：
+  - 網頁開機時自動解析 URL Hash 免密憑證，無縫還原戰績。
+  - 對戰結算時自動在背景靜默向 Firebase 雲端節點（`/commanders`）備份最新戰績，跨裝置零延遲。
+- **快取升級**：更新 Service Worker 快取版本至 `topclash-v4.9.0`，並將 `js/cloud-sync.js` 納入離線快取清單。
+
+---
+
 ### [v4.8.9] - 2026-10-30
 #### 賽事設定佈局防折行與參賽席位 8 欄位完美矩陣優化 (Lobby Layout & 8-Column Bracket Roster Optimization)
 - **賽事規模 32 強按鈕防折行優化**：

@@ -1512,6 +1512,21 @@ function renderCommandDeck() {
   }
 }
 
+function updateCloudSyncButtonState() {
+  const btn = $('#btnCloudSync');
+  if (!btn || typeof CloudSync === 'undefined') return;
+  const acc = CloudSync.getAccount();
+  if (acc && acc.id) {
+    btn.className = 'nav-cloud-btn logged';
+    btn.innerHTML = `<span id="cloudIcon">☁️</span> <span id="cloudText">${esc(acc.displayId || acc.id)}</span>`;
+    btn.title = `已連結雲端存檔：${esc(acc.displayId || acc.id)} [點擊開啟管理面板]`;
+  } else {
+    btn.className = 'nav-cloud-btn';
+    btn.innerHTML = `<span id="cloudIcon">☁️</span> <span id="cloudText">雲端存檔</span>`;
+    btn.title = '雲端存檔與跨電腦同步 (A+C 免密書籤)';
+  }
+}
+
 function renderHud() {
   const lState = (typeof LadderEngine !== 'undefined') ? LadderEngine.getState() : null;
   const p = lState ? lState.player : null;
@@ -1541,6 +1556,7 @@ function renderHud() {
       <span class="chip-stat" title="你的當前連勝場數">連勝 <b>${stats.streak}</b></span>
     `;
   }
+  updateCloudSyncButtonState();
 }
 
 function renderAll() {
@@ -4279,6 +4295,9 @@ function finishBattle(res) {
     if (won) { stats.win++; stats.streak++; stats.best = Math.max(stats.best, stats.streak); }
     else if (!draw) stats.streak = 0;
     LS.set('db15_stats', stats);
+    if (typeof CloudSync !== 'undefined') {
+      CloudSync.syncToCloud();
+    }
   }
 
   /* 幽靈天梯積分結算 */
@@ -4618,6 +4637,9 @@ function showBo3SeriesResult(isPlayerWon) {
   if (isPlayerWon) {
     stats.bo3Won = (stats.bo3Won || 0) + 1;
     LS.set('db15_stats', stats);
+    if (typeof CloudSync !== 'undefined') {
+      CloudSync.syncToCloud();
+    }
   }
   currentActiveModal = $('#bo3SeriesModal');
   const scoreText = state.isOnlinePvp
@@ -7406,3 +7428,185 @@ if (!LS.get('db15_seen', 0) && !replayParam && !tourneyParam && !roomParam) show
 
 window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile, buildReplayShareUrl };
 })();
+
+/* ---------- 雲端指揮官身分中心與免密書籤控制器 (A+C) ---------- */
+function openCloudSyncModal() {
+  const modal = $('#cloudSyncModal');
+  if (!modal || typeof CloudSync === 'undefined') return;
+
+  const acc = CloudSync.getAccount();
+  const unloggedView = $('#cloudAuthViewUnlogged');
+  const loggedView = $('#cloudAuthViewLogged');
+
+  if (acc && acc.id) {
+    unloggedView.hidden = true;
+    loggedView.hidden = false;
+    $('#loggedCommanderIdDisplay').textContent = acc.displayId || acc.id;
+    const bUrl = CloudSync.generateBookmarkUrl();
+    $('#inputBookmarkUrlDisplay').value = bUrl;
+    $('#loggedSyncTimeDisplay').textContent = `已與雲端同步 · 綁定代號: ${acc.displayId || acc.id}`;
+  } else {
+    unloggedView.hidden = false;
+    loggedView.hidden = true;
+    $('#tabCloudRegister').click();
+  }
+
+  modal.hidden = false;
+}
+
+function closeCloudSyncModal() {
+  const modal = $('#cloudSyncModal');
+  if (modal) modal.hidden = true;
+}
+
+function setupCloudSyncModal() {
+  $('#btnCloudSync')?.addEventListener('click', openCloudSyncModal);
+  $('#btnCloudCancel')?.addEventListener('click', closeCloudSyncModal);
+  $('#btnCloseCloudModal')?.addEventListener('click', closeCloudSyncModal);
+
+  // 切換註冊/登入分頁
+  $('#tabCloudRegister')?.addEventListener('click', () => {
+    $('#tabCloudRegister').className = 'pill-btn active';
+    $('#tabCloudLogin').className = 'pill-btn';
+    $('#cloudRegisterPane').hidden = false;
+    $('#cloudLoginPane').hidden = true;
+  });
+
+  $('#tabCloudLogin')?.addEventListener('click', () => {
+    $('#tabCloudLogin').className = 'pill-btn active';
+    $('#tabCloudRegister').className = 'pill-btn';
+    $('#cloudRegisterPane').hidden = true;
+    $('#cloudLoginPane').hidden = false;
+  });
+
+  // 註冊綁定
+  $('#btnDoRegister')?.addEventListener('click', async () => {
+    const id = $('#inputRegCommanderId').value.trim();
+    const pwd = $('#inputRegPassword').value.trim();
+    const pwd2 = $('#inputRegPasswordConfirm').value.trim();
+
+    if (!id || !pwd) {
+      toast('⚠️ 請完整填寫指揮官代號與戰術密碼');
+      return;
+    }
+    if (!/^[a-zA-Z0-9]{6,20}$/.test(id)) {
+      toast('⚠️ 指揮官代號必須為半形英數字，且至少 6 碼！');
+      return;
+    }
+    if (!/^[a-zA-Z0-9]{4,30}$/.test(pwd)) {
+      toast('⚠️ 戰術密碼必須為半形英數字，且至少 4 碼！');
+      return;
+    }
+    if (pwd !== pwd2) {
+      toast('⚠️ 兩次輸入的戰術密碼不相符，請重新確認');
+      return;
+    }
+
+    const btn = $('#btnDoRegister');
+    btn.disabled = true;
+    btn.textContent = '⏳ 雲端同步綁定中...';
+
+    try {
+      const res = await CloudSync.register(id, pwd);
+      toast(`🎉 指揮官【${res.account.displayId}】綁定成功！雲端存檔已建立！`);
+      updateCloudSyncButtonState();
+      openCloudSyncModal(); // 切換到已登入視圖展示專屬連結
+    } catch (e) {
+      toast(`❌ 綁定失敗：${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '☁️ 立即綁定雲端存檔 (建立帳號)';
+    }
+  });
+
+  // 帳密登入 (方案 A)
+  $('#btnDoLogin')?.addEventListener('click', async () => {
+    const id = $('#inputLoginCommanderId').value.trim();
+    const pwd = $('#inputLoginPassword').value.trim();
+
+    if (!id || !pwd) {
+      toast('⚠️ 請輸入指揮官代號與戰術密碼');
+      return;
+    }
+
+    const btn = $('#btnDoLogin');
+    btn.disabled = true;
+    btn.textContent = '⏳ 正在驗證並載入雲端戰績...';
+
+    try {
+      const res = await CloudSync.loginWithPassword(id, pwd);
+      toast(`🎉 登入成功！已從雲端載入指揮官【${res.account.displayId}】的全部戰績與牌組！`);
+      updateCloudSyncButtonState();
+      renderAll();
+      closeCloudSyncModal();
+    } catch (e) {
+      toast(`❌ 登入失敗：${e.message}`);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '🔑 驗證並載入雲端戰績';
+    }
+  });
+
+  // 一鍵複製專屬免密書籤連結 (方案 C)
+  $('#btnCopyBookmarkUrl')?.addEventListener('click', async () => {
+    const input = $('#inputBookmarkUrlDisplay');
+    if (!input || !input.value) return;
+
+    try {
+      await navigator.clipboard.writeText(input.value);
+      toast('📋 專屬免密書籤連結已複製！按 Ctrl+D 加入瀏覽器我的最愛，下次點開直接免密秒登！');
+    } catch (err) {
+      input.select();
+      document.execCommand('copy');
+      toast('📋 已複製專屬連結！');
+    }
+  });
+
+  // 手動同步
+  $('#btnManualSyncCloud')?.addEventListener('click', async () => {
+    const btn = $('#btnManualSyncCloud');
+    btn.disabled = true;
+    btn.textContent = '⏳ 同步中...';
+    const ok = await CloudSync.syncToCloud();
+    btn.disabled = false;
+    btn.textContent = '🔄 立即手動同步';
+    if (ok) {
+      toast('☁️ 本機戰績與配置已成功備份至雲端！');
+    } else {
+      toast('⚠️ 雲端同步失敗，請檢查網路連線');
+    }
+  });
+
+  // 登出解綁
+  $('#btnLogoutCloud')?.addEventListener('click', () => {
+    if (confirm('確定要解除此裝置與雲端指揮官的綁定嗎？本機戰績仍會保留。')) {
+      CloudSync.logout();
+      updateCloudSyncButtonState();
+      toast('👋 已解除雲端綁定');
+      closeCloudSyncModal();
+    }
+  });
+}
+
+// 開機檢查 URL Hash 免密登入 (方案 C 核心)
+async function checkUrlHashCloudLogin() {
+  if (typeof CloudSync === 'undefined') return;
+  const hash = window.location.hash;
+  if (hash && hash.includes('cmd=') && hash.includes('token=')) {
+    try {
+      const params = new URLSearchParams(hash.substring(1));
+      const cmd = params.get('cmd');
+      const token = params.get('token');
+      if (cmd && token) {
+        const res = await CloudSync.loginWithToken(cmd, token);
+        if (res && res.success) {
+          toast(`🎉 歡迎歸隊，指揮官【${res.account.displayId || cmd}】！雲端戰績與牌組已同步！`);
+          updateCloudSyncButtonState();
+          renderAll();
+        }
+      }
+    } catch (e) {
+      console.warn('URL 免密登入解析失敗:', e);
+    }
+  }
+}

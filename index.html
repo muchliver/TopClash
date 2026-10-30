@@ -37,6 +37,9 @@
   </nav>
   <div class="hud-right">
     <div class="hud-stats" id="hudStats"></div>
+    <button class="nav-cloud-btn" id="btnCloudSync" title="雲端存檔與跨電腦同步 (A+C 免密書籤)">
+      <span id="cloudIcon">☁️</span> <span id="cloudText">雲端存檔</span>
+    </button>
     <a href="armory.html" class="nav-armory-btn" id="btnArmory" title="瀏覽 100 款軍武詳細圖鑑全鑑" target="_blank">📖 軍武圖鑑</a>
     <button class="icon-btn" id="btnAudio" aria-label="切換戰場音效" title="開啟/關閉真實戰場音效"><span id="audioIcon">🔊</span></button>
     <button class="icon-btn" id="btnTheme" aria-label="切換深淺色主題" title="切換為深色模式 (夜間指揮所)"><span id="themeIcon">🌙</span></button>
@@ -549,6 +552,104 @@
   </div>
 </div>
 
+<!-- 雲端指揮官中心 Modal (A+C 跨電腦存檔與專屬免密書籤) -->
+<div class="modal" id="cloudSyncModal" hidden>
+  <div class="modal-card cloud-sync-card">
+    <div class="cloud-modal-header" style="margin-bottom:12px">
+      <div class="badge-tag" style="display:inline-block;margin-bottom:6px;font-size:11px;font-family:var(--mono);color:var(--cyan);background:rgba(56,189,248,0.15);padding:2px 8px;border-radius:4px;border:1px solid rgba(56,189,248,0.4);">☁️ 雲端身分與跨裝置存檔</div>
+      <h2 style="font-size:18px;margin:4px 0 6px;">指揮官雲端連動中心 (COMMANDER CLOUD SYNC)</h2>
+      <p class="muted" style="font-size:12px;line-height:1.5;">長久保存場次、勝率、天梯軍階與主力卡組，換電腦只要輸入帳密或開啟專屬免密書籤，一秒同步！</p>
+    </div>
+
+    <!-- 未登入介面 -->
+    <div id="cloudAuthViewUnlogged">
+      <div class="btn-group-pill" style="margin:10px 0 14px;">
+        <button class="pill-btn active" id="tabCloudRegister">✨ 綁定新帳號 (首次備份)</button>
+        <button class="pill-btn" id="tabCloudLogin">🔑 登入既有指揮官</button>
+      </div>
+
+      <!-- 頁面 A-1：註冊綁定表單 -->
+      <div id="cloudRegisterPane">
+        <div class="form-group">
+          <label class="label" style="font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between">
+            <span>指揮官代號 (半形英數字，至少 6 碼)</span>
+            <span class="muted" style="font-size:11px">例如: roger888, topgun01</span>
+          </label>
+          <input id="inputRegCommanderId" class="input" placeholder="輸入半形英數代號 (6~20 碼)" maxlength="20" autocomplete="off" style="font-family:var(--mono)">
+          <div class="muted" style="font-size:11px;margin-top:4px">此代號為唯一帳號識別，不分大小寫</div>
+        </div>
+
+        <div class="form-group" style="margin-top:10px">
+          <label class="label" style="font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between">
+            <span>戰術密碼 (半形英數字，至少 4 碼)</span>
+            <span class="muted" style="font-size:11px">例如: 1234, 8888, pass01</span>
+          </label>
+          <input id="inputRegPassword" type="password" class="input" placeholder="輸入半形英數密碼 (4~30 碼)" maxlength="30" autocomplete="off" style="font-family:var(--mono)">
+        </div>
+
+        <div class="form-group" style="margin-top:10px">
+          <label class="label" style="font-size:12px;margin-bottom:4px;">確認戰術密碼</label>
+          <input id="inputRegPasswordConfirm" type="password" class="input" placeholder="再次輸入戰術密碼" maxlength="30" autocomplete="off" style="font-family:var(--mono)">
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="btn primary lg block" id="btnDoRegister" style="font-weight:900">☁️ 立即綁定雲端存檔 (建立帳號)</button>
+        </div>
+      </div>
+
+      <!-- 頁面 A-2：帳密登入表單 -->
+      <div id="cloudLoginPane" hidden>
+        <div class="form-group">
+          <label class="label" style="font-size:12px;margin-bottom:4px;">指揮官代號 (帳號)</label>
+          <input id="inputLoginCommanderId" class="input" placeholder="輸入註冊時的英數代號" maxlength="20" autocomplete="off" style="font-family:var(--mono)">
+        </div>
+
+        <div class="form-group" style="margin-top:10px">
+          <label class="label" style="font-size:12px;margin-bottom:4px;">戰術密碼 (半形英數字)</label>
+          <input id="inputLoginPassword" type="password" class="input" placeholder="輸入英數密碼" maxlength="30" autocomplete="off" style="font-family:var(--mono)">
+        </div>
+
+        <div style="margin-top:16px">
+          <button class="btn primary lg block" id="btnDoLogin" style="font-weight:900">🔑 驗證並載入雲端戰績</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 已登入管理面板 (方案 C 專屬書籤生成與管理) -->
+    <div id="cloudAuthViewLogged" hidden>
+      <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:11px;color:#34d399;font-weight:700">🟢 雲端已連線同步</div>
+          <div style="font-size:16px;font-weight:900;color:var(--text);font-family:var(--mono);margin-top:2px" id="loggedCommanderIdDisplay">COMMANDER</div>
+          <div class="muted" style="font-size:11.5px;margin-top:2px" id="loggedSyncTimeDisplay">戰績即時背景自動備份中</div>
+        </div>
+        <button class="btn ghost sm" id="btnManualSyncCloud">🔄 立即手動同步</button>
+      </div>
+
+      <div style="background:rgba(56,189,248,0.08);border:1px dashed rgba(56,189,248,0.35);border-radius:8px;padding:12px;margin-bottom:14px">
+        <div style="font-size:12.5px;font-weight:800;color:var(--cyan);display:flex;align-items:center;gap:6px">
+          <span>🔗 專屬免密書籤連結 (方案 C)</span>
+        </div>
+        <div class="muted" style="font-size:11.5px;margin:4px 0 8px;line-height:1.4">
+          將此專屬網址存入瀏覽器<b>「我的最愛 (Ctrl+D)」</b>或傳到 <b>LINE Keep</b>，在任何電腦點開即可<b>免輸入密碼秒登入</b>！
+        </div>
+        <div style="display:flex;gap:8px">
+          <input id="inputBookmarkUrlDisplay" class="input sm" readonly style="font-family:var(--mono);font-size:11px;background:rgba(0,0,0,0.4)">
+          <button class="btn primary sm" id="btnCopyBookmarkUrl" style="white-space:nowrap;font-weight:700">📋 複製專屬連結</button>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <button class="btn ghost sm" id="btnLogoutCloud" style="color:var(--red);border-color:rgba(255,93,110,0.3)">登出此裝置 ✕</button>
+        <button class="btn ghost sm" id="btnCloseCloudModal">關閉視窗</button>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:12px" id="cloudCloseRow">
+      <button class="btn ghost sm" id="btnCloudCancel">關閉</button>
+    </div>
+  </div>
+</div>
 <!-- 指揮官呼號與旗幟自訂 Modal -->
 <div class="modal" id="commanderModal" hidden>
   <div class="modal-card commander-card">

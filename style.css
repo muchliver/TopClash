@@ -8180,3 +8180,43 @@ body:has(.battle:not([hidden])) .command-deck,
 #btnSkip[hidden] {
   display: none !important;
 }
+
+/* ---------- 雲端指揮官同步中心 (A+C) 樣式 ---------- */
+.nav-cloud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: var(--cyan);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.nav-cloud-btn:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+}
+.nav-cloud-btn.logged {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+  color: #34d399;
+}
+.nav-cloud-btn.logged:hover {
+  background: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
+}
+.cloud-sync-card {
+  max-width: 480px;
+  width: 92%;
+  padding: 20px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}

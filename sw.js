@@ -1,4 +1,4 @@
-const CACHE_NAME = 'topclash-v4.8.9';
+const CACHE_NAME = 'topclash-v4.9.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,7 @@ const CORE_ASSETS = [
   './manifest.json',
   './js/data.js',
   './js/engine.js',
+  './js/cloud-sync.js',
   './js/sound.js',
   './js/ladder.js',
   './js/tournament.js',
