@@ -2422,9 +2422,11 @@ function renderLadderView() {
     defBox.innerHTML = defDeck.map(id => {
       const u = UNIT_MAP[id];
       if (!u) return '<div class="mini-unit-chip"></div>';
+      const shortName = u.name.split(' ')[0];
       return `<div class="mini-unit-chip" title="${esc(u.name)} ($${u.cost})">
         <img src="${u.img || `assets/units/${u.id}.jpg`}" alt="${esc(u.name)}" onerror="this.style.display='none'"/>
         <span class="cost-tag">$${u.cost}</span>
+        <span class="unit-mini-name">${esc(shortName)}</span>
       </div>`;
     }).join('');
   }
