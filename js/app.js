@@ -2593,18 +2593,22 @@ function renderLadderRosterTable() {
            <span class="chip-cost">$${flagshipUnit.cost}</span>
          </div>`
       : `<div class="recon-flagship-thumb"><span class="chip-mask-q">?</span></div>`;
-    const reconIntelHtml = `
-      <div class="r-recon-intel">
+    // 方案 A 升級：拆分為獨立的「旗艦裝備艙 (.r-flagship-col)」與「戰術流派膠囊 (.r-archetype-col)」
+    const flagshipColHtml = `
+      <div class="r-flagship-col" title="${isMe ? '我方主力旗艦' : '對手公開旗艦'}：${flagshipUnit ? esc(flagshipUnit.name) : '未知'} ($${flagshipUnit ? flagshipUnit.cost : '?'})">
         ${flagshipThumbHtml}
-        <div class="recon-intel-texts">
-          <div class="recon-intel-main">
-            <span class="recon-intel-tag ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 公開旗艦'}</span>
-            <strong class="recon-intel-unit" title="${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}">${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}</strong>
-          </div>
-          <div class="recon-intel-sub">
-            <span>📡 偵察特徵：<b>${rowArch.icon} ${esc(rowArch.name)}</b></span>
-          </div>
+        <div class="flagship-info-box">
+          <span class="flagship-name" title="${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}">${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}</span>
+          <span class="flagship-role-label ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 核心旗艦'}</span>
         </div>
+      </div>`;
+
+    const archetypeColHtml = `
+      <div class="r-archetype-col" title="偵察推演流派：${esc(rowArch.name)}">
+        <span class="archetype-pill">
+          <span class="arch-icon">${rowArch.icon}</span>
+          <span class="arch-name">${esc(rowArch.name)}</span>
+        </span>
       </div>`;
 
     return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass} ${canEngage ? 'engageable' : ''}">
@@ -2617,7 +2621,8 @@ function renderLadderRosterTable() {
           <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b>${isMe ? ` · <span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : ''}</span>
         </div>
       </div>
-      ${reconIntelHtml}
+      ${flagshipColHtml}
+      ${archetypeColHtml}
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
       <div class="r-action">${actionColHtml}</div>
     </div>`;
