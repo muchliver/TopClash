@@ -6,6 +6,15 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.9.5] - 2026-10-30
+#### 天梯競技右方版面邊界對稱留白與防截斷修復 (Right Boundary Symmetric Margin & Overflow Fix)
+- **修復右欄超出視窗右邊界導致挑戰按鈕被截斷的問題**：
+  - 將 `.ladder-dual-grid` 由 `480px 1fr` 改為 `465px minmax(0, 1fr)`，並為 `.ladder-col-roster`、`.ladder-roster-section`、`.roster-table-box` 與 `.roster-row` 補齊 `min-width: 0` 與 `max-width: 100%`，徹底防止 Grid 右軌被內部元素撐破。
+  - 精調 `.roster-row` 內部各欄（名次、趨勢、守位天數、指揮官、公開旗艦偵察、RP、5 格預覽與右側挑戰按鈕）之彈性寬度與間距，確保右側「⚔️ 挑戰 / 🔒 跨級鎖定」按鈕及外框完整顯示，並與左側一樣保留對稱的 `18px` 邊界留白。
+- **快取升級**：更新 Service Worker 快取版本至 `topclash-v4.9.5`。
+
+---
+
 ### [v4.9.4] - 2026-10-30
 #### 左欄駐防部隊斷層消除與編成評估列 ＋ 右欄公開旗艦與偵察特徵欄 (Defense Fleet HUD & Recon Intel Column)
 - **左欄建議 A：消除上方白底斷層 ＋ 放大 5 張駐防軍武立繪 ＋ 新增「駐防編成評估列」**：
