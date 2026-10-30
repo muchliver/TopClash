@@ -6,6 +6,22 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.9.6] - 2026-10-31
+#### 手機版戰鬥畫面（方案 A：左縮圖＋右雙行精煉戰術卡）與戰後結算雙方比較圖防溢出重構 (Mobile Battle Arena & Settlement Comparison Overhaul)
+- **修復手機版戰鬥畫面 5 張軍武卡壓扁塌陷與空白斷層 Bug**：
+  - 修正 `v4.7.0` 全域 `.bu { flex: 1 1 0; min-height: 0; }` 在手機版 `height: auto` 父容器內導致每張軍武卡塌陷成 `15px` 細扁條的問題；於 `@media (max-width: 768px)` 強制鎖定 `.bu` 為 `flex: 0 0 50px; height: 50px; min-height: 50px;`，並將 `.battle` 與 `.battle-grid` 改為 `min-height: 0; height: auto; grid-template-rows: auto auto;`，徹底消除隊伍面板內部及戰場與底部戰況日誌之間的空白斷層。
+- **採用【方案 A】手機版專屬「左 `40×38px` 清晰立繪縮圖 ＋ 右上下雙行精煉戰術卡」**：
+  - 隊伍標題在手機版自動切換為精簡不截斷之 `🔵 我方部隊 ($X)` 與 `🔴 敵方部隊 ($X)`（桌機版維持原完整標題）。
+  - 卡片左側配置 `40×38px` 軍武縮圖與微縮兵種標；右側自動隱藏手機單欄塞不下的第 2、3 行長文，濃縮為上下雙行（第 1 行：國旗＋軍武名稱＋造價；第 2 行：`⚔️攻擊 🛡️匿蹤 📡電戰`＋精簡 `HP: X`），底部搭配 `4px` 全寬動態血條與不遮擋的 `💥 擊毀` 標籤。
+- **戰鬥期間手機版自動收折頂部非必要導航列**：
+  - 進入戰鬥時自動為 `body` 加上 `.in-battle` 狀態，於手機版隱藏頂部「模式切換列」與「雲端/圖鑑工具列」，釋放約 `95px` 垂直高度，使左右部隊交火區與底部戰況日誌一屏完整呈現。
+- **修復戰後結算報告（`#resultCard` / `#sandboxCard`）雙方比較圖表超出手機螢幕寬度的問題**：
+  - 將 `.aar-body-grid`（MVP 與積分三維度比較）、`.aar-dmg-grid`（雙方 5v5 各單位傷害輸出與戰果比較圖）、`.aar-intel-grid`、`.sand-kpi-grid`、`.sand-breakdown-grid` 在手機版全面由 `1fr` 改為 `minmax(0, 1fr)`，並鎖定彈窗 `max-width: calc(100vw - 12px); overflow-x: hidden;`。
+  - 為 `.dmg-side-col`、`.dmg-u-info`、`.dmg-u-name` 補齊 `min-width: 0; flex: 1 1 0;`，確保長軍武名稱自動省略（`...`）而不把右側傷害與存活率推向螢幕外；同時解除 `.outcome-sub-desc` 與 `.aar-env-tag` 的強制不換行，讓頂部雙方總 VP 比較條（`.outcome-gauge-col`）100% 貼合手機螢幕。
+- **快取升級**：更新 Service Worker 快取版本至 `topclash-v4.9.6`。
+
+---
+
 ### [v4.9.5] - 2026-10-30
 #### 天梯競技右方版面邊界對稱留白與防截斷修復 (Right Boundary Symmetric Margin & Overflow Fix)
 - **修復右欄超出視窗右邊界導致挑戰按鈕被截斷的問題**：

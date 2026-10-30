@@ -2113,6 +2113,7 @@ $('#missionBar').addEventListener('change', e => {
 /* ---------- 離開/清理戰鬥推演與檢視戰場 ---------- */
 function exitActiveBattle() {
   playToken++; // 中止推演循環
+  document.body.classList.remove('in-battle');
   const vb = $('#viewBattle');
   if (vb) vb.hidden = true;
   
@@ -3377,7 +3378,9 @@ function teamHtml(units, side) {
     SPOT: '🔭前觀校射'
   };
 
-  return `<h3><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${titleHtml}</span><span style="font-size:11px;font-family:var(--mono);color:${costColor};font-weight:700;flex:none;margin-left:6px" title="${side === 'B' && totalCost > 15 ? '精選對戰超標預算陣容' : '作戰總預算'}">${budgetLabel}</span></h3>` + units.map(u => {
+  const mobileTitleHtml = side === 'A' ? '🔵 我方部隊' : '🔴 敵方部隊';
+  const mobileBudgetLabel = (side === 'B' && totalCost > 15) ? `$${totalCost} (+$${totalCost - 15})` : `$${totalCost}`;
+  return `<h3><span class="team-h3-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span class="team-title-desk">${titleHtml}</span><span class="team-title-mob">${mobileTitleHtml}</span></span><span class="team-h3-budget" style="font-size:11px;font-family:var(--mono);color:${costColor};font-weight:700;flex:none;margin-left:6px" title="${side === 'B' && totalCost > 15 ? '精選對戰超標預算陣容' : '作戰總預算'}"><span class="team-budget-desk">${budgetLabel}</span><span class="team-budget-mob">${mobileBudgetLabel}</span></span></h3>` + units.map(u => {
     const uData = UNIT_MAP[u.id] || {};
     const catObj = CATS[u.cat] || { short: 'UNIT', label: '作戰單位', color: '#38bdf8' };
     const imgSrc = uData.img || `assets/units/${u.id}.jpg`;
@@ -3417,7 +3420,7 @@ function teamHtml(units, side) {
             <span class="bu-m-pill sth" title="匿蹤與閃避 (STH)">🛡️<b>${stVal}</b></span>
             ${ewVal > 0 ? `<span class="bu-m-pill ew" title="電子戰強度 (EW)">📡<b>${ewVal}</b></span>` : ''}
           </div>
-          <div class="bu-hp-num" id="hpt-${u.uid}">HP: ${u.hpMax} / ${u.hpMax}</div>
+          <div class="bu-hp-num" id="hpt-${u.uid}">HP: ${u.hpMax}<span class="hp-max-part"> / ${u.hpMax}</span></div>
         </div>
       </div>
       <div class="bu-full-hpbar"><u id="hp-${u.uid}"></u></div>
@@ -3431,7 +3434,7 @@ function setHp(uid, hp, max) {
   u.style.width = Math.max(0, p * 100) + '%';
   u.className = p < 0.25 ? 'low' : p < 0.55 ? 'mid' : '';
   const hptEl = $('#hpt-' + uid);
-  if (hptEl) hptEl.textContent = 'HP: ' + Math.round(hp) + ' / ' + max;
+  if (hptEl) hptEl.innerHTML = 'HP: ' + Math.round(hp) + '<span class="hp-max-part"> / ' + max + '</span>';
   const row = $('#bu-' + uid);
   if (row && hp <= 0) row.classList.add('dead');
 }
@@ -3479,6 +3482,7 @@ function setSideHero(side, unit, action, subtext) {
 async function showBattle(res, opts = {}) {
   lastBattleRes = res;
   const token = ++playToken; skip = false; paused = false;
+  document.body.classList.add('in-battle');
   $('#viewBuild').hidden = true;
   $('#missionBar').hidden = true;
   $('#commandDeck').hidden = true;
