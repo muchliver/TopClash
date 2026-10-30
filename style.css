@@ -9351,3 +9351,95 @@ body:has(.battle:not([hidden])) .command-deck,
     font-size: 12px !important;
   }
 }
+
+/* =====================================================
+   📱 手機版挑選軍武防遮蔽優化（方案 1：停用誤觸懸浮窗＋卡片內建武器與特性微縮列＋強化 ⓘ 詳情鈕）(v4.9.7)
+   ===================================================== */
+
+/* 桌機預設隱藏手機版卡片內嵌情報列 */
+.m-mobile-intel {
+  display: none !important;
+}
+
+/* 手機與觸控螢幕徹底封鎖桌機版 #unitTooltip 懸浮窗，避免點擊選軍武時彈出遮蔽整列 */
+@media (max-width: 768px), (hover: none), (pointer: coarse) {
+  #unitTooltip,
+  .unit-tooltip {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .m-card {
+    padding: 8px 11px !important;
+    min-height: 0 !important;
+    margin-bottom: 5px !important;
+    gap: 2px !important;
+  }
+  .m-mobile-intel {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    margin-top: 3px !important;
+    position: relative !important;
+    z-index: 1 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .m-mob-wpn {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--text) !important;
+    opacity: 0.88 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+  }
+  .m-mob-traits {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 3px !important;
+    flex: 0 0 auto !important;
+  }
+  .m-mob-trait-pill {
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    padding: 1px 5px !important;
+    border-radius: 4px !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    border: 1px solid rgba(56, 189, 248, 0.32) !important;
+    color: var(--cyan) !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+  }
+  [data-theme="light"] .m-mob-trait-pill {
+    background: rgba(2, 132, 199, 0.09) !important;
+    border-color: rgba(2, 132, 199, 0.25) !important;
+    color: #0369a1 !important;
+  }
+  .m-info-btn {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 13px !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    color: var(--cyan) !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+  }
+  [data-theme="light"] .m-info-btn {
+    background: #f0f9ff !important;
+    color: #0284c7 !important;
+    border-color: rgba(2, 132, 199, 0.35) !important;
+    box-shadow: 0 1px 4px rgba(2, 132, 199, 0.1) !important;
+  }
+  .unit-sheet-card {
+    max-height: 74vh !important;
+    padding: 16px 14px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}

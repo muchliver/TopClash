@@ -1173,6 +1173,13 @@ function renderMatrix() {
       });
     }
 
+    const M_TRAIT_SHORT = {
+      CAS: '🎯密接對地', LR: '🚀超視距', HEAVY: '🛡️重裝甲', APS: '⚡主動防護',
+      AA_LONG: '📡遠程防空', CIWS: '🔥近防火網', AEGIS: '🔱神盾防空', SUB: '🌊深海潛航',
+      ASW: '🎯反潛獵殺', AMBUSH: '💥匿蹤伏擊', SWARM: '🐝蜂群齊射', EW: '📡電戰壓制',
+      SEAD: '⚡防空壓制', DEEP: '🎯縱深斬首', ARTY: '💥遠程火砲', SAT: '🚀飽和打擊',
+      TRUE_AT: '🗡️頂攻破甲', SPOT: '🔭前觀校射'
+    };
     const cardsHtml = displayUnits.map(u => {
       const isEquipped = state.deck.includes(u.id);
       const isBanned = currentBanned().includes(u.id);
@@ -1192,6 +1199,7 @@ function renderMatrix() {
             <button class="m-info-btn" data-info-id="${u.id}" title="查看裝備詳細情報">ℹ</button>
           </div>
         </div>
+        <div class="m-mobile-intel">${u.weapon ? `<span class="m-mob-wpn">🎯 ${esc(u.weapon)}</span>` : ''}${(u.traits && u.traits.length) ? `<div class="m-mob-traits">${u.traits.map(t => `<span class="m-mob-trait-pill">${M_TRAIT_SHORT[t] || t}</span>`).join('')}</div>` : ''}</div>
         <div class="m-bot">
           <div class="m-stats">
             <span>HP <b>${u.hp}</b></span>
@@ -1217,6 +1225,10 @@ function renderMatrix() {
 const tooltip = $('#unitTooltip');
 function showTooltip(u, x, y) {
   if (!u || !tooltip) return;
+  if (window.innerWidth <= 768 || (window.matchMedia && window.matchMedia('(hover: none), (pointer: coarse)').matches)) {
+    hideTooltip();
+    return;
+  }
   const isBanned = currentBanned().includes(u.id);
   tooltip.innerHTML = `
     <div class="u-tt-header">
@@ -1807,7 +1819,7 @@ $('#matrixBoard').addEventListener('click', e => {
   const card = e.target.closest('.m-card');
   if (!card) return;
   const u = UNIT_MAP[card.dataset.id];
-  if (u) handleMatrixCardClick(u);
+  if (u) { hideTooltip(); handleMatrixCardClick(u); }
 });
 
 $('#matrixBoard').addEventListener('mousemove', e => {

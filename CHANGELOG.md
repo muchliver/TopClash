@@ -6,6 +6,18 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.9.7] - 2026-10-31
+#### 手機版挑選軍武防遮蔽優化（方案 1：關閉誤觸懸浮窗＋卡片內建武器與特性微縮列）(Mobile Unit Selection Anti-Occlusion Overhaul)
+- **徹底封鎖手機與觸控裝置誤觸桌機版 `#unitTooltip` 懸浮窗**：
+  - 於 `js/app.js` 的 `showTooltip()` 與 `style.css` 的 `@media (max-width: 768px), (hover: none), (pointer: coarse)` 雙重鎖定：手機點擊軍武卡片本體時，僅純粹執行「選取 / 卸下軍武」，絕不再彈出並殘留 `336×380px` 的桌機版巨型懸浮視窗遮擋整列軍武。
+- **採用【方案 1】於手機版軍武卡片內直接顯示「主武裝 ＆ 特性標籤」微縮列 (`.m-mobile-intel`)**：
+  - 在手機版每張 `.m-card` 的名稱與底部數值列之間，直接嵌入「🎯 主武裝名稱」與「戰術特性膠囊（如 `🎯密接對地`、`🚀超視距`）」，讓玩家不需點開任何彈窗即可在同一畫面快速比較整列 5 台軍武。
+- **強化卡片右側 `ⓘ` 詳情按鈕與輕量化底部情報抽屜**：
+  - 將 `.m-info-btn` 升級為 `26×26px` 高對比戰術藍按鈕；僅在玩家主動點擊 `ⓘ` 時才從底部滑出精簡版情報抽屜（`#unitDetailModal`）。
+- **快取升級**：更新 Service Worker 快取版本與 `index.html` 靜態資源版本參數至 `topclash-v4.9.7`。
+
+---
+
 ### [v4.9.6] - 2026-10-31
 #### 手機版戰鬥畫面（方案 A：左縮圖＋右雙行精煉戰術卡）與戰後結算雙方比較圖防溢出重構 (Mobile Battle Arena & Settlement Comparison Overhaul)
 - **修復手機版戰鬥畫面 5 張軍武卡壓扁塌陷與空白斷層 Bug**：
