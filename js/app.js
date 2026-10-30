@@ -704,7 +704,7 @@ const state = {
   pvpOpponentDeck: null,
   pvpOpponentDoc: 'defense'
 };
-let playToken = 0, speed = Number(LS.get('db15_speed', 1)) || 1, skip = false, paused = false, currentActiveModal = null;
+let playToken = 0, speed = Number(LS.get('db15_speed', 1)) || 1, skip = false, paused = false, currentActiveModal = null, lastBattleRes = null;
 
 function syncActiveDeck() {
   state.dualDecks[state.deckSlot] = state.deck.slice();
@@ -3476,7 +3476,8 @@ function setSideHero(side, unit, action, subtext) {
   }
 }
 
-async function showBattle(res) {
+async function showBattle(res, opts = {}) {
+  lastBattleRes = res;
   const token = ++playToken; skip = false; paused = false;
   $('#viewBuild').hidden = true;
   $('#missionBar').hidden = true;
@@ -3494,6 +3495,7 @@ async function showBattle(res) {
   $('#btnSpeed').hidden = false;
   $('#btnSpeed').textContent = '速度 ×' + speed;
   $('#btnSkip').hidden = false;
+  if ($('#btnBattleReplay')) $('#btnBattleReplay').hidden = true;
   $('#btnReopenResult').hidden = true;
   $('#btnBattleExit').hidden = true;
 
@@ -3603,7 +3605,12 @@ async function showBattle(res) {
   if (radarEl) radarEl.classList.remove('emp-active');
   document.querySelectorAll('.ph').forEach(p => p.className = 'ph done');
   $('#phaseTitle').textContent = '交 戰 結 束';
-  finishBattle(res);
+  if (opts && opts.isReplay) {
+    enterBattlefieldReviewState();
+    toast('🔄 戰場重播完畢！可自由檢視戰場或點擊右上角【查看結算報告】');
+  } else {
+    finishBattle(res);
+  }
 }
 
 function updateHoloPhase(phase) {
@@ -4221,11 +4228,32 @@ $('#btnSkip').onclick = () => {
   const r = $('.radar');
   if (r) r.classList.remove('emp-active');
 };
+const SPEED_STEPS = [0.6, 1, 2, 4];
 $('#btnSpeed').onclick = () => {
-  speed = speed === 1 ? 2 : speed === 2 ? 4 : 1;
+  const idx = SPEED_STEPS.indexOf(Number(speed));
+  speed = SPEED_STEPS[(idx + 1) % SPEED_STEPS.length];
   LS.set('db15_speed', speed);
   $('#btnSpeed').textContent = '速度 ×' + speed;
+  toast(`⏱️ 戰鬥推演速度已切換為 ×${speed}`);
 };
+
+function enterBattlefieldReviewState() {
+  if ($('#btnPause')) $('#btnPause').hidden = true;
+  if ($('#btnSpeed')) $('#btnSpeed').hidden = true;
+  if ($('#btnSkip')) $('#btnSkip').hidden = true;
+  if ($('#btnBattleBack')) $('#btnBattleBack').hidden = true;
+  if ($('#btnBattleReplay')) $('#btnBattleReplay').hidden = false;
+  if ($('#btnReopenResult')) $('#btnReopenResult').hidden = false;
+  if ($('#btnBattleExit')) $('#btnBattleExit').hidden = false;
+}
+
+$('#btnBattleReplay')?.addEventListener('click', () => {
+  if (!lastBattleRes) return;
+  if (currentActiveModal) currentActiveModal.hidden = true;
+  $('#resultModal').hidden = true;
+  toast(`🎬 開始重播本場戰鬥推演 (目前速度 ×${speed})...`);
+  showBattle(lastBattleRes, { isReplay: true });
+});
 $('#btnReopenResult').onclick = () => {
   if (currentActiveModal) currentActiveModal.hidden = false;
   else $('#resultModal').hidden = false;
@@ -4250,6 +4278,7 @@ $('#btnBattleExit')?.addEventListener('click', handleExitBattleToCurrentMode);
 
 /* ---------- 戰鬥結算與 BO3 / 幽靈處理 ---------- */
 function finishBattle(res) {
+  enterBattlefieldReviewState();
   const won = res.winner === 'A', draw = res.winner === 'draw';
   if (state.mode !== 'sandbox') {
     stats.played++;
@@ -4359,12 +4388,8 @@ function handleLadderMatchEnd(res) {
 
   $('#btnLadderReview').onclick = () => {
     $('#ladderResultModal').hidden = true;
-    if ($('#btnPause')) $('#btnPause').hidden = true;
-    $('#btnSpeed').hidden = true;
-    $('#btnSkip').hidden = true;
-    $('#btnReopenResult').hidden = false;
-    $('#btnBattleExit').hidden = false;
-    toast('🔍 已進入戰場檢視：可自由滾動日誌與檢視部隊殘局');
+    enterBattlefieldReviewState();
+    toast('🔍 已進入戰場檢視：可點擊右上角【🔄 戰場重播】或【📊 查看結算報告】');
   };
 }
 
@@ -4638,12 +4663,8 @@ function showBo3SeriesResult(isPlayerWon) {
 
   const reviewBo3Battlefield = () => {
     $('#bo3SeriesModal').hidden = true;
-    if ($('#btnPause')) $('#btnPause').hidden = true;
-    $('#btnSpeed').hidden = true;
-    $('#btnSkip').hidden = true;
-    $('#btnReopenResult').hidden = false;
-    $('#btnBattleExit').hidden = false;
-    toast('🔍 已進入戰場檢視：可自由滾動日誌與檢視部隊殘局，點擊右上角【查看結算】可隨時重開報告');
+    enterBattlefieldReviewState();
+    toast('🔍 已進入戰場檢視：可點擊右上角【🔄 戰場重播】或【📊 查看結算報告】');
   };
 
   $('#bo3Review').onclick = reviewBo3Battlefield;
@@ -4969,12 +4990,8 @@ function showResult(res, bo3Custom) {
 
   const reviewBattlefield = () => {
     $('#resultModal').hidden = true;
-    if ($('#btnPause')) $('#btnPause').hidden = true;
-    $('#btnSpeed').hidden = true;
-    $('#btnSkip').hidden = true;
-    $('#btnReopenResult').hidden = false;
-    $('#btnBattleExit').hidden = false;
-    toast('🔍 已進入戰場檢視：可自由滾動日誌與檢視部隊殘局，點擊右上角【查看結算】可隨時重開報告');
+    enterBattlefieldReviewState();
+    toast('🔍 已進入戰場檢視：可點擊右上角【🔄 戰場重播】或【📊 查看結算報告】');
   };
 
   $('#rReview').onclick = reviewBattlefield;

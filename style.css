@@ -8034,3 +8034,51 @@ body:has(.battle:not([hidden])) .command-deck,
     width: 100% !important;
   }
 }
+
+
+/* 戰場右上角【🔄 戰場重播】按鈕 (取代重複的退出推演) */
+.btn-battle-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 15px;
+  border-radius: 9px;
+  font-family: var(--head);
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  background: rgba(56, 189, 248, 0.14);
+  color: var(--cyan) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.btn-battle-replay:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+  transform: translateY(-1px);
+}
+[data-theme="light"] .btn-battle-replay {
+  background: #f0f9ff;
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.35);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.08);
+}
+[data-theme="light"] .btn-battle-replay:hover {
+  background: #e0f2fe;
+  border-color: #0284c7;
+}
+
+
+.btn-battle-replay[hidden],
+.btn-battle-reopen[hidden],
+.btn-battle-exit[hidden],
+#btnBattleBack[hidden],
+#btnPause[hidden],
+#btnSpeed[hidden],
+#btnSkip[hidden] {
+  display: none !important;
+}
