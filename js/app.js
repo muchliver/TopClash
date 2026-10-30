@@ -5877,7 +5877,7 @@ function renderTournamentView() {
 
 function renderTourneyHeader(t, isOnline = false) {
   const roundNames = {
-    1: t.size === 32 ? '32 強淘汰賽' : t.size === 16 ? '16 強世界爭霸' : t.size === 8 ? '半準決賽 (8強)' : '準決賽 (4強)',
+    1: t.size === 32 ? '32 強淘汰賽' : t.size === 16 ? '16 強全域聯合' : t.size === 8 ? '半準決賽 (8強)' : '準決賽 (4強)',
     2: t.size === 32 ? '16 強賽' : t.size === 16 ? '半準決賽 (8強)' : '決賽圈',
     3: t.size === 32 ? '半準決賽 (8強)' : t.size === 16 ? '準決賽 (4強)' : '總決賽',
     4: t.size === 32 ? '準決賽 (4強)' : '世界總決賽',
@@ -6100,6 +6100,14 @@ function renderTourneyLobby(t, isOnline = false) {
   }).join('');
 }
 
+function getTourneySizeNameShort(size) {
+  if (size === 4) return '⚡ 4 強 前哨突擊';
+  if (size === 8) return '🎯 8 強 戰區爭端';
+  if (size === 16) return '🌐 16 強 全域聯合';
+  if (size === 32) return '🏆 32 強 巔峰會戰';
+  return `${size} 強`;
+}
+
 function getFormatNameShort(fmt) {
   if (fmt === 'bo1') return '⚡ 極速單淘汰 (BO1/BO3)';
   if (fmt === 'bo3' || fmt === 'bo5') return '⚔️ 大師征服 (BO5)';
@@ -6112,7 +6120,7 @@ function updateTourneyLobbyBadge() {
 
   const onlineRoom = (typeof FirebaseTourneyEngine !== 'undefined') ? FirebaseTourneyEngine.getCurrentRoom() : null;
   if (onlineRoom && onlineRoom.status === 'waiting') {
-    badge.innerHTML = `👥 私人房間 [#${esc(onlineRoom.id)}] · <b>${onlineRoom.size} 強</b> <span style="opacity:0.85">(${getFormatNameShort(onlineRoom.format || onlineRoom.matchType)})</span>`;
+    badge.innerHTML = `👥 私人房間 [#${esc(onlineRoom.id)}] · <b>${getTourneySizeNameShort(onlineRoom.size)}</b> <span style="opacity:0.85">(${getFormatNameShort(onlineRoom.format || onlineRoom.matchType)})</span>`;
     badge.style.color = 'var(--amber)';
     badge.style.borderColor = 'rgba(245,158,11,.45)';
     badge.style.background = 'rgba(245,158,11,.12)';
@@ -6120,17 +6128,17 @@ function updateTourneyLobbyBadge() {
   }
 
   if (currentTourneyTab === 'solo') {
-    badge.innerHTML = `👤 單人闖關 · <b>${tourneySelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(tourneySelectedFormat)})</span>`;
+    badge.innerHTML = `👤 單人闖關 · <b>${getTourneySizeNameShort(tourneySelectedSize)}</b> <span style="opacity:0.85">(${getFormatNameShort(tourneySelectedFormat)})</span>`;
     badge.style.color = 'var(--cyan)';
     badge.style.borderColor = 'rgba(61,224,255,.45)';
     badge.style.background = 'rgba(61,224,255,.12)';
   } else if (currentTourneyTab === 'private') {
-    badge.innerHTML = `👥 私人好友 · <b>${privateSelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(privateSelectedFormat)})</span>`;
+    badge.innerHTML = `👥 私人好友 · <b>${getTourneySizeNameShort(privateSelectedSize)}</b> <span style="opacity:0.85">(${getFormatNameShort(privateSelectedFormat)})</span>`;
     badge.style.color = 'var(--amber)';
     badge.style.borderColor = 'rgba(245,158,11,.45)';
     badge.style.background = 'rgba(245,158,11,.12)';
   } else {
-    badge.innerHTML = `🌐 公開隨機 · <b>${publicSelectedSize} 強</b> <span style="opacity:0.85">(${getFormatNameShort(publicSelectedFormat)})</span>`;
+    badge.innerHTML = `🌐 公開隨機 · <b>${getTourneySizeNameShort(publicSelectedSize)}</b> <span style="opacity:0.85">(${getFormatNameShort(publicSelectedFormat)})</span>`;
     badge.style.color = 'var(--green)';
     badge.style.borderColor = 'rgba(93,255,176,.45)';
     badge.style.background = 'rgba(93,255,176,.12)';
