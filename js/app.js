@@ -2582,36 +2582,43 @@ function renderLadderRosterTable() {
       actionColHtml = `<span class="r-action-pill beaten">✓ 已超越</span>`;
     }
 
-    // 對手公開旗艦與部隊特徵偵察情報 (右欄建議 2)
+    // 對手公開旗艦與部隊特徵偵察情報 (方案 A：圖文整合精銳版)
     const flagshipUnit = UNIT_MAP[(userDeck || [])[0]];
     const rowArch = typeof analyzeDeckArchetype === 'function'
       ? analyzeDeckArchetype(userDeck || [])
       : { icon: '🎖️', name: '均衡聯合作戰流' };
+    const flagshipThumbHtml = flagshipUnit
+      ? `<div class="recon-flagship-thumb" title="${esc(flagshipUnit.name)} ($${flagshipUnit.cost})">
+           <img src="${flagshipUnit.img || `assets/units/${flagshipUnit.id}.jpg`}" alt="${esc(flagshipUnit.name)}" onerror="this.style.display='none'"/>
+           <span class="chip-cost">$${flagshipUnit.cost}</span>
+         </div>`
+      : `<div class="recon-flagship-thumb"><span class="chip-mask-q">?</span></div>`;
     const reconIntelHtml = `
       <div class="r-recon-intel">
-        <div class="recon-intel-main">
-          <span class="recon-intel-tag ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 公開旗艦'}</span>
-          <strong class="recon-intel-unit">${flagshipUnit ? `${esc(flagshipUnit.name)} <small>($${flagshipUnit.cost})</small>` : '未知旗艦'}</strong>
-        </div>
-        <div class="recon-intel-sub">
-          <span>📡 偵察特徵：<b>${rowArch.icon} ${esc(rowArch.name)}</b></span>
+        ${flagshipThumbHtml}
+        <div class="recon-intel-texts">
+          <div class="recon-intel-main">
+            <span class="recon-intel-tag ${isMe ? 'mine' : ''}">${isMe ? '👑 主力旗艦' : '🎯 公開旗艦'}</span>
+            <strong class="recon-intel-unit" title="${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}">${flagshipUnit ? esc(flagshipUnit.name) : '未知旗艦'}</strong>
+          </div>
+          <div class="recon-intel-sub">
+            <span>📡 偵察特徵：<b>${rowArch.icon} ${esc(rowArch.name)}</b></span>
+          </div>
         </div>
       </div>`;
 
     return `<div class="roster-row ${isMe ? 'is-me' : ''} ${topClass} ${canEngage ? 'engageable' : ''}">
       <div class="r-rank">${rankNo <= 3 ? ['🥇','🥈','🥉'][rankNo - 1] : '#' + rankNo}</div>
-      <div class="r-trend">${trendHtml}</div>
       <div class="r-streak">${streakBadgeHtml}</div>
       <div class="r-commander">
         <span class="r-flag">${u.flag}</span>
         <div class="r-name-block">
-          <span class="r-name">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
-          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b> · ${isMe ? `<span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : `<span class="doctrine-secret" style="font-size:10.5px;color:#94a3b8" title="敵方駐防戰術教條（先發制人 / 縱深防禦 / 電子欺敵）保密中，進場推演時解密">🔒 戰術保密</span>`}</span>
+          <span class="r-name" title="${esc(u.name)}">${esc(u.name)} ${isMe ? `<span class="r-my-tag">我方 ${esc(u.uid || player.uid || 'CMD-7392')}</span>` : ''}</span>
+          <span class="r-title-sub">${esc(u.title || '戰區指揮官')} · <b style="color:${tier.color}">${tier.name}</b>${isMe ? ` · <span style="color:var(--cyan);font-size:10.5px" title="我方駐防教條">${(() => { const dObj = DOCTRINES.find(d => d.id === (u.defenseDoc || u.doc || 'defense')) || DOCTRINES[1]; return dObj.icon + ' ' + dObj.name; })()}</span>` : ''}</span>
         </div>
       </div>
       ${reconIntelHtml}
       <div class="r-rp">${u.rp.toLocaleString()} <small>RP</small></div>
-      <div class="r-deck-preview">${deckChipsHtml}</div>
       <div class="r-action">${actionColHtml}</div>
     </div>`;
   }).join('');

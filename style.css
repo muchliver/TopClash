@@ -9443,3 +9443,161 @@ body:has(.battle:not([hidden])) .command-deck,
     padding: 16px 14px calc(20px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* =====================================================
+   🏆 天梯競技右欄名冊「方案 A：圖文整合精銳版」防截斷重構 (v4.9.8)
+   1. 移除冗餘 [- 持平] 趨勢欄 (.r-trend) 與戰術保密標籤
+   2. 移除後方 4 格重複 [?][?][?][?] 問號陣容欄 (.r-deck-preview)
+   3. 將旗艦軍武縮圖 ($費用) 直接嵌入公開旗艦情報卡 (.r-recon-intel)
+   4. 確保指揮官全名、旗艦全名與最右側「⚔️ 挑戰」按鈕 100% 完整顯示不截斷
+   ===================================================== */
+.roster-row {
+  gap: 8px !important;
+  padding: 5px 12px !important;
+}
+
+.roster-row .r-rank {
+  width: 32px !important;
+  flex: 0 0 32px !important;
+}
+
+.roster-row .r-streak {
+  width: 76px !important;
+  flex: 0 0 76px !important;
+}
+
+.roster-row .r-commander {
+  flex: 1.15 1 180px !important;
+  min-width: 135px !important;
+  max-width: none !important;
+  overflow: hidden !important;
+}
+
+.roster-row .r-name-block {
+  min-width: 0 !important;
+  flex: 1 1 0 !important;
+  overflow: hidden !important;
+}
+
+.roster-row .r-name {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* 方案 A：圖文合一公開旗艦情報艙 */
+@media (min-width: 769px) {
+  .r-recon-intel {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    flex: 1.35 1 225px !important;
+    min-width: 175px !important;
+    max-width: 325px !important;
+    padding: 3px 9px 3px 5px !important;
+    border-radius: 7px !important;
+  }
+}
+
+.recon-flagship-thumb {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px !important;
+  border-radius: 5px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(56, 189, 248, 0.42) !important;
+  background: #020617 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-theme="light"] .recon-flagship-thumb {
+  border-color: rgba(2, 132, 199, 0.38) !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12) !important;
+}
+
+.recon-flagship-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+.recon-flagship-thumb .chip-cost {
+  position: absolute !important;
+  right: 1px !important;
+  bottom: 1px !important;
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  padding: 0 3px !important;
+  border-radius: 3px !important;
+  background: rgba(2, 6, 23, 0.88) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(251, 191, 36, 0.45) !important;
+  line-height: 1.15 !important;
+}
+
+.recon-intel-texts {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2px !important;
+}
+
+.roster-row .r-rp {
+  width: 74px !important;
+  flex: 0 0 74px !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+.roster-row .r-action {
+  width: 96px !important;
+  flex: 0 0 96px !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+.roster-row .btn-ladder-engage,
+.roster-row .r-action-pill {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .r-recon-intel {
+    display: none !important;
+  }
+  .roster-row {
+    gap: 5px !important;
+    padding: 6px 8px !important;
+  }
+  .roster-row .r-streak {
+    display: none !important;
+  }
+  .roster-row .r-commander {
+    flex: 1 1 120px !important;
+    min-width: 0 !important;
+  }
+  .roster-row .r-rp {
+    width: 64px !important;
+    flex: 0 0 64px !important;
+    font-size: 12px !important;
+  }
+  .roster-row .r-action {
+    width: 82px !important;
+    flex: 0 0 82px !important;
+  }
+}
