@@ -7723,7 +7723,7 @@ body:has(.battle:not([hidden])) .command-deck,
   flex-direction: row !important;
   align-items: center !important;
   gap: 10px !important;
-  padding: 5px 10px !important;
+  padding: 5px 10px 10px 10px !important;
   border-radius: 9px !important;
   flex: 1 1 0 !important;
   min-height: 0 !important;
@@ -7734,14 +7734,14 @@ body:has(.battle:not([hidden])) .command-deck,
 
 /* 左側：高清軍武立繪大視窗 (面積放大近 5 倍) */
 .bu-thumb {
-  width: 88px !important;
-  height: 54px !important;
+  width: 82px !important;
+  height: 56px !important;
   min-height: 44px !important;
   max-height: 94% !important;
   border-radius: 7px !important;
   overflow: hidden !important;
   position: relative !important;
-  flex: 0 0 88px !important;
+  flex: 0 0 82px !important;
   border: 1px solid rgba(56, 189, 248, 0.38) !important;
   background: #020617 !important;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45) !important;
@@ -7792,26 +7792,27 @@ body:has(.battle:not([hidden])) .command-deck,
   color: #fde047 !important;
 }
 
-/* 右側：三層解耦高密度 C4ISR 戰術艙 */
+/* 右側：全新四行解耦高密度 C4ISR 戰術艙 */
 .bu-body {
   flex: 1 1 auto !important;
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  justify-content: center !important;
+  justify-content: space-between !important;
   gap: 2px !important;
   height: 100% !important;
 }
 
-/* 第一層：軍武識別 (國旗 + 軍武全名[不截斷] + 改裝型號 + 戰術定位) */
-.bu-row-top {
+/* 行 1: 軍武識別 (國旗 + 軍武全名[不截斷] + 改裝型號) */
+.bu-row-name {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 6px !important;
   min-width: 0 !important;
+  line-height: 1.15 !important;
 }
-.bu-title-group {
+.bu-row-name .bu-title-group {
   display: inline-flex !important;
   align-items: center !important;
   gap: 5px !important;
@@ -7825,7 +7826,7 @@ body:has(.battle:not([hidden])) .command-deck,
   flex: none !important;
 }
 .bu-name-txt {
-  font-size: 13px !important;
+  font-size: 12.5px !important;
   font-weight: 800 !important;
   color: #ffffff !important;
   white-space: nowrap !important;
@@ -7835,12 +7836,6 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 [data-theme="light"] .bu-name-txt {
   color: #0f172a !important;
-}
-.bu-tag-group {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  flex: 0 0 auto !important;
 }
 .bu-v-badge {
   font-family: var(--mono) !important;
@@ -7852,27 +7847,21 @@ body:has(.battle:not([hidden])) .command-deck,
   color: var(--cyan) !important;
   border: 1px solid rgba(56, 189, 248, 0.38) !important;
   line-height: 1.1 !important;
+  flex: 0 0 auto !important;
 }
 [data-theme="light"] .bu-v-badge {
   background: rgba(2, 132, 199, 0.1) !important;
   color: #0284c7 !important;
   border-color: rgba(2, 132, 199, 0.3) !important;
 }
-.bu-role-tag {
-  font-size: 10.5px !important;
-  font-weight: 700 !important;
-  white-space: nowrap !important;
-  line-height: 1.15 !important;
-}
 
-/* 第二層：專屬主戰武裝 (🎯 武器型號完整露出) + 戰術特性徽章 */
+/* 行 2: 專屬主戰武裝單獨整行展示 (零截斷) */
 .bu-row-wpn {
   display: flex !important;
   align-items: center !important;
-  justify-content: space-between !important;
-  gap: 6px !important;
+  gap: 5px !important;
   min-width: 0 !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
 }
 .bu-wpn-icon {
   font-size: 10px !important;
@@ -7882,16 +7871,34 @@ body:has(.battle:not([hidden])) .command-deck,
 .bu-wpn-txt {
   font-size: 10.5px !important;
   font-weight: 600 !important;
-  color: #94a3b8 !important;
+  color: #cbd5e1 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   flex: 1 1 auto !important;
   min-width: 0 !important;
-  margin-left: 1px !important;
 }
 [data-theme="light"] .bu-wpn-txt {
-  color: #475569 !important;
+  color: #334155 !important;
+}
+
+/* 行 3: 戰術定位標籤 + 戰術特性徽章群 */
+.bu-row-role {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  line-height: 1.15 !important;
+}
+.bu-role-tag {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 .bu-traits-wrap {
   display: inline-flex !important;
@@ -7918,15 +7925,15 @@ body:has(.battle:not([hidden])) .command-deck,
   color: #1e293b !important;
 }
 
-/* 第三層：軍規戰力參數 (ATK / STH / EW) + 裝甲血條即時同行並排 */
-.bu-row-btm {
+/* 行 4: 軍規戰力參數 (ATK / STH / EW) + 即時 HP 數值 */
+.bu-row-meta {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 8px !important;
+  gap: 6px !important;
   width: 100% !important;
   min-width: 0 !important;
-  margin-top: 1px !important;
+  line-height: 1.15 !important;
 }
 .bu-metrics {
   display: inline-flex !important;
@@ -7976,36 +7983,71 @@ body:has(.battle:not([hidden])) .command-deck,
   color: #7c3aed !important;
 }
 
-.bu-hp-col {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  flex: 1 1 auto !important;
-  min-width: 0 !important;
-  justify-content: flex-end !important;
-}
-.bu-hp-col .hpbar {
-  flex: 1 1 auto !important;
-  max-width: 80px !important;
-  height: 6px !important;
-  margin: 0 !important;
-  border-radius: 4px !important;
-  overflow: hidden !important;
-}
-.bu-hp-col .bu-hp {
-  flex: 0 0 auto !important;
+.bu-hp-num {
   font-family: var(--mono) !important;
   font-size: 10px !important;
   font-weight: 800 !important;
   color: var(--muted) !important;
   margin: 0 !important;
-  min-width: 52px !important;
+  min-width: 58px !important;
   text-align: right !important;
   line-height: 1 !important;
-  visibility: visible !important;
+  white-space: nowrap !important;
+  flex: 0 0 auto !important;
 }
-.bu.dead .bu-hp-col .bu-hp {
+[data-theme="light"] .bu-hp-num {
+  color: #64748b !important;
+}
+.bu.dead .bu-hp-num {
   visibility: hidden !important;
+}
+
+/* 底座：100% 全景貫穿裝甲血條 (Full-Width Base Armor Bar) */
+.bu-full-hpbar {
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  height: 6px !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  z-index: 10 !important;
+  overflow: hidden !important;
+}
+[data-theme="light"] .bu-full-hpbar {
+  background: rgba(15, 23, 42, 0.12) !important;
+  border-top-color: rgba(15, 23, 42, 0.1) !important;
+}
+.bu-full-hpbar u {
+  display: block !important;
+  height: 100% !important;
+  width: 100% !important;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 70%, #6ee7b7 100%) !important;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.6) !important;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  text-decoration: none !important;
+}
+.team-col.a .bu-full-hpbar u {
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 70%, #7dd3fc 100%) !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6) !important;
+}
+.team-col.b .bu-full-hpbar u {
+  background: linear-gradient(90deg, #e11d48 0%, #f43f5e 70%, #fda4af 100%) !important;
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6) !important;
+}
+.bu-full-hpbar u.mid {
+  background: linear-gradient(90deg, #d97706 0%, #f59e0b 70%, #fde68a 100%) !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6) !important;
+}
+.bu-full-hpbar u.low {
+  background: linear-gradient(90deg, #b91c1c 0%, #ef4444 70%, #fca5a5 100%) !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.8) !important;
+  animation: pulseHp 1s infinite alternate !important;
+}
+@keyframes pulseHp {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.35); }
 }
 
 /* 桌機與筆電端第 5 槽武器零截斷全景自適應 */
@@ -8033,27 +8075,30 @@ body:has(.battle:not([hidden])) .command-deck,
 /* 手機端對戰卡片緊湊適配 */
 @media (max-width: 768px) {
   .bu {
-    padding: 5px 8px !important;
-    gap: 8px !important;
+    padding: 4px 6px 9px 6px !important;
+    gap: 6px !important;
   }
   .bu-thumb {
     width: 66px !important;
-    height: 44px !important;
+    height: 50px !important;
     flex: 0 0 66px !important;
   }
   .bu-name-txt {
-    font-size: 12px !important;
+    font-size: 11.5px !important;
   }
-  .bu-sub-group {
+  .bu-wpn-txt {
     font-size: 9.5px !important;
   }
-  .bu-m-pill {
+  .bu-role-tag {
     font-size: 9px !important;
-    padding: 1px 4px !important;
+  }
+  .bu-m-pill {
+    font-size: 8.5px !important;
+    padding: 1px 3px !important;
   }
   .bu-trait-pill {
-    font-size: 9px !important;
-    padding: 1px 4px !important;
+    font-size: 8.5px !important;
+    padding: 1px 3px !important;
   }
   .aar-actions {
     flex-direction: column !important;

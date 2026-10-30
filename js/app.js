@@ -3397,33 +3397,31 @@ function teamHtml(units, side) {
         <span class="bu-cost-tag">${u.cost}</span>
       </div>
       <div class="bu-body">
-        <div class="bu-row-top">
+        <div class="bu-row-name">
           <div class="bu-title-group">
             <span class="bu-flag">${uData.flag || ''}</span>
             <span class="bu-name-txt" title="${esc(u.name)}">${esc(u.name)}</span>
           </div>
-          <div class="bu-tag-group">
-            ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
-            <span class="bu-role-tag" style="color:${catObj.color}">${esc(tagTxt)}</span>
-          </div>
+          ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
         </div>
         <div class="bu-row-wpn" title="${wpnTxt ? '主戰武裝：' + esc(wpnTxt) : ''}">
           <span class="bu-wpn-icon">🎯</span>
           <span class="bu-wpn-txt">${esc(wpnTxt || tagTxt)}</span>
+        </div>
+        <div class="bu-row-role">
+          <span class="bu-role-tag" style="color:${catObj.color}">${esc(tagTxt)}</span>
           <div class="bu-traits-wrap">${traitsHtml}</div>
         </div>
-        <div class="bu-row-btm">
+        <div class="bu-row-meta">
           <div class="bu-metrics">
             <span class="bu-m-pill atk" title="攻擊火力 (ATK)">⚔️<b>${atkVal}</b></span>
             <span class="bu-m-pill sth" title="匿蹤與閃避 (STH)">🛡️<b>${stVal}</b></span>
             ${ewVal > 0 ? `<span class="bu-m-pill ew" title="電子戰強度 (EW)">📡<b>${ewVal}</b></span>` : ''}
           </div>
-          <div class="bu-hp-col">
-            <div class="hpbar"><u id="hp-${u.uid}"></u></div>
-            <div class="bu-hp" id="hpt-${u.uid}">${u.hpMax} / ${u.hpMax}</div>
-          </div>
+          <div class="bu-hp-num" id="hpt-${u.uid}">HP: ${u.hpMax} / ${u.hpMax}</div>
         </div>
       </div>
+      <div class="bu-full-hpbar"><u id="hp-${u.uid}"></u></div>
     </div>`;
   }).join('');
 }
@@ -3434,7 +3432,7 @@ function setHp(uid, hp, max) {
   u.style.width = Math.max(0, p * 100) + '%';
   u.className = p < 0.25 ? 'low' : p < 0.55 ? 'mid' : '';
   const hptEl = $('#hpt-' + uid);
-  if (hptEl) hptEl.textContent = Math.round(hp) + ' / ' + max;
+  if (hptEl) hptEl.textContent = 'HP: ' + Math.round(hp) + ' / ' + max;
   const row = $('#bu-' + uid);
   if (row && hp <= 0) row.classList.add('dead');
 }
