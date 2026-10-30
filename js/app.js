@@ -3356,23 +3356,71 @@ function teamHtml(units, side) {
     titleHtml = side === 'A' ? '我 方 ▸ 友軍編組' : '敵 方 ▸ ' + esc(state.enemyName || '敵軍特遣部隊');
   }
 
+  const TRAIT_SHORT_MAP = {
+    CAS: '🎯密接對地',
+    LR: '🚀超視距',
+    HEAVY: '🛡️重裝甲',
+    APS: '⚡主動防護',
+    AA_LONG: '📡遠程防空',
+    CIWS: '🔥近防火網',
+    AEGIS: '🔱神盾防空',
+    SUB: '🌊深海潛航',
+    ASW: '🎯反潛獵殺',
+    AMBUSH: '💥匿蹤伏擊',
+    SWARM: '🐝蜂群齊射',
+    EW: '📡電戰壓制',
+    SEAD: '⚡防空壓制',
+    DEEP: '🎯縱深斬首',
+    ARTY: '💥遠程火砲',
+    SAT: '🚀飽和打擊',
+    TRUE_AT: '🗡️頂攻破甲',
+    SPOT: '🔭前觀校射'
+  };
+
   return `<h3><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${titleHtml}</span><span style="font-size:11px;font-family:var(--mono);color:${costColor};font-weight:700;flex:none;margin-left:6px" title="${side === 'B' && totalCost > 15 ? '精選對戰超標預算陣容' : '作戰總預算'}">${budgetLabel}</span></h3>` + units.map(u => {
-    const uData = UNIT_MAP[u.id];
-    const imgSrc = uData?.img || `assets/units/${u.id}.jpg`;
-    return `<div class="bu" id="bu-${u.uid}" style="--c:${CATS[u.cat].color}">
-      <div class="bu-top">
-        <div class="bu-thumb"><img src="${imgSrc}" alt="${esc(u.name)}" /></div>
-        <div class="bu-meta-col">
-          <div class="bu-name-row">
-            <span class="bu-flag">${uData?.flag || ''}</span>
-            <span class="bu-name-txt">${esc(u.name)}</span>
-          </div>
-          <div class="bu-cat-sub" style="color:${CATS[u.cat].color}">${CATS[u.cat].short} · ${CATS[u.cat].label}</div>
-        </div>
-        <span class="bu-cost">$${u.cost}</span>
+    const uData = UNIT_MAP[u.id] || {};
+    const catObj = CATS[u.cat] || { short: 'UNIT', label: '作戰單位', color: '#38bdf8' };
+    const imgSrc = uData.img || `assets/units/${u.id}.jpg`;
+    const vBadge = uData.v ? `${uData.v}型` : '';
+    const tagTxt = uData.tag || catObj.label;
+    const wpnTxt = uData.weapon || '';
+    const atkVal = u.atk ?? uData.atk ?? 0;
+    const stVal = u.st ?? uData.st ?? 0;
+    const ewVal = u.ew ?? uData.ew ?? 0;
+    const traitList = u.traits || uData.traits || [];
+    const traitsHtml = traitList.map(t => `<span class="bu-trait-pill" title="${esc(TRAITS[t] || t)}">${TRAIT_SHORT_MAP[t] || t}</span>`).join('');
+
+    return `<div class="bu" id="bu-${u.uid}" data-unit-id="${u.id}" style="--c:${catObj.color}">
+      <div class="bu-thumb">
+        <img src="${imgSrc}" alt="${esc(u.name)}" loading="eager" />
+        <span class="bu-cat-tag" style="background:${catObj.color}">${catObj.short}</span>
+        <span class="bu-cost-tag">${u.cost}</span>
       </div>
-      <div class="hpbar"><u id="hp-${u.uid}"></u></div>
-      <div class="bu-hp" id="hpt-${u.uid}">${u.hpMax} / ${u.hpMax}</div>
+      <div class="bu-body">
+        <div class="bu-row-top">
+          <div class="bu-title-group">
+            <span class="bu-flag">${uData.flag || ''}</span>
+            <span class="bu-name-txt">${esc(u.name)}</span>
+            ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
+          </div>
+          <div class="bu-sub-group" title="${esc(tagTxt)}${wpnTxt ? ' · ' + esc(wpnTxt) : ''}">
+            <span class="bu-role-tag" style="color:${catObj.color}">${esc(tagTxt)}</span>
+            ${wpnTxt ? `<span class="bu-wpn-txt">· ${esc(wpnTxt)}</span>` : ''}
+          </div>
+        </div>
+        <div class="bu-row-mid">
+          <div class="bu-metrics">
+            <span class="bu-m-pill atk" title="攻擊火力 (ATK)">⚔️<b>${atkVal}</b></span>
+            <span class="bu-m-pill sth" title="匿蹤與閃避 (STH)">🛡️<b>${stVal}</b></span>
+            ${ewVal > 0 ? `<span class="bu-m-pill ew" title="電子戰強度 (EW)">📡<b>${ewVal}</b></span>` : ''}
+          </div>
+          <div class="bu-traits-wrap">${traitsHtml}</div>
+        </div>
+        <div class="bu-row-btm">
+          <div class="hpbar"><u id="hp-${u.uid}"></u></div>
+          <div class="bu-hp" id="hpt-${u.uid}">${u.hpMax} / ${u.hpMax}</div>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -4907,14 +4955,12 @@ function showResult(res, bo3Custom) {
       </div>
     </div>
 
-    <!-- 底部現代軍規行動指令列 -->
+    <!-- 底部現代軍規行動指令列 (精簡黃金 4 鍵，主次分明、字體規格統一) -->
     <div class="aar-actions">
-      ${bo3Custom ? `<button class="btn amber" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary aar-btn-main" id="rRematch">🔥 ${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
-      <button class="btn ghost" id="rReview">🔍 檢視戰場情形</button>
-      <button class="btn ghost" id="rShareReplay" title="複製一鍵重播網址，戰友點擊即可完整重現本場推演">🎬 分享重播連結</button>
-      <button class="btn ghost" id="rLoadEnemySandbox" title="將本場敵方陣容與教條載入沙盒，針對性模擬 300 場測試反制配裝">🧪 載入敵陣至沙盒</button>
-      <button class="btn ghost" id="rShareDebrief" title="複製精美戰報至剪貼簿">📋 複製戰報代碼</button>
-      <button class="btn ghost" id="rEdit">⚙️ 返回編輯陣容</button>
+      ${bo3Custom ? `<button class="btn amber aar-btn-main" id="rBo3Next">${esc(bo3Custom.bo3NextText)}</button>` : `<button class="btn primary aar-btn-main" id="rRematch">🔥 ${state.mode === 'daily' ? '調整陣容再挑戰' : '再戰一場'}</button>`}
+      <button class="btn ghost aar-btn-sub" id="rReview">🔍 檢視戰場情形</button>
+      <button class="btn ghost aar-btn-sub" id="rShareReplay" title="複製一鍵重播網址，戰友點擊即可完整重現本場推演">🎬 分享重播連結</button>
+      <button class="btn ghost aar-btn-sub" id="rEdit">⚙️ 返回編輯陣容</button>
     </div>
   `;
 
@@ -4964,8 +5010,8 @@ function showResult(res, bo3Custom) {
     };
   }
 
-  // 複製戰報代碼功能
-  $('#rShareDebrief').onclick = () => {
+  // 複製戰報代碼功能 (若保留節點時綁定)
+  if ($('#rShareDebrief')) $('#rShareDebrief').onclick = () => {
     const txt = shareText(res);
     navigator.clipboard.writeText(txt).then(() => {
       toast('📋 已複製精彩戰報與陣容代碼至剪貼簿！可直接貼上分享給戰友！');

@@ -7654,8 +7654,332 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 
 /* =====================================================
-   ⚔️ 戰鬥推演畫面第 5 槽武器零截斷全景自適應 (Battle View Grand Polish v4.5.1)
+   ⚔️ 對戰畫面 C4ISR 橫向全息戰術軍武卡 & 結算行動列規範 (v4.7.0)
    ===================================================== */
+
+/* --- 1. 戰場結算畫面按鈕列 (.aar-actions) 主次分明與字體統一 --- */
+.aar-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
+  padding-top: 12px !important;
+  margin-top: 4px !important;
+  border-top: 1px solid var(--line) !important;
+}
+.aar-actions .aar-btn-main {
+  height: 44px !important;
+  padding: 0 24px !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 7px !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35) !important;
+}
+.aar-actions .aar-btn-sub,
+.aar-actions .btn.ghost {
+  height: 42px !important;
+  padding: 0 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 9px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+}
+[data-theme="light"] .aar-actions .aar-btn-sub,
+[data-theme="light"] .aar-actions .btn.ghost {
+  background: #ffffff !important;
+  border: 1px solid rgba(15, 23, 42, 0.16) !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05) !important;
+}
+[data-theme="light"] .aar-actions .aar-btn-sub:hover,
+[data-theme="light"] .aar-actions .btn.ghost:hover {
+  background: #f0f9ff !important;
+  border-color: var(--cyan) !important;
+  color: var(--cyan) !important;
+}
+
+/* --- 2. 對戰畫面 C4ISR 橫向全息戰術軍武卡 (.bu) --- */
+.bu {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 5px 10px !important;
+  border-radius: 9px !important;
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* 左側：高清軍武立繪大視窗 (面積放大近 5 倍) */
+.bu-thumb {
+  width: 88px !important;
+  height: 54px !important;
+  min-height: 44px !important;
+  max-height: 94% !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  flex: 0 0 88px !important;
+  border: 1px solid rgba(56, 189, 248, 0.38) !important;
+  background: #020617 !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45) !important;
+}
+[data-theme="light"] .bu-thumb {
+  background: #e2e8f0 !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12) !important;
+}
+.bu-thumb img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+.bu-cat-tag {
+  position: absolute !important;
+  top: 3px !important;
+  left: 3px !important;
+  font-family: var(--mono) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  color: #020617 !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.04em !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5) !important;
+  z-index: 2 !important;
+}
+.bu-cost-tag {
+  position: absolute !important;
+  bottom: 3px !important;
+  right: 3px !important;
+  font-family: var(--head) !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  color: #fbbf24 !important;
+  background: rgba(2, 6, 23, 0.86) !important;
+  border: 1px solid rgba(251, 191, 36, 0.55) !important;
+  padding: 0 5px !important;
+  border-radius: 4px !important;
+  line-height: 1.25 !important;
+  z-index: 2 !important;
+}
+[data-theme="light"] .bu-cost-tag {
+  background: rgba(15, 23, 42, 0.88) !important;
+  color: #fde047 !important;
+}
+
+/* 右側：三層高密度 C4ISR 資訊艙 */
+.bu-body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  gap: 2.5px !important;
+  height: 100% !important;
+}
+
+/* 第一層：國旗 + 名稱 + 型號 + 戰術標語/主武裝 */
+.bu-row-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+.bu-title-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  min-width: 0 !important;
+  flex: 0 1 auto !important;
+  overflow: hidden !important;
+}
+.bu-flag {
+  font-size: 13px !important;
+  line-height: 1 !important;
+  flex: none !important;
+}
+.bu-name-txt {
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.2 !important;
+}
+[data-theme="light"] .bu-name-txt {
+  color: #0f172a !important;
+}
+.bu-v-badge {
+  font-family: var(--mono) !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  background: rgba(56, 189, 248, 0.15) !important;
+  color: var(--cyan) !important;
+  border: 1px solid rgba(56, 189, 248, 0.38) !important;
+  line-height: 1.1 !important;
+  flex: none !important;
+}
+[data-theme="light"] .bu-v-badge {
+  background: rgba(2, 132, 199, 0.1) !important;
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+.bu-sub-group {
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex: 1 1 auto !important;
+  text-align: right !important;
+  min-width: 0 !important;
+  line-height: 1.2 !important;
+}
+.bu-role-tag {
+  font-weight: 700 !important;
+}
+.bu-wpn-txt {
+  color: var(--muted) !important;
+  opacity: 0.9 !important;
+  margin-left: 3px !important;
+  font-weight: 500 !important;
+}
+
+/* 第二層：軍規核心戰力參數 (ATK / STH / EW) + 戰術特性徽章 */
+.bu-row-mid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+.bu-metrics {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  flex: none !important;
+}
+.bu-m-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  font-family: var(--mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: var(--muted) !important;
+  line-height: 1.15 !important;
+  white-space: nowrap !important;
+}
+[data-theme="light"] .bu-m-pill {
+  background: rgba(15, 23, 42, 0.04) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: #475569 !important;
+}
+.bu-m-pill.atk b {
+  color: #fbbf24 !important;
+  font-weight: 800 !important;
+}
+[data-theme="light"] .bu-m-pill.atk b {
+  color: #d97706 !important;
+}
+.bu-m-pill.sth b {
+  color: #38bdf8 !important;
+  font-weight: 800 !important;
+}
+[data-theme="light"] .bu-m-pill.sth b {
+  color: #0284c7 !important;
+}
+.bu-m-pill.ew b {
+  color: #a78bfa !important;
+  font-weight: 800 !important;
+}
+[data-theme="light"] .bu-m-pill.ew b {
+  color: #7c3aed !important;
+}
+.bu-traits-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  overflow: hidden !important;
+  justify-content: flex-end !important;
+  min-width: 0 !important;
+}
+.bu-trait-pill {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 1px 6px !important;
+  border-radius: 4px !important;
+  background: rgba(56, 189, 248, 0.1) !important;
+  border: 1px solid rgba(56, 189, 248, 0.25) !important;
+  color: #e2e8f0 !important;
+  white-space: nowrap !important;
+  line-height: 1.15 !important;
+}
+[data-theme="light"] .bu-trait-pill {
+  background: rgba(2, 132, 199, 0.08) !important;
+  border-color: rgba(2, 132, 199, 0.22) !important;
+  color: #1e293b !important;
+}
+
+/* 第三層：整合式同行裝甲血條 + 即時數值 */
+.bu-row-btm {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  margin-top: 1px !important;
+}
+.bu-row-btm .hpbar {
+  flex: 1 1 auto !important;
+  height: 6.5px !important;
+  margin: 0 !important;
+  border-radius: 4px !important;
+  overflow: hidden !important;
+}
+.bu-row-btm .bu-hp {
+  flex: 0 0 auto !important;
+  font-family: var(--mono) !important;
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+  color: var(--muted) !important;
+  margin: 0 !important;
+  min-width: 58px !important;
+  text-align: right !important;
+  line-height: 1 !important;
+  visibility: visible !important;
+}
+.bu.dead .bu-row-btm .bu-hp {
+  visibility: hidden !important;
+}
+
+/* 桌機與筆電端第 5 槽武器零截斷全景自適應 */
 @media (min-width: 769px) {
   .battle {
     padding: 4px 18px 8px !important;
@@ -7669,17 +7993,44 @@ body:has(.battle:not([hidden])) .command-deck,
     min-height: 34px !important;
   }
   .team-units-box {
-    padding: 3px 8px !important;
-    gap: 2px !important;
-  }
-  .units-card-list {
+    padding: 4px 8px !important;
     gap: 3px !important;
   }
+  .units-card-list {
+    gap: 4px !important;
+  }
+}
+
+/* 手機端對戰卡片緊湊適配 */
+@media (max-width: 768px) {
   .bu {
-    padding: 3px 8px !important;
+    padding: 5px 8px !important;
+    gap: 8px !important;
   }
   .bu-thumb {
-    width: 38px !important;
-    height: 26px !important;
+    width: 66px !important;
+    height: 44px !important;
+    flex: 0 0 66px !important;
+  }
+  .bu-name-txt {
+    font-size: 12px !important;
+  }
+  .bu-sub-group {
+    font-size: 9.5px !important;
+  }
+  .bu-m-pill {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+  }
+  .bu-trait-pill {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+  }
+  .aar-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .aar-actions .btn {
+    width: 100% !important;
   }
 }
