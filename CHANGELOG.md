@@ -6,6 +6,18 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.8.1] - 2026-10-30
+#### 戰場態勢欄精簡與五域狀態燈單行滿版優化 (Holo Radar Strip Streamline & Domain Badges Single-Row Fix)
+- **移除無實質功能之裝飾文字與標籤**：
+  - 移除右側純靜態裝飾字串 `LINK-16 // SYNC`。
+  - 移除右側純文字狀態框 `[FIRE CONTROL ON]`（該資訊已完整呈現於正下方戰術交鋒橫幅與戰報標籤中，避免空間浪費與文字上下換行）。
+- **徹底解決「✈️ 制空、🚀 防空、🛡️ 裝甲、⚓ 制海、📡 電戰」文字換行問題**：
+  - 態勢欄改為由五大作戰領域指示燈均勻橫向展開（`justify-content: space-around`），並強制 `white-space: nowrap`。
+  - 字體升級為 `11px`，單行清爽滿版排列，各階段交戰動態亮起指示燈號更加顯眼易讀。
+- **快取升級**：更新 Service Worker 快取版本至 `topclash-v4.8.1`。
+
+---
+
 ### [v4.8.0] - 2026-10-30
 #### 100項現代軍武全面均衡與 2026 最新實戰規格翻新 (100-Unit Roster Modernization & 20,000-Match Balance Overhaul)
 - **消滅 27 張「無特性白板卡」，100 項軍武 100% 具備專屬戰術特性 (`traits`)**：

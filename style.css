@@ -2796,15 +2796,20 @@ body:has(.battle:not([hidden])) .command-deck,
 }
 .holo-domains {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  gap: 10px;
   z-index: 1;
 }
 .holo-domain {
-  font-size: 10px;
+  font-size: 11px;
   color: #64748b;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  white-space: nowrap !important;
+  letter-spacing: 0.5px;
   transition: all 0.25s ease;
   user-select: none;
 }
