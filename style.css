@@ -42,27 +42,27 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .topbar,.build,.battle{position:relative;z-index:1}
 
 /* ---------- Top bar (緊湊軍規頂部導航，絕對單行零折行) ---------- */
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 18px;height:48px;min-height:48px;flex:0 0 48px;border-bottom:1px solid var(--line);background:var(--topbar-bg);backdrop-filter:blur(10px);position:relative;z-index:20;flex-wrap:nowrap;box-shadow:0 1px 10px rgba(0,0,0,.04);transition:background .22s,border-color .22s}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:6px 20px;height:54px;min-height:54px;flex:0 0 54px;border-bottom:1px solid var(--line);background:var(--topbar-bg);backdrop-filter:blur(10px);position:relative;z-index:20;flex-wrap:nowrap;box-shadow:0 1px 10px rgba(0,0,0,.04);transition:background .22s,border-color .22s}
 .brand{display:flex;align-items:center;gap:10px;flex:none;cursor:pointer;user-select:none;transition:opacity .15s}
 .brand:hover{opacity:.88}
-.brand-mark{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--cyan);background:rgba(61,224,255,.08);border:1px solid var(--line2);box-shadow:0 0 14px rgba(61,224,255,.2) inset}
+.brand-mark{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--cyan);background:rgba(61,224,255,.08);border:1px solid var(--line2);box-shadow:0 0 14px rgba(61,224,255,.2) inset}
 [data-theme="light"] .brand-mark{background:rgba(2,132,199,.08);box-shadow:0 2px 8px rgba(2,132,199,.15)}
-.brand-mark svg{width:18px;height:18px}
-.brand h1{font-family:var(--head);font-size:17px;letter-spacing:.04em;font-weight:700;line-height:1.1;white-space:nowrap}
-.brand h1 small{font-size:12px;color:var(--amber);margin-left:4px;font-weight:600}
-.brand .sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.14em}
+.brand-mark svg{width:20px;height:20px}
+.brand h1{font-family:var(--head);font-size:19px;letter-spacing:.04em;font-weight:700;line-height:1.1;white-space:nowrap}
+.brand h1 small{font-size:13.5px;color:var(--amber);margin-left:4px;font-weight:600}
+.brand .sub{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.14em}
 .modes{display:flex;gap:3px;margin:0 auto;background:rgba(255,255,255,.04);padding:3px;border-radius:9px;border:1px solid var(--line);flex:none}
 [data-theme="light"] .modes{background:rgba(15,23,42,.04)}
-.mode-btn{padding:5px 12px;border-radius:6px;font-weight:700;color:var(--muted);transition:.2s;font-size:12.5px;white-space:nowrap}
+.mode-btn{padding:7px 14px;border-radius:7px;font-weight:700;color:var(--muted);transition:.2s;font-size:13.5px;white-space:nowrap}
 .mode-btn:hover{color:var(--text)}
 .mode-btn.active{background:linear-gradient(135deg,rgba(61,224,255,.22),rgba(61,224,255,.08));color:var(--cyan);box-shadow:0 0 0 1px var(--line2) inset}
 [data-theme="light"] .mode-btn.active{background:#ffffff;color:var(--cyan);box-shadow:0 2px 8px rgba(15,23,42,.08)}
 .hud-right{display:flex;align-items:center;gap:8px;flex:none}
 .hud-stats{display:flex;gap:6px}
-.chip-stat{font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip-stat{font-family:var(--mono);font-size:12px;padding:4px 9px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 [data-theme="light"] .chip-stat{background:#ffffff;box-shadow:0 1px 3px rgba(15,23,42,.05)}
 .chip-stat b{color:var(--text);font-weight:700}
-.icon-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--line2);color:var(--cyan);font-weight:700;font-family:var(--head);font-size:14px;transition:.2s;display:grid;place-items:center;flex:none}
+.icon-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line2);color:var(--cyan);font-weight:700;font-family:var(--head);font-size:15px;transition:.2s;display:grid;place-items:center;flex:none}
 .icon-btn:hover{background:rgba(61,224,255,.14)}
 [data-theme="light"] .icon-btn{border-color:var(--line);color:var(--cyan);background:#ffffff;box-shadow:0 1px 4px rgba(15,23,42,.06)}
 [data-theme="light"] .icon-btn:hover{background:rgba(2,132,199,.1)}
@@ -86,9 +86,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 }
 
 /* ---------- 緊湊戰情橫幅 (Mission Bar，單行高密整潔，調撥按鈕常駐頂部右側) ---------- */
-.mission-bar{padding:3px 18px;background:var(--mission-bg,rgba(10,18,30,.92));border-bottom:1px solid var(--line);backdrop-filter:blur(10px);height:40px;min-height:40px;flex:0 0 40px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10;transition:background .22s ease,border-color .22s ease}
-.mission-content{display:flex;align-items:center;gap:10px;flex:1;min-width:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mission-tag{font-family:var(--mono);font-size:10.5px;padding:2px 7px;border-radius:4px;background:rgba(61,224,255,.12);color:var(--cyan);border:1px solid rgba(61,224,255,.25);letter-spacing:.04em;flex:none}
+.mission-bar{padding:4px 20px;background:var(--mission-bg,rgba(10,18,30,.92));border-bottom:1px solid var(--line);backdrop-filter:blur(10px);height:46px;min-height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:10;transition:background .22s ease,border-color .22s ease}
+.mission-content{display:flex;align-items:center;gap:12px;flex:1;min-width:0;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:4px;background:rgba(61,224,255,.12);color:var(--cyan);border:1px solid rgba(61,224,255,.25);letter-spacing:.04em;flex:none}
 .mission-item{display:flex;align-items:center;gap:6px;flex:none}
 .mission-item b{color:var(--text)}
 .mission-item p{color:var(--muted);font-size:11.5px;margin:0}
@@ -187,8 +187,8 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 /* ---------- 核心 5x5 全景矩陣看板 (Matrix View: 零滾動一屏滿版自適應) ---------- */
 .matrix-layout{
   flex: 1 1 auto;
-  height: calc(100vh - 48px - 40px);
-  max-height: calc(100vh - 48px - 40px);
+  height: calc(100vh - 54px - 46px);
+  max-height: calc(100vh - 54px - 46px);
   min-height: 0;
   padding: 6px 14px 70px;
   max-width: 1600px;
@@ -383,12 +383,12 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 /* A/B 雙陣容快速切換開關 */
 .deck-ab-toggle{display:flex;flex-direction:row;gap:3px;background:rgba(255,255,255,.04);padding:3px;border-radius:7px;border:1px solid var(--line);flex:none}
 [data-theme="light"] .deck-ab-toggle{background:rgba(15,23,42,.04);border-color:rgba(15,23,42,.15)}
-.ab-btn{padding:6px 11px;border-radius:5px;font-family:var(--head);font-size:12px;font-weight:700;color:var(--muted);background:transparent;border:none;cursor:pointer;transition:.15s;line-height:1}
+.ab-btn{padding:8px 13px;border-radius:6px;font-family:var(--head);font-size:13.5px;font-weight:700;color:var(--muted);background:transparent;border:none;cursor:pointer;transition:.15s;line-height:1}
 .ab-btn:hover{color:var(--text)}
 .ab-btn.active{background:linear-gradient(135deg,rgba(61,224,255,.25),rgba(61,224,255,.08));color:var(--cyan);box-shadow:0 0 0 1px rgba(61,224,255,.5) inset}
 [data-theme="light"] .ab-btn.active{background:#ffffff;color:var(--cyan);box-shadow:0 2px 6px rgba(15,23,42,.1)}
 
-.budget-badge{display:flex;flex-direction:column;align-items:flex-start;width:130px;min-width:130px;flex:none}
+.budget-badge{display:flex;flex-direction:column;align-items:flex-start;width:100px;min-width:100px;flex:none}
 .budget-top-row{display:flex;align-items:center;justify-content:space-between;width:100%;gap:6px}
 .budget-label{font-family:var(--head);font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
 .slots-pill{font-family:var(--mono);font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;background:rgba(255,255,255,.06);color:var(--muted);border:1px solid var(--line);transition:.2s;white-space:nowrap}
@@ -531,7 +531,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .sim-tbl td:last-child{text-align:right;font-family:var(--mono)}
 
 /* ---------- Battle (100vh 零截斷全景自適應 100% 滿版大氣展開) ---------- */
-.battle{padding:8px 20px 12px;width:100%;max-width:100%;margin:0;box-sizing:border-box;height:calc(100vh - 48px);max-height:calc(100vh - 48px);overflow:hidden;display:flex;flex-direction:column}
+.battle{padding:8px 20px 12px;width:100%;max-width:100%;margin:0;box-sizing:border-box;height:calc(100vh - 54px);max-height:calc(100vh - 54px);overflow:hidden;display:flex;flex-direction:column}
 .battle-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:8px;flex:none;min-height:38px;width:100%}
 .phase-steps{display:flex;gap:6px}
 .ph{display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);transition:.3s;font-weight:700;font-size:12px}
@@ -4537,8 +4537,8 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   box-sizing: border-box;
   animation: fadeIn 0.25s ease-out;
   flex: 1;
-  height: calc(100vh - 48px);
-  max-height: calc(100vh - 48px);
+  height: calc(100vh - 54px);
+  max-height: calc(100vh - 54px);
   overflow: hidden; /* 徹底杜絕右側垂直捲軸，達成一屏流全景展示 */
 }
 
@@ -4547,7 +4547,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .tournament-layout:has(#tourneyLobbyCard:not([hidden])) {
   overflow-y: auto !important;
   height: auto;
-  min-height: calc(100vh - 48px);
+  min-height: calc(100vh - 54px);
   max-height: none;
 }
 
@@ -6434,8 +6434,8 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .ladder-layout {
   flex: 1;
   min-height: 0;
-  height: calc(100vh - 48px);
-  max-height: calc(100vh - 48px);
+  height: calc(100vh - 54px);
+  max-height: calc(100vh - 54px);
   overflow-y: auto;
   overflow-x: hidden;
   padding: 10px 16px 16px;
@@ -7192,83 +7192,219 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 }
 
 /* =====================================================
-   🎯 底欄常駐指令台自適應寬度流動排版 (Command Deck Sizing)
+   🎯 底欄常駐指令台自適應大氣排版 (Command Deck Grand Layout v4.3.0)
    ===================================================== */
+.deck-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex: none !important;
+}
+.slots-pill, #slotsPill,
+.budget-eff-tag, #budgetEff {
+  display: none !important;
+}
+.budget-badge {
+  width: 95px !important;
+  min-width: 95px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+.budget-label {
+  font-family: var(--head) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .08em !important;
+  color: var(--muted) !important;
+  line-height: 1.1 !important;
+  margin-bottom: 2px !important;
+}
+.budget-digits {
+  font-family: var(--head) !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+}
+.budget-digits b {
+  color: var(--cyan) !important;
+}
+.budget-mini-bar {
+  margin-top: 4px !important;
+  height: 4px !important;
+}
+
+/* 中欄：三大卡片按鈕群大氣飽滿展示 */
+.deck-mid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 14px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
 .deck-label-split {
   display: none !important;
 }
+
+/* 1. 戰術教條卡片組 */
+.doc-group {
+  display: flex !important;
+  align-items: center !important;
+  flex: none !important;
+}
 .doc-toggles {
-  gap: 3px !important;
-  padding: 2px 3px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 44px !important;
+  padding: 3px 6px !important;
+  gap: 5px !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
 }
 .doc-btn {
-  padding: 4px 8px !important;
-  height: 30px !important;
-  font-size: 11.5px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-sizing: border-box !important;
 }
+
+/* 2. 四大聯合作戰體系與電戰指示燈艙 */
 .deck-synergy-bar {
+  display: inline-flex !important;
+  align-items: center !important;
   flex: none !important;
   max-width: none !important;
   overflow: visible !important;
 }
 .indicators-dock-wrap {
-  height: 30px !important;
-  padding: 1px 3px !important;
-  gap: 2px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 44px !important;
+  padding: 3px 8px !important;
+  gap: 5px !important;
+  max-width: none !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 .syn-indicator {
-  padding: 1px 4px !important;
-  height: 24px !important;
-  font-size: 10.5px !important;
-  gap: 2px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 34px !important;
+  padding: 0 10px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  gap: 5px !important;
+  box-sizing: border-box !important;
 }
-.deck-tools {
-  padding-left: 6px !important;
-  border-left: none !important;
-}
-.tools-btn-group {
-  padding: 1px 3px !important;
-  gap: 3px !important;
-}
-.tool-btn {
-  padding: 4px 8px !important;
-  height: 30px !important;
-  font-size: 11.5px !important;
-  gap: 3px !important;
-}
-.tool-btn kbd {
-  display: none !important;
-}
-.mega-launch-btn {
-  min-width: 170px !important;
-  padding: 6px 14px !important;
+.ind-dot {
+  width: 6.5px !important;
+  height: 6.5px !important;
 }
 
-.deck-right {
-  width: auto !important;
-  min-width: 0 !important;
+/* 3. 編制整備工具卡片組 */
+.deck-tools {
+  display: inline-flex !important;
+  align-items: center !important;
+  padding-left: 0 !important;
+  border-left: none !important;
   flex: none !important;
 }
-.mega-launch-btn {
-  width: 190px !important;
-  min-width: 190px !important;
-  max-width: 190px !important;
-  padding: 6px 10px !important;
-}
-.indicators-dock-wrap {
-  gap: 1px !important;
-  padding: 1px 2px !important;
-}
-.syn-indicator {
-  padding: 1px 3px !important;
-  gap: 1px !important;
-  font-size: 10px !important;
-}
-.doc-btn {
+.tools-btn-group {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 44px !important;
   padding: 3px 6px !important;
-  font-size: 11px !important;
+  gap: 5px !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
 }
 .tool-btn {
-  padding: 3px 6px !important;
+  height: 36px !important;
+  padding: 0 12px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 7px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  box-sizing: border-box !important;
+}
+.tool-btn-icon {
+  font-size: 15px !important;
+}
+.tool-btn kbd {
+  display: inline-block !important;
+  font-size: 10px !important;
+  padding: 1px 5px !important;
+  border-radius: 4px !important;
+}
+
+/* 右側：開始戰鬥大按鈕 100% 零截斷大氣展開 */
+.deck-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+.mega-launch-btn {
+  min-width: 270px !important;
+  width: auto !important;
+  max-width: 330px !important;
+  height: 52px !important;
+  padding: 0 16px !important;
+  border-radius: 12px !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+}
+.mega-launch-btn .launch-icon {
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 18px !important;
+  flex: none !important;
+}
+.mega-launch-btn .launch-texts {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  gap: 2px !important;
+}
+.mega-launch-btn .launch-title {
+  font-family: var(--head) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: .06em !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.mega-launch-btn .launch-sub {
+  font-family: var(--mono) !important;
   font-size: 11px !important;
+  letter-spacing: .03em !important;
+  line-height: 1.1 !important;
+  opacity: .9 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+.mega-launch-btn .launch-arrow {
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 15px !important;
+  flex: none !important;
 }
