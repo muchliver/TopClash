@@ -5306,21 +5306,54 @@ async function initHostRoom() {
 }
 
 async function joinTargetRoom() {
-  const code = ($('#pvpJoinCodeInput')?.value || '').trim();
-  if (!code) {
+  const input = $('#pvpJoinCodeInput');
+  const btn = $('#btnSubmitJoinRoom');
+  const waitingStatus = $('#pvpJoinWaitingStatus');
+  const waitingText = $('#pvpJoinWaitingText');
+
+  const rawCode = (input?.value || '').trim().toUpperCase();
+  if (!rawCode) {
     toast('⚠️ 請輸入 6 位房間代碼！');
+    if (input) input.focus();
     return;
   }
+  const cleanCode = rawCode.replace(/^TOPCLASH-BO5-/, '');
+  if (cleanCode.length < 5) {
+    toast('⚠️ 房間代碼格式不符，請輸入 6 位代碼！');
+    return;
+  }
+
+  // 立即提供視覺反饋與防連點防抖
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '連線中... ⏳';
+  }
+  if (waitingStatus) waitingStatus.hidden = false;
+  if (waitingText) waitingText.textContent = `正在連線至房間 [${cleanCode}]...`;
+
   const player = LadderEngine.getState().player;
   const profile = { name: player.name, uid: player.uid || LadderEngine.getPlayerUID(), flag: player.flag };
 
-  toast(`正在連線進入房間 [${code.toUpperCase()}]...`);
+  toast(`正在連線進入房間 [${cleanCode}]...`);
   try {
-    await OnlinePvPEngine.joinRoom(code, profile);
+    await OnlinePvPEngine.joinRoom(cleanCode, profile);
   } catch (err) {
-    toast(`⚠️ 加入失敗：${err.message}`);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '立即加入 ➔';
+    }
+    if (waitingStatus) waitingStatus.hidden = true;
+    toast(`⚠️ 加入失敗：${err.message || '找不到該房間'}`);
   }
 }
+
+// 支援在房間代碼輸入框按 Enter 鍵直接連線
+$('#pvpJoinCodeInput')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    joinTargetRoom();
+  }
+});
 
 // 綁定 onlinePvpModal 互動
 $('#pvpTabsRow')?.addEventListener('click', e => {
@@ -5356,6 +5389,17 @@ $('#btnCopyShareUrl')?.addEventListener('click', () => {
 
 $('#btnSubmitJoinRoom')?.addEventListener('click', joinTargetRoom);
 
+OnlinePvPEngine.on('error', err => {
+  const joinBtn = $('#btnSubmitJoinRoom');
+  if (joinBtn) {
+    joinBtn.disabled = false;
+    joinBtn.textContent = '立即加入 ➔';
+  }
+  const joinStatus = $('#pvpJoinWaitingStatus');
+  if (joinStatus) joinStatus.hidden = true;
+  toast(`⚠️ 線上對戰提示：${err}`);
+});
+
 $('#btnPvpCancel')?.addEventListener('click', () => {
   OnlinePvPEngine.closeConnection();
   $('#onlinePvpModal').hidden = true;
@@ -5364,6 +5408,13 @@ $('#btnPvpCancel')?.addEventListener('click', () => {
 
 // 當對手連線加入時
 OnlinePvPEngine.on('opponent_joined', ({ opponent, isHost }) => {
+  const joinBtn = $('#btnSubmitJoinRoom');
+  if (joinBtn) {
+    joinBtn.disabled = false;
+    joinBtn.textContent = '立即加入 ➔';
+  }
+  const joinStatus = $('#pvpJoinWaitingStatus');
+  if (joinStatus) joinStatus.hidden = true;
   $('#pvpPanelHost').hidden = true;
   $('#pvpPanelJoin').hidden = true;
   $('#pvpVersusBox').hidden = false;

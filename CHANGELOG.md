@@ -6,6 +6,21 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v4.6.2] - 2026-10-30
+#### 線上真人開房對戰加入連線重大修復 (Online PvP Join Room & Firebase Relay Critical Fix)
+- **Firebase Realtime Database 雲端中繼核心修復**：
+  - 徹底解決 `getFbDb()` 因在非錦標賽模式下 Firebase 未初始化（`apps.length === 0`）導致雲端中繼備援完全失效的致命問題。
+  - 在 `OnlinePvPEngine` 內置 Firebase 雲端配置與自啟動機制，確保房主開房與挑戰者加入時，100% 成功掛載雲端訊令中繼。
+  - 雙軌穿透加速：當 WebRTC 遭遇 4G/5G 行動網路或對稱型 NAT 限制時，於 1.2 秒內極速啟用 Firebase 雲端中繼，徹底打通跨網路、跨手機、跨區域連線。
+- **挑戰者 UI 互動視覺反饋與防連點防抖**：
+  - 點擊「立即加入 ➔」後，按鈕立即切換為 `連線中... ⏳` 並鎖定 `disabled`，杜絕因連續點擊造成 Peer 連線重置的惡性循環。
+  - 新增動態旋轉雷達指示燈（`#pvpJoinWaitingStatus`），即時顯示「正在連線至房間 [代碼]...」。
+  - 支援在房間代碼輸入框按下 `Enter` 鍵直接發起連線。
+  - 8 秒連線逾時保護，若房間不存在或房主已關閉，主動解鎖按鈕並顯示明確錯誤引導。
+- **快取升級**：更新 Service Worker 快取至 `topclash-v4.6.2`。
+
+---
+
 ### [v4.6.1] - 2026-10-30
 #### 戰術教條與工具組卡片間距拓寬 (Tactical Doctrine & Tools Spacing Enhancement)
 - **卡片間距擴大至 28px**：

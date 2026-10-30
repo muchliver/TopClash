@@ -19,12 +19,27 @@ const OnlinePvPEngine = (function() {
   let fbMsgListener = null;
   const senderId = 'P-' + Math.random().toString(36).slice(2, 10);
 
+    const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCcqIW2P88KMBTCkNJhneADRjdJzjBOcI0",
+    authDomain: "top-game-913c0.firebaseapp.com",
+    databaseURL: "https://top-game-913c0-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "top-game-913c0",
+    storageBucket: "top-game-913c0.firebasestorage.app",
+    messagingSenderId: "948581983008",
+    appId: "1:948581983008:web:c141212f221a706263ad45"
+  };
+
   function getFbDb() {
     try {
-      if (typeof window !== 'undefined' && window.firebase && window.firebase.apps && window.firebase.apps.length) {
+      if (typeof window !== 'undefined' && window.firebase) {
+        if (!window.firebase.apps || !window.firebase.apps.length) {
+          window.firebase.initializeApp(FIREBASE_CONFIG);
+        }
         return window.firebase.database();
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Firebase init in OnlinePvPEngine:', e);
+    }
     return null;
   }
 
@@ -184,25 +199,42 @@ const OnlinePvPEngine = (function() {
     pvpState.winsA = 0;
     pvpState.winsB = 0;
     pvpState.round = 1;
+    opponentInfo = null;
 
     const fullPeerId = `${ROOM_PREFIX}${cleanCode}`;
 
     return new Promise((resolve, reject) => {
-      // 挑戰者使用隨機 peer id
-      peer = new window.Peer({
-        config: {
-          iceServers: [
-            { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:global.stun.twilio.com:3478' }
-          ]
+      let isSettled = false;
+      let relayStarted = false;
+
+      const finishSuccess = () => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(connectionTimeout);
+        resolve({ roomCode: cleanCode });
+      };
+
+      const finishError = (err) => {
+        if (isSettled) return;
+        isSettled = true;
+        clearTimeout(connectionTimeout);
+        emit('error', err.message || err);
+        reject(err);
+      };
+
+      // 8 秒逾時防護
+      const connectionTimeout = setTimeout(() => {
+        if (!pvpState.connected && !opponentInfo) {
+          finishError(new Error(`連線逾時：找不到房間 [${cleanCode}] 或房主尚未就緒，請確認代碼無誤！`));
         }
-      });
+      }, 8000);
 
       const startRelayFallback = () => {
-        if (pvpState.connected || useFirebaseRelay) return;
+        if (relayStarted || pvpState.connected) return;
+        relayStarted = true;
+        console.log('[PvP] 啟動 Firebase 雲端中繼直連房主:', cleanCode);
         if (attachFirebaseRelay(cleanCode, false, playerProfile) && fbRoomRef) {
           useFirebaseRelay = true;
-          pvpState.connected = true;
           fbRoomRef.child('messages').push({ sender: senderId, type: '__RELAY_JOIN__', ts: Date.now() }).catch(() => {});
           sendPacket('HANDSHAKE', {
             name: playerProfile.name,
@@ -213,26 +245,59 @@ const OnlinePvPEngine = (function() {
         }
       };
 
-      peer.on('open', () => {
-        const outgoing = peer.connect(fullPeerId, { reliable: true });
-        setupConnection(outgoing, playerProfile);
-        // 若 4 秒內 WebRTC 無法穿透對稱型 NAT，自動無縫切換至 Firebase RTDB 雲端中繼
-        setTimeout(() => {
-          if (!pvpState.connected) startRelayFallback();
-        }, 4000);
-        resolve({ roomCode: cleanCode });
-      });
+      // 監聽握手成功
+      const onOpponentHandshake = () => {
+        pvpState.connected = true;
+        finishSuccess();
+      };
+      const unbindTemp = () => {
+        // 握手成功由 handleIncomingPacket 全域處理
+      };
 
-      peer.on('error', err => {
-        console.warn('Peer join error, switching to Firebase Relay fallback:', err);
-        startRelayFallback();
-        setTimeout(() => {
-          if (!opponentInfo) {
-            emit('error', '找不到該房間或房間已關閉，請確認代碼！');
-            reject(err);
+      // 挑戰者 PeerJS 初始化
+      try {
+        peer = new window.Peer({
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+              { urls: 'stun:stun2.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
           }
-        }, 3500);
-      });
+        });
+      } catch (e) {
+        console.warn('[PvP] PeerJS init failed, falling back to Firebase immediately:', e);
+        startRelayFallback();
+      }
+
+      if (peer) {
+        peer.on('open', () => {
+          try {
+            const outgoing = peer.connect(fullPeerId, { reliable: true });
+            setupConnection(outgoing, playerProfile);
+
+            // 若 1.2 秒內 WebRTC 未能穿透對稱型 NAT，立即雙軌啟動 Firebase RTDB 雲端中繼
+            setTimeout(() => {
+              if (!pvpState.connected) startRelayFallback();
+            }, 1200);
+          } catch (e) {
+            startRelayFallback();
+          }
+        });
+
+        peer.on('error', err => {
+          console.warn('[PvP] Peer join error, switching to Firebase Relay fallback:', err);
+          startRelayFallback();
+        });
+      } else {
+        startRelayFallback();
+      }
+
+      // 同時預先掛載 Firebase 監聽，確保房主發送的 HANDSHAKE 絕不遺漏
+      setTimeout(() => {
+        if (!pvpState.connected) startRelayFallback();
+      }, 500);
     });
   }
 
