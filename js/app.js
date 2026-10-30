@@ -6058,7 +6058,7 @@ function renderTourneyLobby(t, isOnline = false) {
         if (!p) {
           return `<div class="p-slot-chip empty">
             <span class="muted">#${idx + 1}</span>
-            <span class="p-name muted" style="font-style:italic">待抽籤席位 (各國特遣隊)</span>
+            <span class="p-name muted" style="font-style:italic">待抽籤席位</span>
             <span class="muted" style="font-size:9.5px">空席</span>
           </div>`;
         }
@@ -6088,7 +6088,7 @@ function renderTourneyLobby(t, isOnline = false) {
     if (!p) {
       return `<div class="p-slot-chip empty">
         <span class="muted">#${idx + 1}</span>
-        <span class="p-name muted" style="font-style:italic">待抽籤席位 (各國特遣隊)</span>
+        <span class="p-name muted" style="font-style:italic">待抽籤席位</span>
         <span class="muted" style="font-size:9.5px">AI 抽籤</span>
       </div>`;
     }
