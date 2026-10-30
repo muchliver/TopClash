@@ -1189,9 +1189,6 @@ function renderMatrix() {
             <div class="m-tag">${esc(u.tag)}</div>
           </div>
           <div class="m-actions">
-            <button class="m-var-toggle" data-cat="${cat}" data-cost="${u.cost}" title="切換同價位其他型號 (A/B/C/D)">
-              ${u.v}型 ▾
-            </button>
             <button class="m-info-btn" data-info-id="${u.id}" title="查看裝備詳細情報">ℹ</button>
           </div>
         </div>
@@ -1689,15 +1686,12 @@ function openUnitDetailModal(u) {
       <div class="sheet-synergy-hints">${synHints.map(h => `<div class="sheet-syn-hint-item"><b>${h.icon} ${esc(h.name)}</b><span>${esc(h.hint)}</span></div>`).join('')}</div>`;
     })()}
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="btn ghost sm" id="btnSheetToggleVar" data-cat="${u.cat}" data-cost="${u.cost}" style="flex:1">
-        切換為 ${u.v === 'A' ? 'B' : 'A'} 型
-      </button>
       ${isEquipped ? `
-        <button class="btn ghost sm" id="btnSheetEquip" data-id="${u.id}" style="flex:2;color:var(--red);border-color:rgba(255,93,110,.4)">
+        <button class="btn ghost sm" id="btnSheetEquip" data-id="${u.id}" style="flex:1;color:var(--red);border-color:rgba(255,93,110,.4)">
           從編制卸下 (回收 $${u.cost})
         </button>
       ` : `
-        <button class="btn primary sm" id="btnSheetEquip" data-id="${u.id}" ${why ? 'disabled' : ''} style="flex:2">
+        <button class="btn primary sm" id="btnSheetEquip" data-id="${u.id}" ${why ? 'disabled' : ''} style="flex:1">
           ${why ? `無法裝備：${why}` : `裝備至第 ${targetSlot + 1} 槽位 ($${u.cost})`}
         </button>
       `}
@@ -3342,7 +3336,6 @@ function teamHtml(units, side) {
       <div class="bu-thumb">
         <img src="${imgSrc}" alt="${esc(u.name)}" loading="eager" />
         <span class="bu-cat-tag" style="background:${catObj.color}">${catObj.short}</span>
-        <span class="bu-cost-tag">${u.cost}</span>
       </div>
       <div class="bu-body">
         <div class="bu-row-name">
@@ -3350,7 +3343,7 @@ function teamHtml(units, side) {
             <span class="bu-flag">${uData.flag || ''}</span>
             <span class="bu-name-txt" title="${esc(u.name)}">${esc(u.name)}</span>
           </div>
-          ${vBadge ? `<span class="bu-v-badge">${vBadge}</span>` : ''}
+          <span class="bu-cost">$${u.cost}</span>
         </div>
         <div class="bu-row-wpn" title="${wpnTxt ? '主戰武裝：' + esc(wpnTxt) : ''}">
           <span class="bu-wpn-icon">🎯</span>

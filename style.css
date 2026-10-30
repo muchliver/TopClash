@@ -7773,23 +7773,7 @@ body:has(.battle:not([hidden])) .command-deck,
   z-index: 2 !important;
 }
 .bu-cost-tag {
-  position: absolute !important;
-  bottom: 3px !important;
-  right: 3px !important;
-  font-family: var(--head) !important;
-  font-size: 11px !important;
-  font-weight: 900 !important;
-  color: #fbbf24 !important;
-  background: rgba(2, 6, 23, 0.86) !important;
-  border: 1px solid rgba(251, 191, 36, 0.55) !important;
-  padding: 0 5px !important;
-  border-radius: 4px !important;
-  line-height: 1.25 !important;
-  z-index: 2 !important;
-}
-[data-theme="light"] .bu-cost-tag {
-  background: rgba(15, 23, 42, 0.88) !important;
-  color: #fde047 !important;
+  display: none !important;
 }
 
 /* 右側：全新四行解耦高密度 C4ISR 戰術艙 */
@@ -7837,22 +7821,17 @@ body:has(.battle:not([hidden])) .command-deck,
 [data-theme="light"] .bu-name-txt {
   color: #0f172a !important;
 }
-.bu-v-badge {
-  font-family: var(--mono) !important;
-  font-size: 9.5px !important;
-  font-weight: 800 !important;
-  padding: 1px 4px !important;
-  border-radius: 4px !important;
-  background: rgba(56, 189, 248, 0.15) !important;
-  color: var(--cyan) !important;
-  border: 1px solid rgba(56, 189, 248, 0.38) !important;
+.bu-row-name .bu-cost {
+  font-family: var(--head) !important;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
+  color: #fbbf24 !important;
   line-height: 1.1 !important;
   flex: 0 0 auto !important;
+  letter-spacing: 0.04em !important;
 }
-[data-theme="light"] .bu-v-badge {
-  background: rgba(2, 132, 199, 0.1) !important;
-  color: #0284c7 !important;
-  border-color: rgba(2, 132, 199, 0.3) !important;
+[data-theme="light"] .bu-row-name .bu-cost {
+  color: #d97706 !important;
 }
 
 /* 行 2: 專屬主戰武裝單獨整行展示 (零截斷) */
