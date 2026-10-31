@@ -542,8 +542,10 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .battle-meta{display:flex;gap:8px;flex:1;flex-wrap:nowrap;align-items:center;overflow:hidden}
 
 /* 戰場環境與氣候凸顯徽章 */
-/* 戰場氣候環境專屬膠囊：特大字體 + 高對比戰術軍規風格 */
+/* 戰場氣候環境專屬膠囊：特大字體 + 高對比戰術軍規風格 + 動態氣象光效 */
 .chip-weather {
+  position: relative !important;
+  overflow: hidden !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 8px !important;
@@ -558,13 +560,31 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   background: rgba(15, 23, 42, 0.85) !important;
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
   white-space: nowrap !important;
-  transition: all 0.2s ease !important;
+  transition: all 0.25s ease !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 }
+
+/* 戰術流光光掃掃描 (即時衛星動態監測) */
+.chip-weather::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -130% !important;
+  width: 55% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%) !important;
+  transform: skewX(-24deg) !important;
+  pointer-events: none !important;
+  animation: weatherSweep 4.5s ease-in-out infinite !important;
+}
+
 .chip-weather .weather-icon {
   font-size: 22px !important;
   line-height: 1 !important;
   display: inline-block !important;
   filter: drop-shadow(0 0 6px currentColor);
+  transform-origin: center center !important;
+  will-change: transform, filter !important;
 }
 .chip-weather b,
 [data-theme="light"] .chip-weather b {
@@ -574,13 +594,14 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   letter-spacing: 0.02em !important;
 }
 
-/* 暴雨雷暴：深海靛藍光暈 + 閃電呼吸邊框 (高對比醒目) */
+/* 暴雨雷暴：深海靛藍光暈 + 閃電霹靂動態閃光 */
 .chip-weather-storm,
 .chip-weather-storm b {
   background: linear-gradient(135deg, #1e3a8a, #0f172a) !important;
   color: #ffffff !important;
   border-color: #3b82f6 !important;
   box-shadow: 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 10px rgba(96, 165, 250, 0.25) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, stormAtmospherePulse 3.2s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-storm,
 [data-theme="light"] .chip-weather-storm b {
@@ -589,18 +610,21 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #1e40af !important;
   box-shadow: 0 3px 12px rgba(29, 78, 216, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, stormAtmospherePulse 3.2s ease-in-out infinite !important;
 }
 .chip-weather-storm .weather-icon,
 [data-theme="light"] .chip-weather-storm .weather-icon {
   filter: drop-shadow(0 0 6px #bfdbfe) !important;
+  animation: stormLightningFlash 3.5s ease-in-out infinite !important;
 }
 
-/* 電磁風暴：雷紫金橘警戒 (高警示能量) */
+/* 電磁風暴：雷紫金橘警戒 + 高頻磁暴 EMP 脈衝跳動 */
 .chip-weather-em {
   background: linear-gradient(135deg, #581c87, #0f172a) !important;
   color: #fbbf24 !important;
   border-color: #c084fc !important;
   box-shadow: 0 0 16px rgba(192, 132, 252, 0.5), inset 0 0 10px rgba(251, 191, 36, 0.2) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, emWavePulse 2.4s ease-in-out infinite !important;
 }
 .chip-weather-em b {
   color: #fbbf24 !important;
@@ -611,6 +635,7 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #581c87 !important;
   box-shadow: 0 3px 12px rgba(107, 33, 168, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, emWavePulse 2.4s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-em b {
   color: #fef08a !important;
@@ -618,14 +643,16 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .chip-weather-em .weather-icon,
 [data-theme="light"] .chip-weather-em .weather-icon {
   filter: drop-shadow(0 0 6px #fde047) !important;
+  animation: emSparksJitter 2.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite !important;
 }
 
-/* 晴朗無風：耀眼金陽 */
+/* 晴朗無風：耀眼金陽 + 日冕平穩旋轉 */
 .chip-weather-clear {
   background: linear-gradient(135deg, #0c4a6e, #0f172a) !important;
   color: #38bdf8 !important;
   border-color: #38bdf8 !important;
   box-shadow: 0 0 14px rgba(56, 189, 248, 0.4) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, sunCoronaPulse 3.5s ease-in-out infinite !important;
 }
 .chip-weather-clear b {
   color: #bae6fd !important;
@@ -636,17 +663,23 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #075985 !important;
   box-shadow: 0 3px 12px rgba(2, 132, 199, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, sunCoronaPulse 3.5s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-clear b {
   color: #ffffff !important;
 }
+.chip-weather-clear .weather-icon,
+[data-theme="light"] .chip-weather-clear .weather-icon {
+  animation: sunSpinSlow 16s linear infinite !important;
+}
 
-/* 荒漠平原：沙塵土金 */
+/* 荒漠平原：沙塵土金 + 熱浪微風搖曳 */
 .chip-weather-plain {
   background: linear-gradient(135deg, #78350f, #1c1917) !important;
   color: #fcd34d !important;
   border-color: #f59e0b !important;
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.4) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, plainHeatPulse 3.2s ease-in-out infinite !important;
 }
 .chip-weather-plain b {
   color: #fcd34d !important;
@@ -657,17 +690,23 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #92400e !important;
   box-shadow: 0 3px 12px rgba(180, 83, 9, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, plainHeatPulse 3.2s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-plain b {
   color: #ffffff !important;
 }
+.chip-weather-plain .weather-icon,
+[data-theme="light"] .chip-weather-plain .weather-icon {
+  animation: plainWindSway 3s ease-in-out infinite !important;
+}
 
-/* 島嶼海峽：蔚藍海空 */
+/* 島嶼海峽：蔚藍海空 + 海浪翻湧起伏 */
 .chip-weather-strait {
   background: linear-gradient(135deg, #0f766e, #0f172a) !important;
   color: #2dd4bf !important;
   border-color: #14b8a6 !important;
   box-shadow: 0 0 14px rgba(20, 184, 166, 0.4) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, straitWavePulse 3s ease-in-out infinite !important;
 }
 .chip-weather-strait b {
   color: #5eead4 !important;
@@ -678,17 +717,23 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #115e59 !important;
   box-shadow: 0 3px 12px rgba(13, 148, 136, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, straitWavePulse 3s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-strait b {
   color: #ffffff !important;
 }
+.chip-weather-strait .weather-icon,
+[data-theme="light"] .chip-weather-strait .weather-icon {
+  animation: oceanWaveBobbing 2.6s ease-in-out infinite !important;
+}
 
-/* 都會巷戰：工業石板冷鋼 */
+/* 都會巷戰：工業石板冷鋼 + 雷達探測脈衝 */
 .chip-weather-urban {
   background: linear-gradient(135deg, #334155, #0f172a) !important;
   color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
   box-shadow: 0 0 14px rgba(148, 163, 184, 0.4) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, urbanReconPulse 3s ease-in-out infinite !important;
 }
 .chip-weather-urban b {
   color: #ffffff !important;
@@ -699,9 +744,198 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
   border-color: #1e293b !important;
   box-shadow: 0 3px 12px rgba(71, 85, 105, 0.4) !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  animation: weatherChipSpawn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, urbanReconPulse 3s ease-in-out infinite !important;
 }
 [data-theme="light"] .chip-weather-urban b {
   color: #ffffff !important;
+}
+.chip-weather-urban .weather-icon,
+[data-theme="light"] .chip-weather-urban .weather-icon {
+  animation: urbanRadarPing 2.2s ease-in-out infinite !important;
+}
+
+/* ================= 氣候動畫關鍵影格定義 (Keyframes) ================= */
+
+/* 1. 氣候進場彈出 */
+@keyframes weatherChipSpawn {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(1px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 2. 衛星監測雷達光掃 */
+@keyframes weatherSweep {
+  0% {
+    left: -130%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.65;
+  }
+  42% {
+    left: 230%;
+    opacity: 0;
+  }
+  100% {
+    left: 230%;
+    opacity: 0;
+  }
+}
+
+/* 3. 暴雨雷暴：閃電閃爍 */
+@keyframes stormLightningFlash {
+  0%, 86%, 92%, 96%, 100% {
+    filter: drop-shadow(0 0 6px #bfdbfe);
+    transform: scale(1);
+  }
+  88% {
+    filter: drop-shadow(0 0 18px #ffffff) brightness(2.2);
+    transform: scale(1.24) translate(-1px, -1px);
+  }
+  94% {
+    filter: drop-shadow(0 0 20px #93c5fd) brightness(2.4);
+    transform: scale(1.28) translate(1px, 0);
+  }
+}
+@keyframes stormAtmospherePulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 10px rgba(96, 165, 250, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(96, 165, 250, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.35);
+  }
+  88%, 94% {
+    box-shadow: 0 0 32px rgba(255, 255, 255, 0.95), inset 0 0 20px rgba(147, 197, 253, 0.6);
+  }
+}
+
+/* 4. 電磁風暴：電磁脈衝震盪 */
+@keyframes emSparksJitter {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 6px #fde047);
+  }
+  12% {
+    transform: scale(1.15) rotate(-8deg);
+    filter: drop-shadow(0 0 14px #ffffff) brightness(1.8);
+  }
+  24% {
+    transform: scale(1.05) rotate(5deg);
+    filter: drop-shadow(0 0 8px #f59e0b);
+  }
+  38% {
+    transform: scale(1.2) rotate(-4deg);
+    filter: drop-shadow(0 0 16px #fef08a) brightness(2);
+  }
+  52% {
+    transform: scale(1) rotate(2deg);
+    filter: drop-shadow(0 0 7px #d97706);
+  }
+}
+@keyframes emWavePulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(192, 132, 252, 0.5), inset 0 0 10px rgba(251, 191, 36, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(245, 158, 11, 0.75), inset 0 0 16px rgba(192, 132, 252, 0.45);
+    border-color: #fde047 !important;
+  }
+}
+
+/* 5. 晴朗空域：金陽平穩自轉與日冕光芒 */
+@keyframes sunSpinSlow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes sunCoronaPulse {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(56, 189, 248, 0.7), inset 0 0 12px rgba(255, 255, 255, 0.35);
+  }
+}
+
+/* 6. 海峽水道：波濤海浪起伏 */
+@keyframes oceanWaveBobbing {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2.5px) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(0.5px) rotate(1.5deg);
+  }
+  75% {
+    transform: translateY(-1.5px) rotate(2deg);
+  }
+}
+@keyframes straitWavePulse {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(20, 184, 166, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(45, 212, 191, 0.7), inset 0 0 12px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* 7. 荒漠平原：熱浪風沙搖曳 */
+@keyframes plainWindSway {
+  0%, 100% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(7deg) scale(1.05);
+  }
+  70% {
+    transform: rotate(-6deg) scale(0.98);
+  }
+}
+@keyframes plainHeatPulse {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(251, 191, 36, 0.7), inset 0 0 12px rgba(255, 255, 255, 0.3);
+  }
+}
+
+/* 8. 都會巷戰：無人機戰術雷達掃描偵測 */
+@keyframes urbanRadarPing {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 14px #38bdf8) brightness(1.4);
+  }
+}
+@keyframes urbanReconPulse {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(148, 163, 184, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(203, 213, 225, 0.65), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip-weather,
+  .chip-weather::after,
+  .chip-weather .weather-icon {
+    animation: none !important;
+  }
 }
 
 /* 我方戰術教條徽章：特大字體 + 青藍色軍規醒目邊框 */
