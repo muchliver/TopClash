@@ -5587,6 +5587,7 @@ $('#btnPvpCancel')?.addEventListener('click', () => {
   OnlinePvPEngine.closeConnection();
   $('#onlinePvpModal').hidden = true;
   currentActiveModal = null;
+  clearUrlSearchParam('room');
 });
 
 // 當對手連線加入時
@@ -7458,11 +7459,24 @@ if (typeof Telemetry !== 'undefined') Telemetry.init();
 setupMatch();
 renderAll();
 
+function clearUrlSearchParam(paramName) {
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has(paramName)) {
+      url.searchParams.delete(paramName);
+      const newQuery = url.searchParams.toString();
+      const newUrl = url.pathname + (newQuery ? '?' + newQuery : '') + url.hash;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  } catch (e) {}
+}
+
 // 檢查 URL 是否帶有模式或好友邀請房間代碼
 const urlParams = new URLSearchParams(window.location.search);
 const modeParam = urlParams.get('mode');
 const tourneyParam = new URLSearchParams(window.location.search).get('tourney');
 if (tourneyParam && typeof FirebaseTourneyEngine !== 'undefined') {
+  clearUrlSearchParam('tourney');
   setTimeout(async () => {
     setMode('tournament');
     currentTourneyTab = 'private';
@@ -7489,6 +7503,7 @@ if (modeParam && ['ladder', 'tournament', 'bo3', 'quick', 'ghost', 'daily', 'san
 }
 const roomParam = urlParams.get('room');
 if (roomParam) {
+  clearUrlSearchParam('room');
   setTimeout(() => {
     setMode('bo3');
     openOnlinePvpModal(roomParam.trim());
@@ -7498,6 +7513,7 @@ if (roomParam) {
 
 const replayParam = urlParams.get('replay');
 if (replayParam) {
+  clearUrlSearchParam('replay');
   try {
     const raw = atob(replayParam.trim());
     const [dA, dB, seedStr, evId, docA, docB] = raw.split('~');
