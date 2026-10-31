@@ -8253,6 +8253,57 @@ body:has(.battle:not([hidden])) .command-deck,
   padding: 4px 8px !important;
   font-size: 11.5px !important;
 }
+
+@media (max-width: 1440px) {
+  .topbar {
+    padding: 6px 8px !important;
+    gap: 6px !important;
+  }
+  .brand {
+    gap: 6px !important;
+  }
+  .brand h1 {
+    font-size: 14px !important;
+  }
+  .brand h1 small {
+    display: none !important;
+  }
+  .brand .sub {
+    display: none !important;
+  }
+  .modes {
+    gap: 1px !important;
+    padding: 2px !important;
+    margin: 0 4px !important;
+  }
+  .player-stat-badge {
+    max-width: 155px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .mode-btn {
+    padding: 5px 6px !important;
+    font-size: 11.5px !important;
+  }
+  .hud-right {
+    gap: 4px !important;
+  }
+  .chip-stat {
+    padding: 2.5px 5px !important;
+    font-size: 10.5px !important;
+  }
+  .nav-cloud-btn,
+  .nav-armory-btn {
+    padding: 3px 5px !important;
+    font-size: 10.5px !important;
+  }
+  .icon-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 13px !important;
+  }
+}
 .icon-btn {
   width: 31px !important;
   height: 31px !important;
@@ -9789,3 +9840,153 @@ body:has(.battle:not([hidden])) .command-deck,
     flex: 0 0 82px !important;
   }
 }
+
+/* =====================================================
+   📡 C4ISR 全域戰情報告與即時遙測大盤 (Telemetry & Analytics HUD) (v5.1.0)
+   ===================================================== */
+.chip-telemetry {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  background: rgba(16, 185, 129, 0.08) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  color: var(--text) !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  font-family: var(--mono) !important;
+  font-size: 11.5px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.chip-telemetry:hover {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.65) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.25) !important;
+}
+
+[data-theme="light"] .chip-telemetry {
+  background: #ecfdf5 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  color: #065f46 !important;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+[data-theme="light"] .chip-telemetry:hover {
+  background: #d1fae5 !important;
+  border-color: #10b981 !important;
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  display: inline-block;
+  flex-shrink: 0;
+  animation: pulseLiveGreen 1.8s infinite ease-in-out;
+}
+
+@keyframes pulseLiveGreen {
+  0% { transform: scale(0.92); opacity: 0.75; box-shadow: 0 0 3px #10b981; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 9px #10b981; }
+  100% { transform: scale(0.92); opacity: 0.75; box-shadow: 0 0 3px #10b981; }
+}
+
+/* 全域遙測彈窗樣式 */
+.telemetry-modal-card {
+  max-width: 580px !important;
+  width: 95% !important;
+  padding: 18px 20px !important;
+  box-sizing: border-box !important;
+}
+
+.tel-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 10px !important;
+  margin: 14px 0 16px !important;
+}
+
+.tel-stat-card {
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+[data-theme="light"] .tel-stat-card {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.tel-stat-card.live-card {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  background: rgba(6, 78, 59, 0.15) !important;
+}
+
+[data-theme="light"] .tel-stat-card.live-card {
+  background: #ecfdf5 !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
+.tel-stat-card .lbl {
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  margin-bottom: 4px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.tel-stat-card .val {
+  font-family: var(--head) !important;
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+}
+
+.tel-stat-card .val.text-green { color: #10b981 !important; }
+.tel-stat-card .val.text-cyan { color: #38bdf8 !important; }
+.tel-stat-card .val.text-amber { color: #fbbf24 !important; }
+.tel-stat-card .val.text-purple { color: #c084fc !important; }
+
+[data-theme="light"] .tel-stat-card .val.text-green { color: #059669 !important; }
+[data-theme="light"] .tel-stat-card .val.text-cyan { color: #0284c7 !important; }
+[data-theme="light"] .tel-stat-card .val.text-amber { color: #d97706 !important; }
+[data-theme="light"] .tel-stat-card .val.text-purple { color: #9333ea !important; }
+
+.tel-stat-card .sub {
+  font-size: 10.5px !important;
+  color: #64748b !important;
+  margin-top: 4px !important;
+  line-height: 1.3 !important;
+}
+
+.ga4-config-card {
+  background: rgba(56, 189, 248, 0.05) !important;
+  border: 1px dashed rgba(56, 189, 248, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 12px 14px !important;
+  margin-top: 10px !important;
+  box-sizing: border-box !important;
+}
+
+[data-theme="light"] .ga4-config-card {
+  background: #f0f9ff !important;
+  border-color: rgba(2, 132, 199, 0.3) !important;
+}
+
+@media (max-width: 600px) {
+  .tel-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+

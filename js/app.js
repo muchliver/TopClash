@@ -1558,14 +1558,19 @@ function renderHud() {
 
   const hudStats = $('#hudStats');
   if (hudStats) {
+    const tel = typeof Telemetry !== 'undefined' ? Telemetry.getStats() : { onlineCount: 1, totalBattles: 0 };
     hudStats.innerHTML = `
       <span class="chip-stat player-stat-badge" id="hudPlayerBadge" style="cursor:pointer" title="個人軍階戰績與天梯位階：${esc(tier.name)} (${p ? p.rp : 2055} RP) [點擊前往天梯競技]">
         <span style="font-weight:800;color:var(--cyan)">${myFlag} 我方：${myName}</span>
         <span class="badge" style="font-size:10px;padding:1px 6px;background:${tier.color}22;color:${tier.color};border:1px solid ${tier.color}66;font-weight:700">${esc(tier.name)}</span>
       </span>
-      <span class="chip-stat" title="你累計的總對戰場次">場次 <b>${stats.played}</b></span>
-      <span class="chip-stat" title="你的個人總勝率">勝率 <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b></span>
-      <span class="chip-stat" title="你的當前連勝場數">連勝 <b>${stats.streak}</b></span>
+      <span class="chip-stat" title="個人戰績：累計總對戰場次、總勝率與當前連勝"><b>${stats.played}</b>場 · <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b> · <b>${stats.streak}</b>連勝</span>
+      <span class="chip-stat chip-telemetry" id="btnOpenTelemetry" style="cursor:pointer" title="📡 全域戰情報告：點擊檢視即時在線、全服累計推演場次與 GA4 統計">
+        <span class="live-pulse-dot"></span>
+        <span>在線 <b id="telemetryOnlineVal">${tel.onlineCount}</b></span>
+        <span style="opacity:0.35">|</span>
+        <span>全服 <b id="telemetryBattlesVal">${tel.totalBattles > 0 ? tel.totalBattles.toLocaleString() : '--'}</b> 局</span>
+      </span>
     `;
   }
   updateCloudSyncButtonState();
@@ -2176,6 +2181,10 @@ $('#hudStats')?.addEventListener('click', e => {
 });
 
 function setMode(m) {
+  if (typeof Telemetry !== 'undefined') {
+    Telemetry.trackEvent('mode_switch', { mode: m });
+  }
+
   // 無論何時點選上方功能列（即使在戰鬥中或檢視戰場情形），立即乾淨退出戰鬥
   exitActiveBattle();
 
@@ -4374,6 +4383,17 @@ function finishBattle(res) {
     if (typeof CloudSync !== 'undefined') {
       CloudSync.syncToCloud();
     }
+  }
+
+  // 雙軌全域遙測：上報戰果至 Firebase RTDB 原子計數器與 GA4 事件
+  if (typeof Telemetry !== 'undefined') {
+    Telemetry.recordBattle({
+      mode: state.mode,
+      won: won,
+      draw: draw,
+      turns: res.rounds ? res.rounds.length : 0,
+      flagshipId: (state.deck && state.deck[0]) || null
+    });
   }
 
   /* 幽靈天梯積分結算 */
@@ -7424,6 +7444,7 @@ SoundEngine.enabled = savedSound;
 if ($('#audioIcon')) $('#audioIcon').textContent = savedSound ? '🔊' : '🔇';
 
 if (typeof LadderEngine !== 'undefined') LadderEngine.init();
+if (typeof Telemetry !== 'undefined') Telemetry.init();
 
 setupMatch();
 renderAll();

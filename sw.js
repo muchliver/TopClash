@@ -1,4 +1,4 @@
-const CACHE_NAME = 'topclash-v5.0.0';
+const CACHE_NAME = 'topclash-v5.1.0';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   './js/tournament.js',
   './js/firebase-tourney.js',
   './js/online-pvp.js',
+  './js/telemetry.js',
   './js/app.js',
   './js/armory.js'
 ];

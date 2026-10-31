@@ -6,6 +6,27 @@
 
 ## 📅 版本歷程總覽 (Release Milestones)
 
+### [v5.1.0] - 2026-10-31
+#### 雙軌全域遙測系統：Firebase 實時戰況大盤 ＋ Google Analytics 4 (GA4) 測量管線 (Global C4ISR Telemetry & GA4 Dual-Track Pipeline)
+- **實作「軌道 1：Firebase Realtime Database 全域原子計數與在線心跳」**：
+  - 新增專屬模組 `js/telemetry.js`，無縫整合現有 Firebase 雲端資料庫（`top-game-913c0`）。
+  - **即時在線指揮官 (Presence)**：利用 Firebase `.info/connected` 與 `onDisconnect().remove()`，精確追蹤目前處於指揮所/戰場中的全體在線人數。
+  - **全服累計推演場次**：每次對戰（快速對戰、天梯、錦標賽、BO5 系列賽、精選對戰）於 `finishBattle()` 結算時，自動透過原子交易自增全服歷史總局數 (`global_stats/summary/total_battles`) 與當日局數 (`global_stats/daily/{date}/battles`)。
+  - **全球指揮官編隊去重登記**：新訪客或新生成呼號之特遣隊自動登記至 `global_stats/players/{uid}`，同步維護全服部隊總量。
+  - **旗艦出戰熱度排行**：全自動記錄各 $5/$4/$3 旗艦出場統計，為後續 Meta 大數據分析奠定基礎。
+- **實作「軌道 2：Google Analytics 4 (GA4) 零摩擦動態掛載與事件管道」**：
+  - 於 `<head>` 配置 GA4 動態測量管線，免改程式碼即可動態載入。
+  - 封裝 `Telemetry.trackEvent()`，在作戰結算（`battle_finish`）、模式切換（`mode_switch`）等關鍵操作自動上報結構化事件至 Google 官方分析後台。
+- **全新高科技「全服作戰數據大盤 (GLOBAL C4ISR TELEMETRY)」互動彈窗**：
+  - 新增 `#globalTelemetryModal` 戰情彈窗，全景展示 4 大核心即時戰情指標：`即時在線指揮官`、`全服累計推演場次`、`全服列編指揮官部隊`、`今日全域接戰次數`。
+  - 內建 GA4 站長自訂面板：支援直接在介面輸入自訂 `G-XXXXXXXXXX` 測量 ID，一鍵儲存即刻生效，並提供「📡 發送測試信號 (c4isr_ping)」即時驗證。
+- **頂部導航列即時動態微光晶片 (`#btnOpenTelemetry`)**：
+  - 於頂部 HUD 新增高對比呼吸綠光指示標籤（`🟢 在線 X ｜ 全服 Y 局`），即時動態更新全服數據，點擊即可一鍵呼叫全域戰情大盤。
+  - 深度優化 1280px ~ 1440px 頂部導航空間分配，個人戰績精煉為單一高資訊密度晶片，確保全功能按鈕 100% 完美呈現零裁切。
+- **快取升級**：更新 Service Worker 快取版本與 `index.html` 靜態資源版本參數至 `topclash-v5.1.0`。
+
+---
+
 ### [v5.0.0] - 2026-10-31
 #### 天梯名冊方案 A：CSS Grid 嚴格等距網格 ＋ 頂部戰情表頭列 ＋ 雙欄去前綴零截斷重構 (Ladder Roster CSS Grid Uniform Spacing & Header Overhaul)
 - **改用 `CSS Grid` 固定 7 欄軌道 ＋ 統一 `10px` 欄距，徹底根除欄位間隔不一問題**：

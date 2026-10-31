@@ -9,11 +9,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5.0.0">
+<link rel="stylesheet" href="style.css?v=5.1.0">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Google Analytics 4 (GA4) 測量管線初始化 (可透過介面或設定動態掛載 G- ID) -->
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
 </head>
 <body>
 <div class="bg-grid" aria-hidden="true"></div>
@@ -861,6 +867,63 @@
   </div>
 </div>
 
+<!-- C4ISR 全域戰情報告與大數據大盤 (Global Telemetry & Analytics Modal) -->
+<div class="modal" id="globalTelemetryModal" hidden>
+  <div class="modal-card telemetry-modal-card">
+    <div class="cloud-modal-header" style="margin-bottom:12px">
+      <div class="badge-tag" style="display:inline-block;margin-bottom:6px;font-size:11px;font-family:var(--mono);color:#10b981;background:rgba(16,185,129,0.12);padding:2px 8px;border-radius:4px;border:1px solid rgba(16,185,129,0.35);">📡 C4ISR 全域戰情報告 · 即時遙測大盤</div>
+      <h2 style="font-size:18px;margin:4px 0 6px;">全服作戰數據大盤 (GLOBAL C4ISR TELEMETRY)</h2>
+      <p class="muted" style="font-size:12px;line-height:1.5;">雙軌統計架構：整合 Firebase Realtime Database 實時連線戰況 與 Google Analytics 4 (GA4) 訪客事件分析。</p>
+    </div>
+
+    <!-- 4 大核心全域即時戰情指標 -->
+    <div class="tel-grid">
+      <div class="tel-stat-card live-card">
+        <div class="lbl"><span class="live-pulse-dot"></span> 即時在線指揮官</div>
+        <div class="val text-green" id="modalTelOnline">--</div>
+        <div class="sub">目前正處於戰情室/戰場之即時連線人數</div>
+      </div>
+      <div class="tel-stat-card">
+        <div class="lbl">⚔️ 全服累計推演場次</div>
+        <div class="val text-cyan" id="modalTelBattles">--</div>
+        <div class="sub">全球所有指揮官累計進行之聯合作戰局數</div>
+      </div>
+      <div class="tel-stat-card">
+        <div class="lbl">🎖️ 全服列編指揮官部隊</div>
+        <div class="val text-amber" id="modalTelPlayers">--</div>
+        <div class="sub">已完成編號列裝之不重複特遣隊數</div>
+      </div>
+      <div class="tel-stat-card">
+        <div class="lbl">📅 今日全域接戰次數</div>
+        <div class="val text-purple" id="modalTelToday">--</div>
+        <div class="sub">今日 00:00 起全服推演自增場次</div>
+      </div>
+    </div>
+
+    <!-- 軌道 2：Google Analytics 4 (GA4) 站長配置區 -->
+    <div class="ga4-config-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <strong style="font-size:13px;color:var(--text);display:flex;align-items:center;gap:6px">
+          <span>🌐 Google Analytics 4 (GA4) 流量與事件分析</span>
+        </strong>
+        <span class="muted" style="font-size:10.5px">雙軌架構 · 官方報表後台</span>
+      </div>
+      <p class="muted" style="font-size:11.5px;line-height:1.45;margin-bottom:8px">
+        免動程式碼！輸入你的 GA4 評估 ID（格式為 <code>G-XXXXXXXXXX</code>），系統將自動啟動追蹤碼並上報訪客來源、留存率與 <code>battle_finish</code> 等作戰事件。
+      </p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="inputGA4MeasurementId" class="input" placeholder="例如: G-XXXXXXXXXX (留空則停用)" style="font-family:var(--mono);font-size:12px;flex:1" maxlength="24">
+        <button class="btn primary sm" id="btnSaveGA4" type="button" style="white-space:nowrap;font-weight:700">💾 儲存並啟用</button>
+        <button class="btn ghost sm" id="btnTestGAEvent" type="button" style="white-space:nowrap" title="向 GA4 發送一筆測試信號 (c4isr_ping)">📡 測試信號</button>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+      <button class="btn secondary" id="btnCloseTelemetryModal" type="button">關閉戰情報告</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status"></div>
 
 <script src="js/data.js"></script>
@@ -873,7 +936,8 @@
 <script src="js/firebase-tourney.js?v=4.2.8"></script>
 <script src="js/tournament.js?v=4.2.8"></script>
 <script src="js/online-pvp.js?v=4.2.8"></script>
-<script src="js/app.js?v=5.0.0"></script>
-<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5.0.0').then(r=>r.update()).catch(()=>{}));}</script>
+<script src="js/telemetry.js?v=5.1.0"></script>
+<script src="js/app.js?v=5.1.0"></script>
+<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5.1.0').then(r=>r.update()).catch(()=>{}));}</script>
 </body>
 </html>
