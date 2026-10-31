@@ -8225,28 +8225,38 @@ body:has(.battle:not([hidden])) .command-deck,
    🏆 天梯競技方案 1：全螢幕等高滿版雙欄 + 左欄結構精修 + 導航列防擠壓 (v4.9.3)
    ===================================================== */
 
-/* 1. 頂部導航列緊湊防溢出優化：確保軍武圖鑑、音效、深淺色、說明按鈕 100% 完整顯示 */
+/* 1. 頂部導航列緊湊防溢出優化 (方案 B：完整大氣品牌標題 + 二合一指揮官膠囊 + 到訪人次膠囊) */
 .topbar {
   padding: 6px 14px !important;
   gap: 8px !important;
+}
+.brand .sub {
+  letter-spacing: 0.06em !important;
 }
 .modes {
   gap: 2px !important;
   padding: 2px !important;
 }
 .mode-btn {
-  padding: 6px 10px !important;
-  font-size: 13px !important;
+  padding: 5px 10px !important;
+  font-size: 12.5px !important;
 }
 .hud-right {
   gap: 5px !important;
 }
 .hud-stats {
-  gap: 4px !important;
+  gap: 5px !important;
 }
 .chip-stat {
   padding: 3px 7px !important;
   font-size: 11.5px !important;
+}
+.p-badge-record {
+  opacity: 0.88;
+  font-size: 11px;
+  padding-left: 5px;
+  margin-left: 1px;
+  border-left: 1px solid var(--line2);
 }
 .nav-cloud-btn,
 .nav-armory-btn {
@@ -8254,49 +8264,60 @@ body:has(.battle:not([hidden])) .command-deck,
   font-size: 11.5px !important;
 }
 
+@media (max-width: 1520px) {
+  .p-badge-record {
+    display: none !important;
+  }
+}
+
 @media (max-width: 1440px) {
   .topbar {
-    padding: 6px 8px !important;
+    padding: 6px 10px !important;
     gap: 6px !important;
   }
   .brand {
-    gap: 6px !important;
+    gap: 7px !important;
+  }
+  .brand-mark {
+    width: 33px !important;
+    height: 33px !important;
   }
   .brand h1 {
-    font-size: 14px !important;
+    font-size: 17px !important;
   }
   .brand h1 small {
-    display: none !important;
+    display: inline !important;
+    font-size: 12px !important;
+    margin-left: 3px !important;
   }
   .brand .sub {
-    display: none !important;
+    display: block !important;
+    font-size: 9px !important;
+    letter-spacing: 0.04em !important;
   }
   .modes {
     gap: 1px !important;
     padding: 2px !important;
-    margin: 0 4px !important;
-  }
-  .player-stat-badge {
-    max-width: 155px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    margin: 0 auto !important;
   }
   .mode-btn {
-    padding: 5px 6px !important;
-    font-size: 11.5px !important;
+    padding: 5px 7px !important;
+    font-size: 12px !important;
   }
   .hud-right {
     gap: 4px !important;
   }
+  .hud-stats {
+    gap: 4px !important;
+  }
   .chip-stat {
-    padding: 2.5px 5px !important;
-    font-size: 10.5px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
   }
   .nav-cloud-btn,
   .nav-armory-btn {
-    padding: 3px 5px !important;
-    font-size: 10.5px !important;
+    padding: 3px 6px !important;
+    font-size: 11px !important;
   }
   .icon-btn {
     width: 28px !important;
@@ -8304,10 +8325,45 @@ body:has(.battle:not([hidden])) .command-deck,
     font-size: 13px !important;
   }
 }
+
+@media (max-width: 1340px) {
+  .topbar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+  .brand h1 {
+    font-size: 16px !important;
+  }
+  .brand h1 small {
+    font-size: 11.5px !important;
+  }
+  .brand .sub {
+    font-size: 8.5px !important;
+    letter-spacing: 0.02em !important;
+  }
+  .mode-btn {
+    padding: 4px 5.5px !important;
+    font-size: 11.5px !important;
+  }
+  .chip-stat {
+    padding: 2.5px 5.5px !important;
+    font-size: 10.5px !important;
+  }
+  .nav-cloud-btn,
+  .nav-armory-btn {
+    padding: 2.5px 5.5px !important;
+    font-size: 10.5px !important;
+  }
+  .icon-btn {
+    width: 27px !important;
+    height: 27px !important;
+    font-size: 12.5px !important;
+  }
+}
 .icon-btn {
-  width: 31px !important;
-  height: 31px !important;
-  font-size: 14px !important;
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 13.5px !important;
 }
 
 /* 2. 天梯全螢幕等高滿版容器 (消滅下方空白，直達視窗底部) */

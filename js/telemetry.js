@@ -20,6 +20,8 @@ const Telemetry = (() => {
   let totalBattles = 0;
   let totalPlayers = 0;
   let todayBattles = 0;
+  let totalVisits = Math.max(1, parseInt(localStorage.getItem('topclash_local_visits') || '1', 10));
+  let todayVisits = 1;
   let myPresenceRef = null;
   let mySessionId = 'sess_' + Math.random().toString(36).substring(2, 10);
 
@@ -136,15 +138,35 @@ const Telemetry = (() => {
     if (isInitialized) return;
     isInitialized = true;
 
+    // 每次瀏覽器工作階段 (Session) 到訪計數 +1 (本機保底 + 雲端同步)
+    const sessionVisited = sessionStorage.getItem('topclash_session_visit_counted');
+    if (!sessionVisited) {
+      const localV = Math.max(0, parseInt(localStorage.getItem('topclash_local_visits') || '0', 10)) + 1;
+      localStorage.setItem('topclash_local_visits', String(localV));
+      totalVisits = Math.max(totalVisits, localV);
+    }
+
+    // 綁定 UI 點擊事件（無論離線或連線皆可開啟戰情大盤）
+    setupUIEvents();
     initGA4();
+
     const database = initFirebase();
     if (!database) {
+      sessionStorage.setItem('topclash_session_visit_counted', '1');
       updateUI();
       return;
     }
 
     const uid = getMyUid();
     const callsign = getMyCallsign();
+    const todayKey = getTodayKey();
+
+    // 0. 網站到訪人次累計 (Total & Daily Site Visits)
+    if (!sessionVisited) {
+      sessionStorage.setItem('topclash_session_visit_counted', '1');
+      database.ref('global_stats/summary/total_visits').transaction(c => (c || 0) + 1).catch(() => {});
+      database.ref(`global_stats/daily/${todayKey}/visits`).transaction(c => (c || 0) + 1).catch(() => {});
+    }
 
     // 1. 在線狀態管理 (Online Presence)
     const connectedRef = database.ref('.info/connected');
@@ -187,23 +209,24 @@ const Telemetry = (() => {
       database.ref(`global_stats/players/${uid}/lastActive`).set(window.firebase.database.ServerValue.TIMESTAMP).catch(() => {});
     }
 
-    // 3. 監聽全域推演總數與部隊總數
+    // 3. 監聽全域到訪總人次、推演總局數與部隊總數
     database.ref('global_stats/summary').on('value', snap => {
       const val = snap.val() || {};
       totalBattles = val.total_battles || 0;
       totalPlayers = val.total_players || 0;
+      const localV = Math.max(1, parseInt(localStorage.getItem('topclash_local_visits') || '1', 10));
+      totalVisits = Math.max(val.total_visits || 0, totalPlayers, onlineCount, localV, 1);
       updateUI();
     });
 
-    // 4. 監聽今日全服對戰局數
-    const todayKey = getTodayKey();
-    database.ref(`global_stats/daily/${todayKey}/battles`).on('value', snap => {
-      todayBattles = snap.val() || 0;
+    // 4. 監聽今日全服對戰局數與今日到訪人次
+    database.ref(`global_stats/daily/${todayKey}`).on('value', snap => {
+      const val = snap.val() || {};
+      todayBattles = typeof val === 'object' ? (val.battles || 0) : 0;
+      todayVisits = typeof val === 'object' ? Math.max(val.visits || 0, 1) : 1;
       updateUI();
     });
 
-    // 綁定 UI 點擊事件
-    setupUIEvents();
     updateUI();
   }
 
@@ -246,20 +269,26 @@ const Telemetry = (() => {
 
   // 更新介面上的戰情數字
   function updateUI() {
+    const visitsEl = document.getElementById('telemetryVisitsVal');
     const onlineEl = document.getElementById('telemetryOnlineVal');
     const battlesEl = document.getElementById('telemetryBattlesVal');
+    if (visitsEl) visitsEl.textContent = totalVisits.toLocaleString();
     if (onlineEl) onlineEl.textContent = onlineCount.toLocaleString();
     if (battlesEl) battlesEl.textContent = totalBattles > 0 ? totalBattles.toLocaleString() : '--';
 
-    // 更新彈窗內的數字（若已打開）
+    // 更新彈窗內的數字（點選膠囊展開時顯示：在線人數、全服對戰幾局、到訪人次、今日戰況等）
     const mOnline = document.getElementById('modalTelOnline');
     const mBattles = document.getElementById('modalTelBattles');
+    const mVisits = document.getElementById('modalTelVisits');
+    const mTodayVisits = document.getElementById('modalTelTodayVisits');
     const mPlayers = document.getElementById('modalTelPlayers');
     const mToday = document.getElementById('modalTelToday');
 
     if (mOnline) mOnline.textContent = onlineCount.toLocaleString();
     if (mBattles) mBattles.textContent = totalBattles.toLocaleString();
-    if (mPlayers) mPlayers.textContent = totalPlayers.toLocaleString();
+    if (mVisits) mVisits.textContent = totalVisits.toLocaleString();
+    if (mTodayVisits) mTodayVisits.textContent = todayVisits.toLocaleString();
+    if (mPlayers) mPlayers.textContent = Math.max(totalPlayers, 1).toLocaleString();
     if (mToday) mToday.textContent = todayBattles.toLocaleString();
   }
 
@@ -324,7 +353,7 @@ const Telemetry = (() => {
     init,
     recordBattle,
     trackEvent,
-    getStats: () => ({ onlineCount, totalBattles, totalPlayers, todayBattles }),
+    getStats: () => ({ onlineCount, totalBattles, totalPlayers, todayBattles, totalVisits, todayVisits }),
     openTelemetryModal,
     closeTelemetryModal,
     setGA4MeasurementId,
@@ -336,3 +365,4 @@ const Telemetry = (() => {
 if (typeof window !== 'undefined') {
   window.Telemetry = Telemetry;
 }
+

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=5.1.0">
+<link rel="stylesheet" href="style.css?v=5.1.1">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -879,25 +879,30 @@
     <!-- 4 大核心全域即時戰情指標 -->
     <div class="tel-grid">
       <div class="tel-stat-card live-card">
-        <div class="lbl"><span class="live-pulse-dot"></span> 即時在線指揮官</div>
+        <div class="lbl"><span class="live-pulse-dot"></span> 即時在線人數</div>
         <div class="val text-green" id="modalTelOnline">--</div>
-        <div class="sub">目前正處於戰情室/戰場之即時連線人數</div>
+        <div class="sub">目前正處於戰情室／戰場之實時連線指揮官</div>
       </div>
       <div class="tel-stat-card">
-        <div class="lbl">⚔️ 全服累計推演場次</div>
-        <div class="val text-cyan" id="modalTelBattles">--</div>
-        <div class="sub">全球所有指揮官累計進行之聯合作戰局數</div>
+        <div class="lbl">⚔️ 全服累計對戰局數</div>
+        <div class="val text-cyan"><span id="modalTelBattles">--</span> <small style="font-size:13px;font-weight:700;opacity:0.8">局</small></div>
+        <div class="sub">今日全服已接戰 <b id="modalTelToday" style="color:var(--text)">0</b> 局</div>
+      </div>
+      <div class="tel-stat-card">
+        <div class="lbl">🌐 累計到訪網站人次</div>
+        <div class="val text-amber"><span id="modalTelVisits">--</span> <small style="font-size:13px;font-weight:700;opacity:0.8">人次</small></div>
+        <div class="sub">今日到訪 <b id="modalTelTodayVisits" style="color:var(--text)">1</b> 人次</div>
       </div>
       <div class="tel-stat-card">
         <div class="lbl">🎖️ 全服列編指揮官部隊</div>
-        <div class="val text-amber" id="modalTelPlayers">--</div>
+        <div class="val text-purple"><span id="modalTelPlayers">--</span> <small style="font-size:13px;font-weight:700;opacity:0.8">隊</small></div>
         <div class="sub">已完成編號列裝之不重複特遣隊數</div>
       </div>
-      <div class="tel-stat-card">
-        <div class="lbl">📅 今日全域接戰次數</div>
-        <div class="val text-purple" id="modalTelToday">--</div>
-        <div class="sub">今日 00:00 起全服推演自增場次</div>
-      </div>
+    </div>
+
+    <!-- 我方個人戰績摘要列 -->
+    <div class="tel-personal-bar" id="modalPersonalRecord" style="margin-bottom:12px;padding:9px 12px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.28);font-size:12.5px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>🎖️ 我方個人戰績載入中...</span>
     </div>
 
     <!-- 軌道 2：Google Analytics 4 (GA4) 站長配置區 -->
@@ -936,8 +941,8 @@
 <script src="js/firebase-tourney.js?v=4.2.8"></script>
 <script src="js/tournament.js?v=4.2.8"></script>
 <script src="js/online-pvp.js?v=4.2.8"></script>
-<script src="js/telemetry.js?v=5.1.0"></script>
-<script src="js/app.js?v=5.1.0"></script>
-<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5.1.0').then(r=>r.update()).catch(()=>{}));}</script>
+<script src="js/telemetry.js?v=5.1.1"></script>
+<script src="js/app.js?v=5.1.1"></script>
+<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=5.1.1').then(r=>r.update()).catch(()=>{}));}</script>
 </body>
 </html>

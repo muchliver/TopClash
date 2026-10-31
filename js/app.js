@@ -1558,20 +1558,23 @@ function renderHud() {
 
   const hudStats = $('#hudStats');
   if (hudStats) {
-    const tel = typeof Telemetry !== 'undefined' ? Telemetry.getStats() : { onlineCount: 1, totalBattles: 0 };
+    const tel = typeof Telemetry !== 'undefined' ? Telemetry.getStats() : { onlineCount: 1, totalBattles: 0, totalVisits: 1 };
+    const winRate = stats.played ? Math.round(stats.win / stats.played * 100) : 0;
     hudStats.innerHTML = `
-      <span class="chip-stat player-stat-badge" id="hudPlayerBadge" style="cursor:pointer" title="個人軍階戰績與天梯位階：${esc(tier.name)} (${p ? p.rp : 2055} RP) [點擊前往天梯競技]">
-        <span style="font-weight:800;color:var(--cyan)">${myFlag} 我方：${myName}</span>
-        <span class="badge" style="font-size:10px;padding:1px 6px;background:${tier.color}22;color:${tier.color};border:1px solid ${tier.color}66;font-weight:700">${esc(tier.name)}</span>
+      <span class="chip-stat player-stat-badge" id="hudPlayerBadge" style="cursor:pointer" title="🎖️ 指揮官戰績：${myName} (${esc(tier.name)} · ${p ? p.rp : 2055} RP) ｜ 累計 ${stats.played} 場 · 勝率 ${winRate}% · ${stats.streak} 連勝 [點擊前往天梯競技]">
+        <span class="p-badge-name" style="font-weight:800;color:var(--cyan)">${myFlag} ${myName}</span>
+        <span class="badge" style="font-size:10px;padding:1px 6px;background:${tier.color}22;color:${tier.color};border:1px solid ${tier.color}66;font-weight:700;flex-shrink:0">${esc(tier.name)}</span>
+        <span class="p-badge-record"><b>${stats.played}</b>場·<b>${winRate}%</b></span>
       </span>
-      <span class="chip-stat" title="個人戰績：累計總對戰場次、總勝率與當前連勝"><b>${stats.played}</b>場 · <b>${stats.played ? Math.round(stats.win / stats.played * 100) : 0}%</b> · <b>${stats.streak}</b>連勝</span>
-      <span class="chip-stat chip-telemetry" id="btnOpenTelemetry" style="cursor:pointer" title="📡 全域戰情報告：點擊檢視即時在線、全服累計推演場次與 GA4 統計">
+      <span class="chip-stat chip-telemetry" id="btnOpenTelemetry" style="cursor:pointer" title="📡 點擊檢視：即時在線人數、全服累計對戰幾局與網站流量大盤">
         <span class="live-pulse-dot"></span>
-        <span>在線 <b id="telemetryOnlineVal">${tel.onlineCount}</b></span>
-        <span style="opacity:0.35">|</span>
-        <span>全服 <b id="telemetryBattlesVal">${tel.totalBattles > 0 ? tel.totalBattles.toLocaleString() : '--'}</b> 局</span>
+        <span>到訪 <b id="telemetryVisitsVal">${(tel.totalVisits || 1).toLocaleString()}</b> 人次</span>
       </span>
     `;
+    const mPersonal = document.getElementById('modalPersonalRecord');
+    if (mPersonal) {
+      mPersonal.innerHTML = `${myFlag} <b>${myName}</b>（${esc(tier.name)}）｜ 個人累計 <b>${stats.played}</b> 場 · 勝率 <b>${winRate}%</b> · 當前 <b>${stats.streak}</b> 連勝`;
+    }
   }
   updateCloudSyncButtonState();
 }
