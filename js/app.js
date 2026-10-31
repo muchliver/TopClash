@@ -3595,13 +3595,17 @@ async function showBattle(res, opts = {}) {
   const maxHp = {}; [...T.A, ...T.B].forEach(u => { maxHp[u.uid] = u.hpMax; });
   $('#battleLog').innerHTML = '';
   $('#phaseTitle').textContent = '戰 場 就 緒';
-  const dn = d => DOCTRINES.find(x => x.id === d).name;
-  let metaHtml = `<span class="chip-stat">${res.ev.icon} <b>${esc(res.ev.name)}</b></span>`;
+  const getDocObj = d => DOCTRINES.find(x => x.id === d) || { name: d, icon: '⚔' };
+  const evObj = res.ev || { id: 'clear', name: '晴朗無風', icon: '☀', desc: '標準環境' };
+  const evClass = `chip-weather chip-weather-${evObj.id || 'clear'}`;
+  let metaHtml = `<span class="chip-stat ${evClass}" title="戰場氣候環境：${esc(evObj.desc || evObj.name)}"><span class="weather-icon">${evObj.icon}</span> <b>${esc(evObj.name)}</b></span>`;
+  const docA = getDocObj(res.docs.A);
+  const docB = getDocObj(res.docs.B);
   if (state.isOnlinePvp) {
     metaHtml = `<span class="chip-stat" style="color:var(--amber)">BO5 第 ${state.bo3.round}/5 局 (比分: 本部特遣隊 ${state.bo3.winsA} - 挑戰突擊隊 ${state.bo3.winsB})</span>` + metaHtml;
-    metaHtml += `<span class="chip-stat">本部特遣隊教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">挑戰突擊隊教條 <b>${dn(res.docs.B)}</b></span>`;
+    metaHtml += `<span class="chip-stat chip-doctrine-my" title="本部特遣隊教條：${esc(docA.desc || docA.name)}">我方教條 <b>${docA.icon} ${docA.name}</b></span><span class="chip-stat chip-doctrine-enemy" title="挑戰突擊隊教條：${esc(docB.desc || docB.name)}">敵方教條 <b>${docB.icon} ${docB.name}</b></span>`;
   } else {
-    metaHtml += `<span class="chip-stat">我方教條 <b>${dn(res.docs.A)}</b></span><span class="chip-stat">敵方教條 <b>${dn(res.docs.B)}</b></span>`;
+    metaHtml += `<span class="chip-stat chip-doctrine-my" title="我方作戰教條：${esc(docA.desc || docA.name)}">我方教條 <b>${docA.icon} ${docA.name}</b></span><span class="chip-stat chip-doctrine-enemy" title="敵方駐防教條：${esc(docB.desc || docB.name)}">敵方教條 <b>${docB.icon} ${docB.name}</b></span>`;
     if (state.mode === 'bo3') {
       metaHtml = `<span class="chip-stat" style="color:var(--amber)">BO5 第 ${state.bo3.round}/5 局 (${state.bo3.winsA} - ${state.bo3.winsB})</span>` + metaHtml;
     } else if (state.mode === 'tournament' && typeof TournamentEngine !== 'undefined') {

@@ -539,7 +539,168 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .ph.on{color:#021018;background:var(--cyan);border-color:var(--cyan);box-shadow:0 0 18px rgba(61,224,255,.5)}
 .ph.on i{background:rgba(0,0,0,.2)}
 .ph.done{color:var(--green);border-color:rgba(93,255,176,.4)}
-.battle-meta{display:flex;gap:6px;flex:1;flex-wrap:nowrap;overflow:hidden}
+.battle-meta{display:flex;gap:8px;flex:1;flex-wrap:nowrap;align-items:center;overflow:hidden}
+
+/* 戰場環境與氣候凸顯徽章 */
+.chip-weather {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  padding: 4px 11px !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.02em !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
+  background: rgba(15, 23, 42, 0.75) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+.chip-weather .weather-icon {
+  font-size: 16px !important;
+  display: inline-block !important;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+/* 暴雨雷暴：深海靛藍光暈 + 閃電呼吸邊框 */
+.chip-weather-storm {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.65), rgba(15, 23, 42, 0.85)) !important;
+  color: #93c5fd !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 14px rgba(96, 165, 250, 0.35), inset 0 0 8px rgba(96, 165, 250, 0.2) !important;
+}
+[data-theme="light"] .chip-weather-storm {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+  color: #1d4ed8 !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+}
+
+/* 電磁風暴：神秘紫電光暈 */
+.chip-weather-em {
+  background: linear-gradient(135deg, rgba(88, 28, 135, 0.65), rgba(15, 23, 42, 0.85)) !important;
+  color: #d8b4fe !important;
+  border-color: #c084fc !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4) !important;
+}
+[data-theme="light"] .chip-weather-em {
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff) !important;
+  color: #7e22ce !important;
+  border-color: #a855f7 !important;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.25) !important;
+}
+
+/* 晴朗無風：耀眼金陽 */
+.chip-weather-clear {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.45), rgba(15, 23, 42, 0.85)) !important;
+  color: #fde047 !important;
+  border-color: #eab308 !important;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-clear {
+  background: linear-gradient(135deg, #fefce8, #fef08a) !important;
+  color: #a16207 !important;
+  border-color: #ca8a04 !important;
+  box-shadow: 0 2px 8px rgba(202, 138, 4, 0.2) !important;
+}
+
+/* 荒漠平原：沙塵土金 */
+.chip-weather-plain {
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.5), rgba(41, 37, 36, 0.85)) !important;
+  color: #fcd34d !important;
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-plain {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
+  color: #b45309 !important;
+  border-color: #d97706 !important;
+}
+
+/* 島嶼海峽：蔚藍海空 */
+.chip-weather-strait {
+  background: linear-gradient(135deg, rgba(12, 74, 110, 0.65), rgba(15, 23, 42, 0.85)) !important;
+  color: #38bdf8 !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35) !important;
+}
+[data-theme="light"] .chip-weather-strait {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe) !important;
+  color: #0369a1 !important;
+  border-color: #0284c7 !important;
+}
+
+/* 都會巷戰：工業石板冷鋼 */
+.chip-weather-urban {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.7), rgba(15, 23, 42, 0.85)) !important;
+  color: #cbd5e1 !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 12px rgba(148, 163, 184, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-urban {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  color: #334155 !important;
+  border-color: #64748b !important;
+}
+
+/* 我方戰術教條徽章：加大 + 青藍色軍規醒目邊框 */
+.chip-doctrine-my {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 8px !important;
+  background: rgba(2, 132, 199, 0.14) !important;
+  border: 1.5px solid rgba(56, 189, 248, 0.5) !important;
+  color: var(--cyan) !important;
+  box-shadow: 0 2px 6px rgba(56, 189, 248, 0.15) !important;
+  white-space: nowrap !important;
+}
+.chip-doctrine-my b {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  margin-left: 2px;
+}
+[data-theme="light"] .chip-doctrine-my {
+  background: #f0f9ff !important;
+  border-color: #38bdf8 !important;
+  color: #0284c7 !important;
+}
+[data-theme="light"] .chip-doctrine-my b {
+  color: #0c4a6e !important;
+}
+
+/* 敵方戰術教條徽章：加大 + 赤橘警戒色邊框 */
+.chip-doctrine-enemy {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 8px !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border: 1.5px solid rgba(248, 113, 113, 0.5) !important;
+  color: #f87171 !important;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15) !important;
+  white-space: nowrap !important;
+}
+.chip-doctrine-enemy b {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  margin-left: 2px;
+}
+[data-theme="light"] .chip-doctrine-enemy {
+  background: #fef2f2 !important;
+  border-color: #f87171 !important;
+  color: #dc2626 !important;
+}
+[data-theme="light"] .chip-doctrine-enemy b {
+  color: #991b1b !important;
+}
 .battle-ctl{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
 
 /* 戰鬥結束統帥級超大醒目按鈕 (查看結算報告 / 返回陣容編組) */
@@ -9022,8 +9183,17 @@ body:has(.battle:not([hidden])) .command-deck,
     margin: 0 !important;
   }
   .battle-meta .chip-stat {
-    font-size: 10.5px !important;
-    padding: 2px 6px !important;
+    font-size: 11.5px !important;
+    padding: 2.5px 7px !important;
+  }
+  .battle-meta .chip-weather {
+    font-size: 11.5px !important;
+    padding: 2.5px 8px !important;
+  }
+  .battle-meta .chip-doctrine-my,
+  .battle-meta .chip-doctrine-enemy {
+    font-size: 11.5px !important;
+    padding: 2.5px 7px !important;
   }
   .battle-ctl {
     gap: 5px !important;
