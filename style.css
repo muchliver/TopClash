@@ -542,161 +542,229 @@ kbd{display:inline-block;padding:1px 5px;font-family:var(--mono);font-size:10px;
 .battle-meta{display:flex;gap:8px;flex:1;flex-wrap:nowrap;align-items:center;overflow:hidden}
 
 /* 戰場環境與氣候凸顯徽章 */
+/* 戰場氣候環境專屬膠囊：特大字體 + 高對比戰術軍規風格 */
 .chip-weather {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  font-size: 13px !important;
+  gap: 8px !important;
+  font-size: 16.5px !important;
   font-weight: 800 !important;
-  padding: 4px 11px !important;
-  border-radius: 8px !important;
-  letter-spacing: 0.02em !important;
-  border: 1.5px solid rgba(56, 189, 248, 0.4) !important;
-  background: rgba(15, 23, 42, 0.75) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  height: 38px !important;
+  padding: 0 18px !important;
+  border-radius: 9px !important;
+  letter-spacing: 0.03em !important;
+  box-sizing: border-box !important;
+  border: 2px solid rgba(56, 189, 248, 0.6) !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35) !important;
   white-space: nowrap !important;
   transition: all 0.2s ease !important;
 }
 .chip-weather .weather-icon {
-  font-size: 16px !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
   display: inline-block !important;
-  filter: drop-shadow(0 0 4px currentColor);
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.chip-weather b,
+[data-theme="light"] .chip-weather b {
+  color: #ffffff !important;
+  font-size: 17.5px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
 }
 
-/* 暴雨雷暴：深海靛藍光暈 + 閃電呼吸邊框 */
-.chip-weather-storm {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.65), rgba(15, 23, 42, 0.85)) !important;
-  color: #93c5fd !important;
-  border-color: #60a5fa !important;
-  box-shadow: 0 0 14px rgba(96, 165, 250, 0.35), inset 0 0 8px rgba(96, 165, 250, 0.2) !important;
-}
-[data-theme="light"] .chip-weather-storm {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
-  color: #1d4ed8 !important;
+/* 暴雨雷暴：深海靛藍光暈 + 閃電呼吸邊框 (高對比醒目) */
+.chip-weather-storm,
+.chip-weather-storm b {
+  background: linear-gradient(135deg, #1e3a8a, #0f172a) !important;
+  color: #ffffff !important;
   border-color: #3b82f6 !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.5), inset 0 0 10px rgba(96, 165, 250, 0.25) !important;
+}
+[data-theme="light"] .chip-weather-storm,
+[data-theme="light"] .chip-weather-storm b {
+  background: linear-gradient(135deg, #1d4ed8, #1e3a8a) !important;
+  color: #ffffff !important;
+  border-color: #1e40af !important;
+  box-shadow: 0 3px 12px rgba(29, 78, 216, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+.chip-weather-storm .weather-icon,
+[data-theme="light"] .chip-weather-storm .weather-icon {
+  filter: drop-shadow(0 0 6px #bfdbfe) !important;
 }
 
-/* 電磁風暴：神秘紫電光暈 */
+/* 電磁風暴：雷紫金橘警戒 (高警示能量) */
 .chip-weather-em {
-  background: linear-gradient(135deg, rgba(88, 28, 135, 0.65), rgba(15, 23, 42, 0.85)) !important;
-  color: #d8b4fe !important;
+  background: linear-gradient(135deg, #581c87, #0f172a) !important;
+  color: #fbbf24 !important;
   border-color: #c084fc !important;
-  box-shadow: 0 0 14px rgba(192, 132, 252, 0.4) !important;
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.5), inset 0 0 10px rgba(251, 191, 36, 0.2) !important;
+}
+.chip-weather-em b {
+  color: #fbbf24 !important;
 }
 [data-theme="light"] .chip-weather-em {
-  background: linear-gradient(135deg, #faf5ff, #f3e8ff) !important;
-  color: #7e22ce !important;
-  border-color: #a855f7 !important;
-  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.25) !important;
+  background: linear-gradient(135deg, #6b21a8, #4c1d95) !important;
+  color: #fef08a !important;
+  border-color: #581c87 !important;
+  box-shadow: 0 3px 12px rgba(107, 33, 168, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="light"] .chip-weather-em b {
+  color: #fef08a !important;
+}
+.chip-weather-em .weather-icon,
+[data-theme="light"] .chip-weather-em .weather-icon {
+  filter: drop-shadow(0 0 6px #fde047) !important;
 }
 
 /* 晴朗無風：耀眼金陽 */
 .chip-weather-clear {
-  background: linear-gradient(135deg, rgba(120, 53, 15, 0.45), rgba(15, 23, 42, 0.85)) !important;
-  color: #fde047 !important;
-  border-color: #eab308 !important;
-  box-shadow: 0 0 12px rgba(234, 179, 8, 0.3) !important;
+  background: linear-gradient(135deg, #0c4a6e, #0f172a) !important;
+  color: #38bdf8 !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.4) !important;
+}
+.chip-weather-clear b {
+  color: #bae6fd !important;
 }
 [data-theme="light"] .chip-weather-clear {
-  background: linear-gradient(135deg, #fefce8, #fef08a) !important;
-  color: #a16207 !important;
-  border-color: #ca8a04 !important;
-  box-shadow: 0 2px 8px rgba(202, 138, 4, 0.2) !important;
+  background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+  color: #ffffff !important;
+  border-color: #075985 !important;
+  box-shadow: 0 3px 12px rgba(2, 132, 199, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-clear b {
+  color: #ffffff !important;
 }
 
 /* 荒漠平原：沙塵土金 */
 .chip-weather-plain {
-  background: linear-gradient(135deg, rgba(120, 53, 15, 0.5), rgba(41, 37, 36, 0.85)) !important;
+  background: linear-gradient(135deg, #78350f, #1c1917) !important;
   color: #fcd34d !important;
   border-color: #f59e0b !important;
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4) !important;
+}
+.chip-weather-plain b {
+  color: #fcd34d !important;
 }
 [data-theme="light"] .chip-weather-plain {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
-  color: #b45309 !important;
-  border-color: #d97706 !important;
+  background: linear-gradient(135deg, #b45309, #78350f) !important;
+  color: #ffffff !important;
+  border-color: #92400e !important;
+  box-shadow: 0 3px 12px rgba(180, 83, 9, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-plain b {
+  color: #ffffff !important;
 }
 
 /* 島嶼海峽：蔚藍海空 */
 .chip-weather-strait {
-  background: linear-gradient(135deg, rgba(12, 74, 110, 0.65), rgba(15, 23, 42, 0.85)) !important;
-  color: #38bdf8 !important;
-  border-color: #0284c7 !important;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35) !important;
+  background: linear-gradient(135deg, #0f766e, #0f172a) !important;
+  color: #2dd4bf !important;
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 14px rgba(20, 184, 166, 0.4) !important;
+}
+.chip-weather-strait b {
+  color: #5eead4 !important;
 }
 [data-theme="light"] .chip-weather-strait {
-  background: linear-gradient(135deg, #f0f9ff, #e0f2fe) !important;
-  color: #0369a1 !important;
-  border-color: #0284c7 !important;
+  background: linear-gradient(135deg, #0d9488, #0f766e) !important;
+  color: #ffffff !important;
+  border-color: #115e59 !important;
+  box-shadow: 0 3px 12px rgba(13, 148, 136, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-strait b {
+  color: #ffffff !important;
 }
 
 /* 都會巷戰：工業石板冷鋼 */
 .chip-weather-urban {
-  background: linear-gradient(135deg, rgba(51, 65, 85, 0.7), rgba(15, 23, 42, 0.85)) !important;
-  color: #cbd5e1 !important;
+  background: linear-gradient(135deg, #334155, #0f172a) !important;
+  color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  box-shadow: 0 0 12px rgba(148, 163, 184, 0.3) !important;
+  box-shadow: 0 0 14px rgba(148, 163, 184, 0.4) !important;
+}
+.chip-weather-urban b {
+  color: #ffffff !important;
 }
 [data-theme="light"] .chip-weather-urban {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
-  color: #334155 !important;
-  border-color: #64748b !important;
+  background: linear-gradient(135deg, #475569, #334155) !important;
+  color: #ffffff !important;
+  border-color: #1e293b !important;
+  box-shadow: 0 3px 12px rgba(71, 85, 105, 0.4) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+[data-theme="light"] .chip-weather-urban b {
+  color: #ffffff !important;
 }
 
-/* 我方戰術教條徽章：加大 + 青藍色軍規醒目邊框 */
+/* 我方戰術教條徽章：特大字體 + 青藍色軍規醒目邊框 */
 .chip-doctrine-my {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 4px 10px !important;
-  border-radius: 8px !important;
-  background: rgba(2, 132, 199, 0.14) !important;
-  border: 1.5px solid rgba(56, 189, 248, 0.5) !important;
-  color: var(--cyan) !important;
-  box-shadow: 0 2px 6px rgba(56, 189, 248, 0.15) !important;
+  gap: 7px !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
+  background: rgba(2, 132, 199, 0.22) !important;
+  border: 2px solid #38bdf8 !important;
+  color: #38bdf8 !important;
+  box-shadow: 0 2px 10px rgba(56, 189, 248, 0.25) !important;
   white-space: nowrap !important;
 }
 .chip-doctrine-my b {
   color: #ffffff !important;
-  font-weight: 800 !important;
-  margin-left: 2px;
+  font-weight: 900 !important;
+  font-size: 17px !important;
+  margin-left: 4px;
 }
 [data-theme="light"] .chip-doctrine-my {
-  background: #f0f9ff !important;
-  border-color: #38bdf8 !important;
-  color: #0284c7 !important;
+  background: #e0f2fe !important;
+  border-color: #0284c7 !important;
+  color: #0369a1 !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.2) !important;
 }
 [data-theme="light"] .chip-doctrine-my b {
-  color: #0c4a6e !important;
+  color: #075985 !important;
 }
 
-/* 敵方戰術教條徽章：加大 + 赤橘警戒色邊框 */
+/* 敵方戰術教條徽章：特大字體 + 赤橘警戒色邊框 */
 .chip-doctrine-enemy {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 4px 10px !important;
-  border-radius: 8px !important;
-  background: rgba(239, 68, 68, 0.12) !important;
-  border: 1.5px solid rgba(248, 113, 113, 0.5) !important;
+  gap: 7px !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  border-radius: 9px !important;
+  box-sizing: border-box !important;
+  background: rgba(239, 68, 68, 0.2) !important;
+  border: 2px solid #f87171 !important;
   color: #f87171 !important;
-  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.15) !important;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.25) !important;
   white-space: nowrap !important;
 }
 .chip-doctrine-enemy b {
   color: #ffffff !important;
-  font-weight: 800 !important;
-  margin-left: 2px;
+  font-weight: 900 !important;
+  font-size: 17px !important;
+  margin-left: 4px;
 }
 [data-theme="light"] .chip-doctrine-enemy {
-  background: #fef2f2 !important;
-  border-color: #f87171 !important;
-  color: #dc2626 !important;
+  background: #fee2e2 !important;
+  border-color: #dc2626 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.2) !important;
 }
 [data-theme="light"] .chip-doctrine-enemy b {
   color: #991b1b !important;
