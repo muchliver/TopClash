@@ -22,9 +22,11 @@ const ICON = {
 };
 
 const LS = {
+
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
+window.LS = LS;
 
 /* ---------- 軍規級純前端 Web Audio API 物理聲學與戰場空間殘響合成引擎 v2 (Military Acoustic DSP Engine) ---------- */
 const SoundEngine = {
@@ -7530,9 +7532,6 @@ if (!LS.get('db15_seen', 0) && !replayParam && !tourneyParam && !roomParam) show
 
 // Service Worker 由 index.html 與 armory.html 統一註冊
 
-window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile, buildReplayShareUrl };
-})();
-
 /* ---------- 雲端指揮官身分中心與免密書籤控制器 (A+C) ---------- */
 function openCloudSyncModal() {
   const modal = $('#cloudSyncModal');
@@ -7714,3 +7713,16 @@ async function checkUrlHashCloudLogin() {
     }
   }
 }
+
+  // 點選遮罩背景關閉彈窗
+  $('#cloudSyncModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'cloudSyncModal') closeCloudSyncModal();
+  });
+  
+  // 啟動雲端存檔按鈕監聽與 URL 免密登入辨識
+  setupCloudSyncModal();
+  checkUrlHashCloudLogin();
+
+
+window.__db15 = { state, startBattle, setMode, getGhostPool, applyTheme, toggleTheme, LadderEngine, renderLadderView, OnlinePvPEngine, getTournamentPlayerProfile, buildReplayShareUrl, openCloudSyncModal, CloudSync: (typeof CloudSync !== 'undefined' ? CloudSync : null) };
+})();

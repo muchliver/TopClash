@@ -4,6 +4,10 @@
  * 方案 C：安全 Token 專屬免密書籤連結 (Ctrl+D / LINE Keep 一鍵秒登)
  */
 const CloudSync = (() => {
+  const LS = (typeof window !== 'undefined' && window.LS) || {
+    get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
   const FIREBASE_CONFIG = {
     databaseURL: "https://top-game-913c0-default-rtdb.asia-southeast1.firebasedatabase.app"
   };
@@ -285,3 +289,4 @@ const CloudSync = (() => {
     logout
   };
 })();
+window.CloudSync = CloudSync;
